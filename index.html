@@ -538,13 +538,20 @@ async function onDocUpload(input) {
               data.candidates[0].content.parts && data.candidates[0].content.parts[0]
               ? data.candidates[0].content.parts[0].text || '' : '';
 
+    // Ensure raw is a string
+    if (typeof raw !== 'string') raw = JSON.stringify(raw);
     raw = raw.replace(/```json/g,'').replace(/```/g,'').trim();
     var jsonStart = raw.indexOf('{');
     var jsonEnd = raw.lastIndexOf('}');
-    if (jsonStart < 0 || jsonEnd < 0) throw new Error('No JSON found in response');
+    if (jsonStart < 0 || jsonEnd < 0) throw new Error('No JSON found in AI response');
     raw = raw.slice(jsonStart, jsonEnd + 1);
 
-    var extracted = JSON.parse(raw);
+    var extracted;
+    try {
+      extracted = JSON.parse(raw);
+    } catch(pe) {
+      throw new Error('Invalid JSON from AI: ' + raw.slice(0,100));
+    }
     var filled = 0;
     Object.keys(extracted).forEach(function(id) {
       var el = document.getElementById(id);

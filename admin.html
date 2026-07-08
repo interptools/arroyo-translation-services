@@ -379,9 +379,10 @@ async function translate() {
       });
       var d1 = await r1.json();
       if (d1.error) throw new Error(d1.error.message);
-      raw = d1.candidates && d1.candidates[0] && d1.candidates[0].content &&
+      var rawVal = d1.candidates && d1.candidates[0] && d1.candidates[0].content &&
             d1.candidates[0].content.parts && d1.candidates[0].content.parts[0]
-            ? d1.candidates[0].content.parts[0].text || '' : '';
+            ? d1.candidates[0].content.parts[0].text : '';
+      raw = typeof rawVal === 'string' ? rawVal : JSON.stringify(rawVal);
     } catch(eg) { console.log('Worker failed:', eg.message); }
 
         if (!raw || raw.length < 20) {
