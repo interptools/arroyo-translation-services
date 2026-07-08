@@ -560,78 +560,294 @@ function doDownloadPDF() {
   if (!s) return;
   if (!s.translation) { alert('Please translate the document first.'); return; }
 
-  // Parse translation into sections for clean display
-  var translationLines = s.translation.split('\n');
-  var formattedLines = translationLines.map(function(line) {
-    if (line.startsWith('===') && line.endsWith('===')) {
-      return '<div class="pdf-section-hdr">' + line.replace(/===/g,'').trim() + '</div>';
-    } else if (line.trim().startsWith('【') || line.trim().startsWith('CERTIFICATION')) {
-      return '<div class="pdf-cert">' + line + '</div>';
-    } else if (line.trim()) {
-      var parts = line.split(':');
-      if (parts.length >= 2) {
-        var label = parts[0].trim();
-        var value = parts.slice(1).join(':').trim();
-        return '<div class="pdf-field"><span class="pdf-label">' + label + '</span><span class="pdf-value">' + value + '</span></div>';
-      }
-      return '<div class="pdf-line">' + line + '</div>';
-    }
-    return '<div class="pdf-spacer"></div>';
-  }).join('');
+  var f = s.fields || {};
+  var today = new Date().toLocaleDateString('en-PH', {year:'numeric',month:'long',day:'numeric'});
 
-  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+  // Section definitions per document type
+  var docConfig = {
+    'Birth Certificate': {
+      jpTitle: '出生証明書',
+      sections: [
+        { label: 'A', en: 'CHILD INFORMATION', jp: '子の情報', fields: [
+          {num:'1', en:'Name (First, Middle, Last)', jp:'氏名（名・ミドルネーム・姓）', id:'child_name'},
+          {num:'2', en:'Date of Birth', jp:'生年月日', id:'child_dob'},
+          {num:'3', en:'Place of Birth', jp:'出生地', id:'child_pob'},
+          {num:'4', en:'Sex', jp:'性別', id:'child_sex'},
+          {num:'5', en:'Birth Order', jp:'出生順位', id:'child_order'},
+        ]},
+        { label: 'B', en: "MOTHER'S INFORMATION", jp: '母の情報', fields: [
+          {num:'6', en:"Mother's Maiden Name", jp:'母の旧姓', id:'mother_name'},
+          {num:'7', en:'Citizenship', jp:'国籍', id:'mother_citizen'},
+          {num:'8', en:'Religion', jp:'宗教', id:'mother_religion'},
+          {num:'', en:'Occupation', jp:'職業', id:'mother_occ'},
+        ]},
+        { label: 'C', en: "FATHER'S INFORMATION", jp: '父の情報', fields: [
+          {num:'9', en:"Father's Name", jp:'父の氏名', id:'father_name'},
+          {num:'10', en:'Citizenship', jp:'国籍', id:'father_citizen'},
+          {num:'11', en:'Religion', jp:'宗教', id:'father_religion'},
+          {num:'', en:'Occupation', jp:'職業', id:'father_occ'},
+        ]},
+        { label: 'D', en: 'REGISTRATION INFORMATION', jp: '登録情報', fields: [
+          {num:'', en:'Registry Number', jp:'登録番号', id:'reg_number'},
+          {num:'', en:'Date of Registration', jp:'登録日', id:'reg_date'},
+          {num:'', en:'Issuing Authority', jp:'発行機関', val:'Philippine Statistics Authority (PSA)', jpval:'フィリピン統計局（PSA）'},
+        ]},
+      ]
+    },
+    'Marriage Certificate': {
+      jpTitle: '婚姻証明書',
+      sections: [
+        { label: 'A', en: "HUSBAND'S INFORMATION", jp: '夫の情報', fields: [
+          {num:'1', en:"Husband's Name", jp:'夫の氏名', id:'husband_name'},
+          {num:'2', en:'Date of Birth', jp:'生年月日', id:'husband_dob'},
+          {num:'3', en:'Place of Birth', jp:'出生地', id:'husband_pob'},
+          {num:'4', en:'Citizenship', jp:'国籍', id:'husband_citizen'},
+          {num:'5', en:'Religion', jp:'宗教', id:'husband_religion'},
+          {num:'6', en:'Civil Status', jp:'婚姻状況', id:'husband_civil'},
+        ]},
+        { label: 'B', en: "WIFE'S INFORMATION", jp: '妻の情報', fields: [
+          {num:'7', en:"Wife's Maiden Name", jp:'妻の旧姓', id:'wife_name'},
+          {num:'8', en:'Date of Birth', jp:'生年月日', id:'wife_dob'},
+          {num:'9', en:'Place of Birth', jp:'出生地', id:'wife_pob'},
+          {num:'10', en:'Citizenship', jp:'国籍', id:'wife_citizen'},
+          {num:'11', en:'Religion', jp:'宗教', id:'wife_religion'},
+          {num:'12', en:'Civil Status', jp:'婚姻状況', id:'wife_civil'},
+        ]},
+        { label: 'C', en: 'MARRIAGE INFORMATION', jp: '婚姻情報', fields: [
+          {num:'13', en:'Date of Marriage', jp:'婚姻日', id:'marriage_date'},
+          {num:'14', en:'Place of Marriage', jp:'婚姻地', id:'marriage_place'},
+          {num:'15', en:'Solemnizing Officer', jp:'挙式執行者', id:'officer'},
+        ]},
+        { label: 'D', en: 'REGISTRATION INFORMATION', jp: '登録情報', fields: [
+          {num:'', en:'Registry Number', jp:'登録番号', id:'reg_number'},
+          {num:'', en:'Issuing Authority', jp:'発行機関', val:'Philippine Statistics Authority (PSA)', jpval:'フィリピン統計局（PSA）'},
+        ]},
+      ]
+    },
+    'Death Certificate': {
+      jpTitle: '死亡証明書',
+      sections: [
+        { label: 'A', en: "DECEASED'S INFORMATION", jp: '故人の情報', fields: [
+          {num:'1', en:'Name of Deceased', jp:'故人の氏名', id:'deceased_name'},
+          {num:'2', en:'Sex', jp:'性別', id:'deceased_sex'},
+          {num:'3', en:'Date of Birth', jp:'生年月日', id:'deceased_dob'},
+          {num:'4', en:'Civil Status', jp:'婚姻状況', id:'civil_status'},
+          {num:'5', en:'Occupation', jp:'職業', id:'deceased_occ'},
+          {num:'6', en:'Usual Residence', jp:'常住地', id:'deceased_residence'},
+        ]},
+        { label: 'B', en: 'DEATH INFORMATION', jp: '死亡情報', fields: [
+          {num:'7', en:'Date of Death', jp:'死亡日', id:'death_date'},
+          {num:'8', en:'Place of Death', jp:'死亡場所', id:'death_place'},
+        ]},
+        { label: 'C', en: 'CAUSES OF DEATH', jp: '死因', fields: [
+          {num:'19a', en:'Immediate Cause', jp:'直接死因', id:'cause_immediate'},
+          {num:'19b', en:'Antecedent Cause', jp:'先行死因', id:'cause_antecedent'},
+          {num:'19c', en:'Underlying Cause', jp:'根本死因', id:'cause_underlying'},
+          {num:'20', en:'Attending Physician', jp:'担当医師', id:'physician'},
+        ]},
+        { label: 'D', en: 'REGISTRATION INFORMATION', jp: '登録情報', fields: [
+          {num:'', en:'Registry Number', jp:'登録番号', id:'reg_number'},
+          {num:'', en:'Issuing Authority', jp:'発行機関', val:'Philippine Statistics Authority (PSA)', jpval:'フィリピン統計局（PSA）'},
+        ]},
+      ]
+    },
+    'CENOMAR': {
+      jpTitle: '未婚証明書（CENOMAR）',
+      sections: [
+        { label: 'A', en: "SUBJECT'S INFORMATION", jp: '申請者の情報', fields: [
+          {num:'1', en:'Name', jp:'氏名', id:'applicant_name'},
+          {num:'2', en:'Date of Birth', jp:'生年月日', id:'applicant_dob'},
+          {num:'3', en:'Place of Birth', jp:'出生地', id:'applicant_pob'},
+          {num:'4', en:'Sex', jp:'性別', id:'applicant_sex'},
+          {num:'5', en:'Citizenship', jp:'国籍', id:'applicant_citizen'},
+        ]},
+        { label: 'B', en: 'CERTIFICATION DETAILS', jp: '証明内容', fields: [
+          {num:'6', en:'Result', jp:'結果', val:'NO MARRIAGE RECORD FOUND', jpval:'婚姻記録なし'},
+          {num:'7', en:'Date of Issuance', jp:'発行日', id:'issuance_date'},
+          {num:'8', en:'Reference Number', jp:'参照番号', id:'ref_number'},
+          {num:'', en:'Issuing Authority', jp:'発行機関', val:'Philippine Statistics Authority (PSA)', jpval:'フィリピン統計局（PSA）'},
+        ]},
+      ]
+    },
+    'Advisory on Marriages': {
+      jpTitle: '婚姻記録照会書',
+      sections: [
+        { label: 'A', en: "SUBJECT'S INFORMATION", jp: '照会対象者の情報', fields: [
+          {num:'1', en:'Name', jp:'氏名', id:'subject_name'},
+          {num:'2', en:'Date of Birth', jp:'生年月日', id:'subject_dob'},
+          {num:'3', en:'Place of Birth', jp:'出生地', id:'subject_pob'},
+          {num:'4', en:'Sex', jp:'性別', id:'subject_sex'},
+        ]},
+        { label: 'B', en: 'MARRIAGE RECORD(S)', jp: '婚姻記録', fields: [
+          {num:'5', en:'Number of Marriages', jp:'婚姻件数', id:'num_marriages'},
+          {num:'6', en:'Spouse Name', jp:'配偶者名', id:'spouse_name'},
+          {num:'7', en:'Date of Marriage', jp:'婚姻日', id:'marriage_date'},
+          {num:'8', en:'Status', jp:'婚姻の状況', id:'marriage_status'},
+        ]},
+        { label: 'C', en: 'ISSUANCE INFORMATION', jp: '発行情報', fields: [
+          {num:'', en:'Date of Issuance', jp:'発行日', id:'issuance_date'},
+          {num:'', en:'Issuing Authority', jp:'発行機関', val:'Philippine Statistics Authority (PSA)', jpval:'フィリピン統計局（PSA）'},
+        ]},
+      ]
+    },
+    'Certificate of No Birth Record': {
+      jpTitle: '出生記録なし証明書',
+      sections: [
+        { label: 'A', en: "SUBJECT'S INFORMATION", jp: '照会対象者の情報', fields: [
+          {num:'1', en:'Name', jp:'氏名', id:'subject_name'},
+          {num:'2', en:'Date of Birth', jp:'生年月日', id:'subject_dob'},
+          {num:'3', en:'Place of Birth', jp:'出生地', id:'subject_pob'},
+          {num:'4', en:'Sex', jp:'性別', id:'subject_sex'},
+        ]},
+        { label: 'B', en: 'PARENT INFORMATION', jp: '親の情報', fields: [
+          {num:'5', en:"Father's Name", jp:'父の氏名', id:'father_name'},
+          {num:'6', en:"Mother's Name", jp:'母の旧姓', id:'mother_name'},
+        ]},
+        { label: 'C', en: 'CERTIFICATION DETAILS', jp: '証明内容', fields: [
+          {num:'7', en:'Result', jp:'結果', val:'NO BIRTH RECORD FOUND', jpval:'出生記録なし'},
+          {num:'8', en:'Date of Issuance', jp:'発行日', id:'issuance_date'},
+          {num:'9', en:'Reference Number', jp:'参照番号', id:'ref_number'},
+          {num:'', en:'Issuing Authority', jp:'発行機関', val:'Philippine Statistics Authority (PSA)', jpval:'フィリピン統計局（PSA）'},
+        ]},
+      ]
+    },
+    'Certificate of No Death Record': {
+      jpTitle: '死亡記録なし証明書',
+      sections: [
+        { label: 'A', en: "SUBJECT'S INFORMATION", jp: '照会対象者の情報', fields: [
+          {num:'1', en:'Name', jp:'氏名', id:'subject_name'},
+          {num:'2', en:'Date of Birth', jp:'生年月日', id:'subject_dob'},
+          {num:'3', en:'Place of Birth', jp:'出生地', id:'subject_pob'},
+          {num:'4', en:'Sex', jp:'性別', id:'subject_sex'},
+        ]},
+        { label: 'B', en: 'CERTIFICATION DETAILS', jp: '証明内容', fields: [
+          {num:'5', en:'Result', jp:'結果', val:'NO DEATH RECORD FOUND', jpval:'死亡記録なし'},
+          {num:'6', en:'Date of Issuance', jp:'発行日', id:'issuance_date'},
+          {num:'7', en:'Reference Number', jp:'参照番号', id:'ref_number'},
+          {num:'', en:'Issuing Authority', jp:'発行機関', val:'Philippine Statistics Authority (PSA)', jpval:'フィリピン統計局（PSA）'},
+        ]},
+      ]
+    }
+  };
+
+  var config = docConfig[s.doctype] || {jpTitle: s.doctype, sections: []};
+
+  // Build JP translations from the AI translation text
+  var jpMap = {};
+  var lines = s.translation.split('\n');
+  lines.forEach(function(line) {
+    var slash = line.lastIndexOf('/');
+    if (slash > 0) {
+      var colon = line.indexOf(':');
+      if (colon > 0 && colon < slash) {
+        var jpVal = line.slice(slash+1).trim();
+        var fieldId = line.slice(0, colon).trim().toLowerCase().replace(/\s+/g,'_').replace(/[^a-z_]/g,'');
+        if (jpVal) jpMap[fieldId] = jpVal;
+      }
+    }
+  });
+
+  // Helper to get JP translation
+  function getJP(fieldId, enVal) {
+    // Try direct map
+    if (jpMap[fieldId]) return jpMap[fieldId];
+    // Common translations
+    var common = {
+      'Male':'男性','Female':'女性','Filipino':'フィリピン国籍',
+      'Roman Catholic':'ローマ・カトリック','Single':'未婚','Married':'既婚',
+      'Widowed':'寡婦','Seventh':'第七子','7th Child':'第7子',
+      'Philippine Statistics Authority (PSA)':'フィリピン統計局（PSA）'
+    };
+    if (common[enVal]) return common[enVal];
+    // Date conversion
+    if (enVal && enVal.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      var parts = enVal.split('-');
+      return parts[0] + '年' + parseInt(parts[1]) + '月' + parseInt(parts[2]) + '日';
+    }
+    return '';
+  }
+
+  // Build sections HTML
+  var sectionsHtml = '';
+  config.sections.forEach(function(sec) {
+    sectionsHtml += '<div class="sec-hdr">' + sec.label + '.&nbsp;&nbsp;' + sec.en + '&nbsp;&nbsp;/&nbsp;&nbsp;' + sec.jp + '</div>';
+    sectionsHtml += '<div class="sec-body">';
+    sec.fields.forEach(function(field) {
+      var enVal = field.val || (field.id ? (f[field.id] || '') : '');
+      var jpVal = field.jpval || getJP(field.id || '', enVal);
+      if (!enVal) return;
+      sectionsHtml += '<div class="field-row">' +
+        '<div class="field-num">' + (field.num || '') + '</div>' +
+        '<div class="field-content">' +
+          '<div class="field-label-en">' + field.en + '</div>' +
+          '<div class="field-label-jp">' + field.jp + '</div>' +
+          '<div class="field-val-en">' + enVal + '</div>' +
+          '<div class="field-val-jp">' + (jpVal || '—') + '</div>' +
+        '</div>' +
+      '</div>';
+    });
+    sectionsHtml += '</div>';
+  });
+
+  var docHtml = '<!DOCTYPE html><html lang="ja"><head>' +
+    '<meta charset="UTF-8">' +
     '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">' +
+    '<title>' + s.doctype + ' — Japanese Translation</title>' +
     '<style>' +
-    'body{font-family:"Noto Sans JP","Inter",sans-serif;margin:0;padding:0;background:#fff;color:#1a2744;font-size:11px}' +
-    '.header{background:#1a2744;padding:18px 30px;text-align:center}' +
-    '.header h1{color:#e8c97a;font-size:16px;margin:0 0 4px;font-family:Inter,sans-serif}' +
-    '.header p{color:rgba(255,255,255,0.6);font-size:10px;margin:0}' +
-    '.content{padding:24px 30px}' +
-    '.doc-title{font-size:14px;font-weight:600;text-align:center;margin-bottom:16px;color:#1a2744}' +
-    '.meta{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:16px;padding:12px;background:#f5f5f5;border-radius:6px;font-size:10px;color:#555}' +
-    '.divider{border:none;border-top:2px solid #c9a84c;margin:12px 0}' +
-    '.pdf-section-hdr{background:#1a2744;color:#e8c97a;padding:7px 12px;font-size:10px;font-weight:700;margin:14px 0 6px;border-radius:4px;letter-spacing:0.5px}' +
-    '.pdf-field{display:flex;padding:5px 8px;border-bottom:1px solid #f0ede8;gap:8px}' +
-    '.pdf-field:nth-child(even){background:#faf8f4}' +
-    '.pdf-label{color:#6b7280;font-size:10px;min-width:120px;flex-shrink:0;font-weight:500}' +
-    '.pdf-value{color:#1a2744;font-size:10px;font-weight:500;line-height:1.5}' +
-    '.pdf-cert{background:#f0f4ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 12px;margin:16px 0;font-size:9px;color:#1e40af;line-height:1.6}' +
-    '.pdf-line{padding:3px 8px;font-size:10px}' +
-    '.pdf-spacer{height:4px}' +
-    '.disclaimer{background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:10px 12px;margin-top:16px;font-size:9px;color:#92400e;line-height:1.6}' +
-    '.footer{background:#1a2744;padding:10px 30px;text-align:center;margin-top:24px}' +
-    '.footer p{color:rgba(255,255,255,0.5);font-size:8px;margin:0}' +
-    '@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}' +
+    '*{box-sizing:border-box;margin:0;padding:0}' +
+    'body{font-family:"Noto Sans JP",sans-serif;background:#faf8f0;color:#1a2744;font-size:10px;padding:20px}' +
+    '.page{max-width:740px;margin:0 auto;background:#faf8f0}' +
+    '.top-label{text-align:center;font-size:8px;color:#888;margin-bottom:4px;letter-spacing:1px}' +
+    '.jp-title{text-align:center;font-size:22px;font-weight:700;color:#1a2744;margin-bottom:2px}' +
+    '.en-title{text-align:center;font-size:10px;color:#888;margin-bottom:6px;letter-spacing:1px}' +
+    '.gold-line{border:none;border-top:2px solid #c9a84c;margin:8px 0}' +
+    '.ref-row{display:flex;justify-content:space-between;font-size:8px;color:#888;margin-bottom:12px}' +
+    '.sec-hdr{background:#1a2744;color:#fff;padding:5px 10px;font-size:9px;font-weight:700;letter-spacing:0.5px;margin-top:8px}' +
+    '.sec-body{border:1px solid #ddd;border-top:none}' +
+    '.field-row{display:flex;border-bottom:1px solid #eee;background:#f5f5dc}' +
+    '.field-row:nth-child(even){background:#efedde}' +
+    '.field-num{width:28px;min-width:28px;padding:6px 4px;text-align:center;font-size:8px;color:#888;border-right:1px solid #ddd;display:flex;align-items:center;justify-content:center}' +
+    '.field-content{flex:1;padding:5px 8px}' +
+    '.field-label-en{font-size:8px;color:#888}' +
+    '.field-label-jp{font-size:7px;color:#aaa;margin-bottom:3px}' +
+    '.field-val-en{font-size:10px;font-weight:600;color:#1a2744}' +
+    '.field-val-jp{font-size:10px;color:#333}' +
+    '.cert-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;padding:10px;margin:12px 0;font-size:9px;color:#1e40af;line-height:1.7}' +
+    '.disc-box{background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:8px;margin-top:8px;font-size:8px;color:#92400e;line-height:1.6}' +
+    '@media print{body{background:#faf8f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}.page{max-width:100%}}' +
     '</style></head><body>' +
-    '<div class="header"><h1>Arroyo Translation Services</h1><p>Official Japanese Translation of PSA Civil Registry Document</p></div>' +
-    '<div class="content">' +
-    '<div class="doc-title">' + s.doctype + ' — 日本語翻訳 / Japanese Translation</div>' +
-    '<div class="meta">' +
-    '<div><strong>お客様 / Customer:</strong> ' + s.name + '</div>' +
-    '<div><strong>参照番号 / Reference:</strong> ' + s.id + '</div>' +
-    '<div><strong>目的 / Purpose:</strong> ' + (s.purpose||'—') + '</div>' +
-    '<div><strong>翻訳日 / Date:</strong> ' + s.date + '</div>' +
+    '<div class="page">' +
+    '<div class="top-label">REPUBLIKA NG PILIPINAS / REPUBLIC OF THE PHILIPPINES</div>' +
+    '<div class="jp-title">' + config.jpTitle + '</div>' +
+    '<div class="en-title">' + s.doctype.toUpperCase() + ' &mdash; Japanese Translation</div>' +
+    '<hr class="gold-line">' +
+    '<div class="ref-row">' +
+    '<span>登録番号 / Registry No.: ' + (f.reg_number || f.ref_number || '—') + '</span>' +
+    '<span>翻訳日 / Date: ' + today + '</span>' +
     '</div>' +
-    '<hr class="divider">' +
-    formattedLines +
-    '<div class="disclaimer">【承認された使用用途】本翻訳は日本のビザ申請・市区町村役所への婚姻届に適しています。裁判手続きや公証が必要な法的書類には使用できません。<br>' +
-    'ACCEPTED USE: Suitable for Japanese visa applications and marriage registration. NOT valid for court proceedings or notarized legal submissions.</div>' +
+    sectionsHtml +
+    '<div class="cert-box">' +
+    '本翻訳は、フィリピン統計局（PSA）が発行した原文書（' + config.jpTitle + '）を忠実に日本語に翻訳したものです。翻訳者はその正確性について責任を負います。<br><br>' +
+    'This is a faithful Japanese translation of the original ' + s.doctype + ' issued by the Philippine Statistics Authority (PSA). The translator certifies the accuracy of this translation.' +
     '</div>' +
-    '<div class="footer"><p>Arroyo Translation Services &copy; 2025 — PSA Document Translation EN to JP</p></div>' +
+    '<div class="disc-box">' +
+    'ACCEPTED USE: Suitable for Japanese visa applications and marriage registration at a Japanese municipal office (役所). NOT valid for court proceedings or notarized legal submissions.<br>' +
+    '【ご注意】本翻訳は日本のビザ申請・市区町村役所への婚姻届に適しています。裁判手続きや公証が必要な法的書類には使用できません。' +
+    '</div>' +
+    '</div>' +
     '<script>window.onload=function(){window.print();}<\/script>' +
     '</body></html>';
 
-  var blob = new Blob([html], {type: 'text/html'});
+  var blob = new Blob([docHtml], {type:'text/html'});
   var url = URL.createObjectURL(blob);
   var win = window.open(url, '_blank');
   if (!win) {
     var a = document.createElement('a');
-    a.href = url;
-    a.download = s.id + '-' + s.doctype.replace(/ /g,'-') + '-JP.html';
-    a.click();
+    a.href = url; a.download = s.id + '-JP.html'; a.click();
   }
   toast('PDF ready — use Print > Save as PDF');
 }
+
 
 async function doEmail() {
   var s = subs.find(function(x) { return x.id === activeId; });
