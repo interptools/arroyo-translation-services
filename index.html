@@ -313,6 +313,9 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
 <script>
 const JSONBIN_KEY = '$2a$10$fO/kBOQ1AEcGiT2YVcQQ0uNmSp/Jn5Lu10yYyEMy5UL6eXY0w4BNG';
 const JSONBIN_BIN = '6a4e1aecf5f4af5e29710ff9';
+const EMAILJS_SVC      = 'service_wog8mwj';
+const EMAILJS_TPL_NOTIF = 'template_3ifoszg';
+const EMAILJS_KEY      = 'XDm2wGz_tn8DOjWPw';
 
 
 var docFileData = null;
@@ -688,10 +691,12 @@ async function doSubmit() {
 
     // Step 3: Send email notification to you
     try {
-      await emailjs.init('XDm2wGz_tn8DOjWPw');
-      await emailjs.send('service_wog8mwj', 'template_5l2krhk', {
+      await emailjs.init(EMAILJS_KEY);
+      await emailjs.send(EMAILJS_SVC, EMAILJS_TPL_NOTIF, {
         to_email: 'areymar36@gmail.com',
         customer_name: name,
+        customer_email: email,
+        customer_phone: phone,
         doc_type: doctype,
         ref_no: submission.id,
         purpose: purpose || 'Not specified'
