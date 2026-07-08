@@ -440,19 +440,17 @@ async function doTranslate() {
     'Return the translation in a clean, professional format suitable for official use.';
 
   try {
-    var parts = [{text: prompt}];
-    if (s.docFile && s.docFile.data) {
-      parts.push({inline_data: {mime_type: 'image/jpeg', data: s.docFile.data}});
-    }
-
+    // Use text-only prompt (image causes 3030 errors with vision model)
     var r = await fetch(WORKER, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        contents: [{parts: parts}],
+        contents: [{parts: [{text: prompt}]}],
         generationConfig: {temperature: 0.2, maxOutputTokens: 2000}
       })
     });
+
+    if (!r.ok) throw new Error('Worker HTTP ' + r.status);
     var d = await r.json();
     if (d.error) throw new Error(d.error.message);
 
@@ -460,6 +458,7 @@ async function doTranslate() {
               d.candidates[0].content.parts && d.candidates[0].content.parts[0]
               ? d.candidates[0].content.parts[0].text : '';
     if (typeof raw !== 'string') raw = JSON.stringify(raw);
+    if (!raw) throw new Error('Empty response from AI');
 
     s.translation = raw;
     s.status = 'translated';
@@ -468,8 +467,8 @@ async function doTranslate() {
     render(); updateStats();
     toast('Translation complete: ' + s.name);
   } catch(e) {
-    tout.textContent = 'Translation error: ' + e.message;
-    toast('Translation failed');
+    tout.textContent = 'Translation error: ' + e.message + '\n\nPlease try again.';
+    toast('Translation failed: ' + e.message);
   }
   btn.disabled = false;
   btn.innerHTML = '⚡ Translate (AI)';
