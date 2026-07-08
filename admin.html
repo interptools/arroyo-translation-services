@@ -227,9 +227,24 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
         <button class="abtn abtn-pdf" id="b-pdf" onclick="doDownloadPDF()">↓ Download PDF</button>
         <button class="abtn abtn-email" id="b-email" onclick="doEmail()">✉ Email Customer</button>
         <button class="abtn abtn-edit" id="b-edit" onclick="toggleEdit()">✏ Edit Details</button>
+        <button class="abtn" id="b-edit-trans" onclick="toggleTranslationEditor()" style="background:#e0f2fe;color:#0369a1">✏ Edit Translation</button>
       </div>
 
       <div class="t-out" id="t-out"></div>
+
+      <!-- Translation Editor -->
+      <div id="translation-editor" style="display:none;margin-top:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:11px;font-weight:600;color:#1a2744;text-transform:uppercase;letter-spacing:1px">Edit Translation</span>
+          <div style="display:flex;gap:6px">
+            <button onclick="saveTranslation()" style="padding:6px 14px;background:#1a2744;color:#e8c97a;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Save</button>
+            <button onclick="closeTranslationEditor()" style="padding:6px 14px;background:#f0ede8;color:#6b7280;border:none;border-radius:6px;font-size:11px;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>
+          </div>
+        </div>
+        <textarea id="translation-textarea" style="width:100%;height:220px;padding:10px;border:1px solid #e5e0d8;border-radius:8px;font-size:11px;font-family:Noto Sans JP,sans-serif;color:#1a2744;background:#faf8f4;resize:vertical;line-height:1.6"></textarea>
+        <div style="font-size:10px;color:#6b7280;margin-top:4px">Edit the Japanese translation directly. Each line: Japanese label: English value / Japanese value</div>
+      </div>
+
       <div class="edit-panel" id="edit-panel">
         <h4>Edit Document Details</h4>
         <div class="edit-grid" id="edit-fields-grid"></div>
@@ -1146,6 +1161,41 @@ async function saveEdit() {
   document.getElementById('edit-panel').style.display = 'none';
   openModal(activeId);
   toast('Details updated for ' + s.name);
+}
+
+function toggleTranslationEditor() {
+  var s = subs.find(function(x) { return x.id === activeId; });
+  if (!s) return;
+  var editor = document.getElementById('translation-editor');
+  var isOpen = editor.style.display === 'block';
+  if (isOpen) { closeTranslationEditor(); return; }
+
+  // Close edit panel if open
+  document.getElementById('edit-panel').style.display = 'none';
+
+  var ta = document.getElementById('translation-textarea');
+  ta.value = s.translation || '';
+  editor.style.display = 'block';
+  ta.focus();
+}
+
+function closeTranslationEditor() {
+  document.getElementById('translation-editor').style.display = 'none';
+}
+
+async function saveTranslation() {
+  var s = subs.find(function(x) { return x.id === activeId; });
+  if (!s) return;
+  var ta = document.getElementById('translation-textarea');
+  s.translation = ta.value.trim();
+  if (s.translation) s.status = 'translated';
+  await saveSubs();
+  var tout = document.getElementById('t-out');
+  tout.textContent = s.translation;
+  tout.style.display = 'block';
+  closeTranslationEditor();
+  render(); updateStats();
+  toast('Translation updated for ' + s.name);
 }
 
 // Init
