@@ -592,9 +592,9 @@ function toggleSample() {
 }
 
 async function doSubmit() {
-  var name = document.getElementById('f-name').value.trim();
-  var email = document.getElementById('f-email').value.trim();
-  var phone = document.getElementById('f-phone').value.trim();
+  var name    = document.getElementById('f-name').value.trim();
+  var email   = document.getElementById('f-email').value.trim();
+  var phone   = document.getElementById('f-phone').value.trim();
   var doctype = document.getElementById('f-doctype').value;
 
   if (!name || !email || !phone || !doctype) {
@@ -609,20 +609,15 @@ async function doSubmit() {
   var fields = DOC_FIELDS[doctype] || [];
   var fieldData = {};
   var purpose = '';
-  var allFilled = true;
   fields.forEach(function(f) {
     var el = document.getElementById(f.id);
     var val = el ? el.value.trim() : '';
     fieldData[f.id] = val;
     if (f.id === 'purpose') purpose = val;
-    if (!val) allFilled = false;
   });
 
-  if (!allFilled) {
-    if (!confirm('Some document details are not filled in. Submit anyway?')) return;
-  }
-
-  if (!proofFileData) {
+  var proofFile = document.getElementById('f-proof').files[0];
+  if (!proofFile) {
     alert('Please upload your GCash payment screenshot in section 5.');
     return;
   }
@@ -632,13 +627,12 @@ async function doSubmit() {
   btn.textContent = 'Submitting...';
 
   try {
-    var proofFile = document.getElementById('f-proof').files[0];
-    if (proofFile && !proofFileData) {
+    // Convert proof to base64
+    if (!proofFileData) {
       proofFileData = await toBase64(proofFile);
     }
 
-    // Store metadata only (images too large for JSONBin free tier)
-    // Admin sees document type and fields; customer uploads are referenced by name
+    // Build submission — keep images small to fit JSONBin 100KB limit
     var submission = {
       id: genId(),
       name: name,
@@ -649,58 +643,83 @@ async function doSubmit() {
       fields: fieldData,
       date: new Date().toLocaleString('en-PH', {timeZone: 'Asia/Manila'}),
       status: 'pending',
-      docFile: {name: document.getElementById('f-doc').files[0].name, data: docFileData.slice(0, 50000)},
-      proofFile: {name: proofFile ? proofFile.name : '', data: proofFileData ? proofFileData.slice(0, 50000) : ''},
+      docFile: {
+        name: document.getElementById('f-doc').files[0].name,
+        data: docFileData ? docFileData.slice(0, 20000) : ''
+      },
+      proofFile: {
+        name: proofFile.name,
+        data: proofFileData ? proofFileData.slice(0, 20000) : ''
+      },
       translation: ''
     };
 
+    // Step 1: Get current submissions
     var getRes = await fetch('https://api.jsonbin.io/v3/b/' + JSONBIN_BIN + '/latest', {
       headers: {'X-Master-Key': JSONBIN_KEY}
     });
-    var current = await getRes.json();
-    var subs = current.record && current.record.submissions ? current.record.submissions : [];
+
+    var subs = [];
+    if (getRes.ok) {
+      var current = await getRes.json();
+      subs = (current.record && current.record.submissions) ? current.record.submissions : [];
+    }
+
+    // Add new submission at top
     subs.unshift(submission);
 
-    await fetch('https://api.jsonbin.io/v3/b/' + JSONBIN_BIN, {
+    // Keep only last 30 to stay under size limit
+    if (subs.length > 30) subs = subs.slice(0, 30);
+
+    // Step 2: Save to JSONBin
+    var putRes = await fetch('https://api.jsonbin.io/v3/b/' + JSONBIN_BIN, {
       method: 'PUT',
-      headers: {'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_KEY},
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': JSONBIN_KEY
+      },
       body: JSON.stringify({submissions: subs})
     });
 
-    document.querySelectorAll('.card-section').forEach(function(s) { s.style.display = 'none'; });
+    if (!putRes.ok) {
+      var errText = await putRes.text();
+      throw new Error('Save failed (' + putRes.status + '): ' + errText.slice(0, 100));
+    }
+
+    // Step 3: Send email notification to you
+    try {
+      await emailjs.init('XDm2wGz_tn8DOjWPw');
+      await emailjs.send('service_wog8mwj', 'template_5l2krhk', {
+        to_email: 'areymar36@gmail.com',
+        customer_name: name,
+        doc_type: doctype,
+        ref_no: submission.id,
+        purpose: purpose || 'Not specified'
+      });
+    } catch(emailErr) {
+      console.log('Email notification failed:', emailErr);
+      // Don't block submission if email fails
+    }
+
+    // Step 4: Show success
+    document.querySelectorAll('.card-section').forEach(function(s) {
+      s.style.display = 'none';
+    });
     document.getElementById('success-screen').style.display = 'block';
     document.getElementById('confirm-email').textContent = email;
-    document.querySelectorAll('.step-num').forEach(function(el) { el.classList.remove('active'); el.classList.add('done'); });
+    document.querySelectorAll('.step-num').forEach(function(el) {
+      el.classList.remove('active');
+      el.classList.add('done');
+    });
 
   } catch(e) {
+    console.error('Submit error:', e);
     btn.disabled = false;
     btn.textContent = 'Submit request';
     alert('Submission failed: ' + (e.message || 'Please check your connection and try again.'));
   }
 }
-
-function openQR() {
-  var modal = document.getElementById('qr-modal');
-  modal.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-}
-function closeQR() {
-  var modal = document.getElementById('qr-modal');
-  modal.style.display = 'none';
-  document.body.style.overflow = '';
-}
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeQR();
-});
-
-setStep(1);
-
-document.getElementById('f-doctype').addEventListener('change', function() {
-  var name = document.getElementById('f-name').value.trim();
-  var email = document.getElementById('f-email').value.trim();
-  var phone = document.getElementById('f-phone').value.trim();
-  if (name && email && phone && this.value) setStep(2);
-});
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </body>
 </html>
