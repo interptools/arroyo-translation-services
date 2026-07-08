@@ -747,23 +747,57 @@ function doDownloadPDF() {
     }
   });
 
+  // Month names for date conversion
+  var monthJP = ['','1','2','3','4','5','6','7','8','9','10','11','12'];
+
   // Helper to get JP translation
   function getJP(fieldId, enVal) {
-    // Try direct map
+    if (!enVal) return '';
+    // Try AI translation map first
     if (jpMap[fieldId]) return jpMap[fieldId];
-    // Common translations
+
+    // Date YYYY-MM-DD → Japanese
+    if (enVal.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      var p = enVal.split('-');
+      return p[0] + '年' + parseInt(p[1]) + '月' + parseInt(p[2]) + '日';
+    }
+
+    // Common value translations
     var common = {
-      'Male':'男性','Female':'女性','Filipino':'フィリピン国籍',
-      'Roman Catholic':'ローマ・カトリック','Single':'未婚','Married':'既婚',
-      'Widowed':'寡婦','Seventh':'第七子','7th Child':'第7子',
-      'Philippine Statistics Authority (PSA)':'フィリピン統計局（PSA）'
+      'Male':'男性','Female':'女性',
+      'Filipino':'フィリピン国籍','Philippines':'フィリピン',
+      'Roman Catholic':'ローマ・カトリック','Catholic':'カトリック',
+      'Single':'未婚','Married':'既婚','Widowed':'寡婦/鰥夫','Separated':'別居',
+      'Annulled':'婚姻無効',
+      '1st Child':'第1子','2nd Child':'第2子','3rd Child':'第3子',
+      '4th Child':'第4子','5th Child':'第5子','6th Child':'第6子',
+      '7th Child':'第7子','8th Child':'第8子',
+      'First':'第1子','Second':'第2子','Third':'第3子','Fourth':'第4子',
+      'Fifth':'第5子','Sixth':'第6子','Seventh':'第7子','Eighth':'第8子',
+      'Housekeeper':'主婦','Housewife':'主婦','Farmer':'農業','Carpenter':'大工',
+      'Teacher':'教師','Student':'学生','Engineer':'エンジニア',
+      'Driver':'運転手','Nurse':'看護師','Doctor':'医師',
+      'Businessman':'実業家','Retired':'退職者','Unemployed':'無職',
+      'Natural':'自然死','Accident':'事故死','Homicide':'他殺','Suicide':'自殺',
+      'Philippine Statistics Authority (PSA)':'フィリピン統計局（PSA）',
+      'NO MARRIAGE RECORD FOUND':'婚姻記録なし',
+      'NO BIRTH RECORD FOUND':'出生記録なし',
+      'NO DEATH RECORD FOUND':'死亡記録なし',
     };
     if (common[enVal]) return common[enVal];
-    // Date conversion
-    if (enVal && enVal.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      var parts = enVal.split('-');
-      return parts[0] + '年' + parseInt(parts[1]) + '月' + parseInt(parts[2]) + '日';
-    }
+
+    // Place names - add katakana for common Philippine places
+    var places = {
+      'Manila':'マニラ市','Bato':'バト','Camarines Sur':'カマリネス・スール州',
+      'Bato, Camarines Sur':'カマリネス・スール州バト',
+      'Quezon City':'ケソン市','Cebu City':'セブ市','Davao City':'ダバオ市',
+      'Iloilo City':'イロイロ市','Batangas City':'バタンガス市',
+      'Metro Manila':'メトロ・マニラ',
+    };
+    if (places[enVal]) return places[enVal];
+
+    // For names - convert to katakana approximation
+    // Just return empty and let the AI translation handle it
     return '';
   }
 
@@ -779,10 +813,10 @@ function doDownloadPDF() {
       sectionsHtml += '<div class="field-row">' +
         '<div class="field-num">' + (field.num || '') + '</div>' +
         '<div class="field-content">' +
-          '<div class="field-label-en">' + field.en + '</div>' +
           '<div class="field-label-jp">' + field.jp + '</div>' +
+          '<div class="field-val-jp">' + (jpVal || '<span style="color:#ccc">—</span>') + '</div>' +
+          '<div class="field-label-en">' + field.en + '</div>' +
           '<div class="field-val-en">' + enVal + '</div>' +
-          '<div class="field-val-jp">' + (jpVal || '—') + '</div>' +
         '</div>' +
       '</div>';
     });
