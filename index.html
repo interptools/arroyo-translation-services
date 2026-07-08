@@ -295,7 +295,7 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
 <script>
 const JSONBIN_KEY = '$2a$10$fO/kBOQ1AEcGiT2YVcQQ0uNmSp/Jn5Lu10yYyEMy5UL6eXY0w4BNG';
 const JSONBIN_BIN = '6886f800acd3cb34a8ea3bcb';
-const GEMINI_KEY = 'AIzaSyAb8RN6IVFTZt0UKBFMqYCzO6RP2J-3XWp5Kp88vvXu3rdLP17Q';
+const GEMINI_KEY = 'AQ.Ab8RN6KKGXZ0qDSY4L61sUK-cCf5WRL0qCKieAu3sQ2nR44kpQ';
 
 var docFileData = null;
 var proofFileData = null;
@@ -504,10 +504,10 @@ async function onDocUpload(input) {
       'Return ONLY a raw JSON object. No markdown. No backticks. No explanation.';
 
     var res = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + GEMINI_KEY,
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
       {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json', 'x-goog-api-key': GEMINI_KEY},
         body: JSON.stringify({
           contents: [{
             role: 'user',
