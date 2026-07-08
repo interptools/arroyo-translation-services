@@ -207,6 +207,125 @@
     </div>
 
     <div class="card-section">
+      <div class="sec-title" style="cursor:pointer;user-select:none" onclick="togglePreview()">
+        <span style="background:var(--navy);color:var(--goldl);width:20px;height:20px;border-radius:50%;font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">?</span>
+        Sample translation output preview
+        <span id="preview-arrow" style="margin-left:auto;font-size:14px;color:var(--muted);transition:transform .3s">&#9660;</span>
+      </div>
+      <div id="preview-box" style="display:none;margin-top:4px">
+        <p style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.6">
+          This is a sample of what your translated document will look like. Your actual translation will contain your real document details.
+        </p>
+        <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;font-size:11px;font-family:sans-serif">
+
+          <!-- Sample header -->
+          <div style="background:#faf8f0;padding:10px 14px;border-bottom:1px solid var(--border);text-align:center">
+            <div style="font-size:7px;color:#888;margin-bottom:2px">REPUBLIKA NG PILIPINAS / REPUBLIC OF THE PHILIPPINES</div>
+            <div style="font-size:14px;font-weight:600;color:#1a2744;margin-bottom:1px">出生証明書</div>
+            <div style="font-size:8px;color:#888">CERTIFICATE OF LIVE BIRTH — Japanese Translation</div>
+          </div>
+
+          <!-- Ref row -->
+          <div style="background:#faf8f0;padding:5px 14px;border-bottom:2px solid #c9a84c;display:flex;justify-content:space-between">
+            <span style="font-size:8px;color:#888">登録番号 / Registry No.: SAMPLE-0001</span>
+            <span style="font-size:8px;color:#888">翻訳日 / Date: July 8, 2025</span>
+          </div>
+
+          <!-- Section A -->
+          <div style="background:#1a2744;padding:4px 10px">
+            <span style="color:#fff;font-size:8px">A. CHILD INFORMATION / 子の情報</span>
+          </div>
+          <div style="background:#f5f5dc;padding:6px 10px;border-bottom:1px solid #ddd">
+            <div style="font-size:7px;color:#888">1. Name / 氏名</div>
+            <div style="font-size:9px;color:#1a2744;font-weight:500">JUAN DELA CRUZ SANTOS</div>
+            <div style="font-size:9px;color:#333">フアン・デラ・クルス・サントス</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;background:#f5f5dc;border-bottom:1px solid #ddd">
+            <div style="padding:6px 10px;border-right:1px solid #ddd">
+              <div style="font-size:7px;color:#888">2. Sex / 性別</div>
+              <div style="font-size:9px;color:#1a2744;font-weight:500">Male</div>
+              <div style="font-size:9px;color:#333">男性</div>
+            </div>
+            <div style="padding:6px 10px;border-right:1px solid #ddd">
+              <div style="font-size:7px;color:#888">3. Date of Birth / 生年月日</div>
+              <div style="font-size:9px;color:#1a2744;font-weight:500">April 22, 1993</div>
+              <div style="font-size:9px;color:#333">1993年4月22日</div>
+            </div>
+            <div style="padding:6px 10px">
+              <div style="font-size:7px;color:#888">4. Place of Birth / 出生地</div>
+              <div style="font-size:9px;color:#1a2744;font-weight:500">Manila City</div>
+              <div style="font-size:9px;color:#333">マニラ市</div>
+            </div>
+          </div>
+
+          <!-- Section B -->
+          <div style="background:#1a2744;padding:4px 10px">
+            <span style="color:#fff;font-size:8px">B. MOTHER'S INFORMATION / 母の情報</span>
+          </div>
+          <div style="background:#f5f5dc;padding:6px 10px;border-bottom:1px solid #ddd">
+            <div style="font-size:7px;color:#888">6. Mother Maiden Name / 母の旧姓</div>
+            <div style="font-size:9px;color:#1a2744;font-weight:500">MARIA REYES DELA CRUZ</div>
+            <div style="font-size:9px;color:#333">マリア・レイエス・デラ・クルス</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;background:#f5f5dc;border-bottom:1px solid #ddd">
+            <div style="padding:6px 10px;border-right:1px solid #ddd">
+              <div style="font-size:7px;color:#888">7. Citizenship / 国籍</div>
+              <div style="font-size:9px;color:#1a2744;font-weight:500">Filipino</div>
+              <div style="font-size:9px;color:#333">フィリピン国籍</div>
+            </div>
+            <div style="padding:6px 10px;border-right:1px solid #ddd">
+              <div style="font-size:7px;color:#888">8. Religion / 宗教</div>
+              <div style="font-size:9px;color:#1a2744;font-weight:500">Roman Catholic</div>
+              <div style="font-size:9px;color:#333">ローマ・カトリック</div>
+            </div>
+            <div style="padding:6px 10px">
+              <div style="font-size:7px;color:#888">Occupation / 職業</div>
+              <div style="font-size:9px;color:#1a2744;font-weight:500">Teacher</div>
+              <div style="font-size:9px;color:#333">教師</div>
+            </div>
+          </div>
+
+          <!-- Section C -->
+          <div style="background:#1a2744;padding:4px 10px">
+            <span style="color:#fff;font-size:8px">C. FATHER'S INFORMATION / 父の情報</span>
+          </div>
+          <div style="background:#f5f5dc;padding:6px 10px;border-bottom:1px solid #ddd">
+            <div style="font-size:7px;color:#888">9. Father Name / 父の氏名</div>
+            <div style="font-size:9px;color:#1a2744;font-weight:500">PEDRO SANTOS REYES</div>
+            <div style="font-size:9px;color:#333">ペドロ・サントス・レイエス</div>
+          </div>
+
+          <!-- Section D -->
+          <div style="background:#1a2744;padding:4px 10px">
+            <span style="color:#fff;font-size:8px">D. REGISTRATION INFORMATION / 登録情報</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;background:#f5f5dc">
+            <div style="padding:6px 10px;border-right:1px solid #ddd">
+              <div style="font-size:7px;color:#888">Registry No. / 登録番号</div>
+              <div style="font-size:9px;color:#1a2744;font-weight:500">SAMPLE-0001</div>
+            </div>
+            <div style="padding:6px 10px;border-right:1px solid #ddd">
+              <div style="font-size:7px;color:#888">Date Registered / 登録日</div>
+              <div style="font-size:9px;color:#1a2744;font-weight:500">May 4, 1993</div>
+              <div style="font-size:9px;color:#333">1993年5月4日</div>
+            </div>
+            <div style="padding:6px 10px">
+              <div style="font-size:7px;color:#888">Issuing Authority / 発行機関</div>
+              <div style="font-size:9px;color:#1a2744;font-weight:500">PSA</div>
+              <div style="font-size:9px;color:#333">フィリピン統計局</div>
+            </div>
+          </div>
+
+          <!-- Watermark notice -->
+          <div style="background:#fffbeb;border-top:1px solid #fde68a;padding:8px 10px;text-align:center">
+            <span style="font-size:9px;color:#92400e;font-weight:600">SAMPLE ONLY — Your actual translation will contain your real document details</span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="card-section">
       <div class="disclaimer">
         <strong>Accepted use:</strong> This translation is suitable for Japanese visa applications and marriage registration at a Japanese municipal office (役所). It is NOT valid for court proceedings or notarized legal submissions. For such purposes, please consult a certified legal translator.
       </div>
@@ -435,30 +554,111 @@ async function handleDocUpload(input) {
 
     const fieldList = (DOC_FIELDS[doctype] || []).map(f => `- ${f.label} (field id: ${f.id})`).join('\n');
 
-    const prompt = `You are an expert at reading PSA (Philippine Statistics Authority) civil registry documents. 
-Carefully read this ${doctype} document image and extract all visible information.
+    const docTips = {
+      'Birth Certificate': `
+- Child name is in section 1 (First, Middle, Last columns)
+- Sex: look for X mark next to Male or Female checkbox
+- Date of birth split into Day/Month/Year boxes
+- Place of birth: Name of Hospital/Institution or street/barangay, then City/Municipality, Province
+- Birth order: look for "Single/Twin/etc" checkbox and "1st/2nd/etc" 
+- Mother info in sections 6-8 (Maiden First, Middle, Last name)
+- Father info in sections 9-11
+- Registry number top right (e.g. 93-628)
+- Registration date near bottom prepared/received section`,
 
-Return ONLY a valid JSON object with these exact field IDs as keys:
+      'Marriage Certificate': `
+- Husband name in section 1 (First, Middle, Last)
+- Wife name in section 7 (First, Middle, Last - use maiden name)
+- Date of marriage in section 3
+- Place of marriage: church/venue name, city, province
+- Solemnizing officer name and title
+- Both ages, citizenships, religions in their respective sections
+- Registry number top right`,
+
+      'Death Certificate': `
+- Deceased name in section 1 (First, Middle, Last)
+- Sex: X mark checkbox
+- Date of birth and date of death in separate sections
+- Place of death: hospital/address, city, province
+- Cause of death in medical certificate section (usually section 19)
+- Attending physician name
+- Civil status: look for checkbox (Single/Married/Widowed/Separated)
+- Occupation in section labeled "usual occupation"`,
+
+      'CENOMAR': `
+- Applicant name prominently displayed
+- Date of birth and place of birth
+- This is a certification document - look for "NO MARRIAGE RECORD" text
+- Reference/control number at top or bottom
+- Date of issuance at bottom
+- Issued by PSA office location`,
+
+      'Advisory on Marriages': `
+- Subject name at top of document
+- Date and place of birth
+- Marriage records listed in table format (if any found)
+- Each record shows: spouse name, date of marriage, place
+- Current status of each marriage (valid/annulled/etc)
+- Number of marriages found
+- Date of issuance and reference number`,
+
+      'Certificate of No Birth Record': `
+- Subject name prominently displayed
+- Date of birth and place of birth of the subject
+- Father and mother names listed
+- "NO BIRTH RECORD" certification text
+- Reference number and date of issuance
+- Issued by PSA office`,
+
+      'Certificate of No Death Record': `
+- Subject name prominently displayed  
+- Date of birth and place of birth
+- "NO DEATH RECORD" certification text
+- Reference number and date of issuance
+- Issued by PSA office`
+    };
+
+    const prompt = `You are an expert forensic document reader specializing in Philippine PSA (Philippine Statistics Authority) civil registry documents. These documents may be old, yellowed, handwritten, stamped, or partially faded.
+
+Your task: Carefully read this ${doctype} image and extract all visible field values.
+
+GENERAL PSA DOCUMENT READING RULES:
+- Names are in ALL CAPS, handwritten or typewritten
+- Fields are in numbered boxes/sections
+- Dates may be written as "April 22, 1993" or split across Day/Month/Year boxes - combine them
+- Reconstruct full names as: First Middle Last
+- Province and City/Municipality usually at the top
+- Registry/reference numbers usually top right or bottom
+- Some text may be faded - make your best reading attempt
+- Handwritten entries may be in cursive - read carefully
+- Ignore stamps, barcodes, signatures, and official seals
+- Security paper watermarks should be ignored
+
+SPECIFIC TIPS FOR ${doctype}:
+${docTips[doctype] || '- Read all visible fields carefully and extract relevant information'}
+
+Fields to extract (return as JSON with these exact keys):
 ${fieldList}
 
-Rules:
-- Use exact text from the document
-- For dates use format: YYYY-MM-DD
+Strict output rules:
+- For dates always use format: YYYY-MM-DD
 - For sex use exactly: Male or Female
-- If a field is not visible or not applicable, use empty string ""
-- Return ONLY the JSON object, no explanation, no markdown
+- For civil status use: Single, Married, Widowed, or Separated
+- If genuinely unreadable use empty string ""
+- Return ONLY raw JSON object, no markdown, no backticks, no explanation
 
-Example format: {"child_name":"Juan dela Cruz","child_dob":"1990-03-15",...}`;
+Example format: {"child_name":"REYMAR B ARROYO","child_dob":"1993-04-22","child_pob":"Bato, Camarines Sur","child_sex":"Male"}`;
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 1000,
+        max_tokens: 1500,
         messages: [{
           role: 'user',
           content: [
+            { type: 'text', text: 'I am uploading a PSA civil registry document. Please read it very carefully, including any handwritten, faded, or stamped text.' },
             { type: 'image', source: { type: 'base64', media_type: mediaType, data: b64 } },
             { type: 'text', text: prompt }
           ]
@@ -506,6 +706,14 @@ function setStep(n) {
     if (i < n) el.classList.add('done');
     else if (i === n) el.classList.add('active');
   }
+}
+
+function togglePreview() {
+  const box = document.getElementById('preview-box');
+  const arrow = document.getElementById('preview-arrow');
+  const open = box.style.display === 'block';
+  box.style.display = open ? 'none' : 'block';
+  arrow.style.transform = open ? '' : 'rotate(180deg)';
 }
 
 function genId() {
