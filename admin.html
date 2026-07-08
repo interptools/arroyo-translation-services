@@ -597,6 +597,7 @@ function doDownloadPDF() {
           {num:'', en:'Registry Number', jp:'登録番号', id:'reg_number'},
           {num:'', en:'Date of Registration', jp:'登録日', id:'reg_date'},
           {num:'', en:'Issuing Authority', jp:'発行機関', val:'Philippine Statistics Authority (PSA)', jpval:'フィリピン統計局（PSA）'},
+          {num:'', en:'Purpose of Translation', jp:'翻訳目的', id:'purpose'},
         ]},
       ]
     },
@@ -627,6 +628,7 @@ function doDownloadPDF() {
         { label: 'D', en: 'REGISTRATION INFORMATION', jp: '登録情報', fields: [
           {num:'', en:'Registry Number', jp:'登録番号', id:'reg_number'},
           {num:'', en:'Issuing Authority', jp:'発行機関', val:'Philippine Statistics Authority (PSA)', jpval:'フィリピン統計局（PSA）'},
+          {num:'', en:'Purpose of Translation', jp:'翻訳目的', id:'purpose'},
         ]},
       ]
     },
@@ -654,6 +656,7 @@ function doDownloadPDF() {
         { label: 'D', en: 'REGISTRATION INFORMATION', jp: '登録情報', fields: [
           {num:'', en:'Registry Number', jp:'登録番号', id:'reg_number'},
           {num:'', en:'Issuing Authority', jp:'発行機関', val:'Philippine Statistics Authority (PSA)', jpval:'フィリピン統計局（PSA）'},
+          {num:'', en:'Purpose of Translation', jp:'翻訳目的', id:'purpose'},
         ]},
       ]
     },
@@ -672,6 +675,7 @@ function doDownloadPDF() {
           {num:'7', en:'Date of Issuance', jp:'発行日', id:'issuance_date'},
           {num:'8', en:'Reference Number', jp:'参照番号', id:'ref_number'},
           {num:'', en:'Issuing Authority', jp:'発行機関', val:'Philippine Statistics Authority (PSA)', jpval:'フィリピン統計局（PSA）'},
+          {num:'', en:'Purpose of Translation', jp:'翻訳目的', id:'purpose'},
         ]},
       ]
     },
@@ -693,6 +697,7 @@ function doDownloadPDF() {
         { label: 'C', en: 'ISSUANCE INFORMATION', jp: '発行情報', fields: [
           {num:'', en:'Date of Issuance', jp:'発行日', id:'issuance_date'},
           {num:'', en:'Issuing Authority', jp:'発行機関', val:'Philippine Statistics Authority (PSA)', jpval:'フィリピン統計局（PSA）'},
+          {num:'', en:'Purpose of Translation', jp:'翻訳目的', id:'purpose'},
         ]},
       ]
     },
@@ -714,6 +719,7 @@ function doDownloadPDF() {
           {num:'8', en:'Date of Issuance', jp:'発行日', id:'issuance_date'},
           {num:'9', en:'Reference Number', jp:'参照番号', id:'ref_number'},
           {num:'', en:'Issuing Authority', jp:'発行機関', val:'Philippine Statistics Authority (PSA)', jpval:'フィリピン統計局（PSA）'},
+          {num:'', en:'Purpose of Translation', jp:'翻訳目的', id:'purpose'},
         ]},
       ]
     },
@@ -731,6 +737,7 @@ function doDownloadPDF() {
           {num:'6', en:'Date of Issuance', jp:'発行日', id:'issuance_date'},
           {num:'7', en:'Reference Number', jp:'参照番号', id:'ref_number'},
           {num:'', en:'Issuing Authority', jp:'発行機関', val:'Philippine Statistics Authority (PSA)', jpval:'フィリピン統計局（PSA）'},
+          {num:'', en:'Purpose of Translation', jp:'翻訳目的', id:'purpose'},
         ]},
       ]
     }
@@ -868,22 +875,76 @@ function doDownloadPDF() {
   var sectionsHtml = '';
   config.sections.forEach(function(sec) {
     sectionsHtml += '<div class="sec-hdr">' + sec.label + '.&nbsp;&nbsp;' + sec.en + '&nbsp;&nbsp;/&nbsp;&nbsp;' + sec.jp + '</div>';
-    sectionsHtml += '<div class="sec-body' + (sec.twoCol ? ' two-col' : '') + '">';
-    sec.fields.forEach(function(field) {
+    
+    // Filter out empty fields
+    var visibleFields = sec.fields.filter(function(field) {
       var enVal = field.val || (field.id ? (f[field.id] || '') : '');
-      var jpVal = field.jpval || getJP(field.id || '', enVal);
-      if (!enVal) return;
-      sectionsHtml += '<div class="field-row">' +
-        '<div class="field-num">' + (field.num || '') + '</div>' +
-        '<div class="field-content">' +
-          '<div class="field-label-jp">' + field.jp + '</div>' +
-          '<div class="field-val-jp">' + (jpVal || '<span style="color:#ccc">—</span>') + '</div>' +
-          '<div class="field-label-en">' + field.en + '</div>' +
-          '<div class="field-val-en">' + enVal + '</div>' +
-        '</div>' +
-      '</div>';
+      return !!enVal;
     });
-    sectionsHtml += '</div>';
+
+    if (sec.twoCol) {
+      // Two-column: split fields into left and right halves
+      var half = Math.ceil(visibleFields.length / 2);
+      var leftFields = visibleFields.slice(0, half);
+      var rightFields = visibleFields.slice(half);
+      sectionsHtml += '<div style="display:grid;grid-template-columns:1fr 1fr;border:1px solid #ddd;border-top:none">';
+      
+      // Left column
+      sectionsHtml += '<div style="border-right:1px solid #ddd">';
+      leftFields.forEach(function(field, idx) {
+        var enVal = field.val || (field.id ? (f[field.id] || '') : '');
+        var jpVal = field.jpval || getJP(field.id || '', enVal);
+        var bg = idx % 2 === 0 ? '#f5f5dc' : '#efedde';
+        sectionsHtml += '<div class="field-row" style="background:' + bg + '">' +
+          '<div class="field-num">' + (field.num || '') + '</div>' +
+          '<div class="field-content">' +
+            '<div class="field-label-jp">' + field.jp + '</div>' +
+            '<div class="field-val-jp">' + (jpVal || '<span style="color:#ccc">—</span>') + '</div>' +
+            '<div class="field-label-en">' + field.en + '</div>' +
+            '<div class="field-val-en">' + enVal + '</div>' +
+          '</div>' +
+        '</div>';
+      });
+      sectionsHtml += '</div>';
+      
+      // Right column
+      sectionsHtml += '<div>';
+      rightFields.forEach(function(field, idx) {
+        var enVal = field.val || (field.id ? (f[field.id] || '') : '');
+        var jpVal = field.jpval || getJP(field.id || '', enVal);
+        var bg = idx % 2 === 0 ? '#f5f5dc' : '#efedde';
+        sectionsHtml += '<div class="field-row" style="background:' + bg + '">' +
+          '<div class="field-num">' + (field.num || '') + '</div>' +
+          '<div class="field-content">' +
+            '<div class="field-label-jp">' + field.jp + '</div>' +
+            '<div class="field-val-jp">' + (jpVal || '<span style="color:#ccc">—</span>') + '</div>' +
+            '<div class="field-label-en">' + field.en + '</div>' +
+            '<div class="field-val-en">' + enVal + '</div>' +
+          '</div>' +
+        '</div>';
+      });
+      sectionsHtml += '</div>';
+      sectionsHtml += '</div>';
+
+    } else {
+      // Single column
+      sectionsHtml += '<div class="sec-body">';
+      visibleFields.forEach(function(field, idx) {
+        var enVal = field.val || (field.id ? (f[field.id] || '') : '');
+        var jpVal = field.jpval || getJP(field.id || '', enVal);
+        var bg = idx % 2 === 0 ? '#f5f5dc' : '#efedde';
+        sectionsHtml += '<div class="field-row" style="background:' + bg + '">' +
+          '<div class="field-num">' + (field.num || '') + '</div>' +
+          '<div class="field-content">' +
+            '<div class="field-label-jp">' + field.jp + '</div>' +
+            '<div class="field-val-jp">' + (jpVal || '<span style="color:#ccc">—</span>') + '</div>' +
+            '<div class="field-label-en">' + field.en + '</div>' +
+            '<div class="field-val-en">' + enVal + '</div>' +
+          '</div>' +
+        '</div>';
+      });
+      sectionsHtml += '</div>';
+    }
   });
 
   var docHtml = '<!DOCTYPE html><html lang="ja"><head>' +
@@ -900,6 +961,7 @@ function doDownloadPDF() {
     '.gold-line{border:none;border-top:1.5px solid #c9a84c;margin:4px 0}' +
     '.ref-row{display:flex;justify-content:space-between;font-size:7.5px;color:#888;margin-bottom:6px}' +
     '.sec-hdr{background:#1a2744;color:#fff;padding:4px 10px;font-size:8.5px;font-weight:700;letter-spacing:0.5px;margin-top:5px}' +
+    '.page-content{padding:8px 20px}' +
     '.sec-body{border:1px solid #ddd;border-top:none}' +'.sec-body.two-col{display:grid;grid-template-columns:1fr 1fr}' +
     '.field-row{display:flex;border-bottom:1px solid #eee;background:#f5f5dc;min-height:auto}' +
     '.field-row:nth-child(even){background:#efedde}' +
@@ -919,15 +981,19 @@ function doDownloadPDF() {
     '}' +
     '</style></head><body>' +
     '<div class="page">' +
-    '<div class="top-label">REPUBLIKA NG PILIPINAS / REPUBLIC OF THE PHILIPPINES</div>' +
-    '<div class="jp-title">' + config.jpTitle + '</div>' +
-    '<div class="en-title">' + s.doctype.toUpperCase() + ' &mdash; Japanese Translation</div>' +
-    '<hr class="gold-line">' +
-    '<div class="ref-row">' +
+    '<div style="background:#1a2744;padding:10px 20px;text-align:center">' +
+    '<div style="font-size:7.5px;color:rgba(255,255,255,0.5);letter-spacing:1px;margin-bottom:2px">REPUBLIKA NG PILIPINAS / REPUBLIC OF THE PHILIPPINES</div>' +
+    '<div style="font-size:20px;font-weight:700;color:#e8c97a;margin-bottom:1px">' + config.jpTitle + '</div>' +
+    '<div style="font-size:9px;color:rgba(255,255,255,0.5);letter-spacing:1px">' + s.doctype.toUpperCase() + ' &mdash; Japanese Translation</div>' +
+    '</div>' +
+    '<div style="padding:8px 20px">' +
+    '<div style="display:flex;justify-content:space-between;font-size:7.5px;color:#888;margin-bottom:4px;padding-bottom:4px;border-bottom:1.5px solid #c9a84c">' +
     '<span>登録番号 / Registry No.: ' + (f.reg_number || f.ref_number || '—') + '</span>' +
     '<span>翻訳日 / Date: ' + today + '</span>' +
     '</div>' +
     sectionsHtml +
+    '</div>' +
+    '<div style="padding:0 20px 10px">' +
     '<div class="cert-box">' +
     '本翻訳は、フィリピン統計局（PSA）が発行した原文書（' + config.jpTitle + '）を忠実に日本語に翻訳したものです。翻訳者はその正確性について責任を負います。<br><br>' +
     'This is a faithful Japanese translation of the original ' + s.doctype + ' issued by the Philippine Statistics Authority (PSA). The translator certifies the accuracy of this translation.' +
@@ -935,6 +1001,7 @@ function doDownloadPDF() {
     '<div class="disc-box">' +
     'ACCEPTED USE: Suitable for Japanese visa applications and marriage registration at a Japanese municipal office (役所). NOT valid for court proceedings or notarized legal submissions.<br>' +
     '【ご注意】本翻訳は日本のビザ申請・市区町村役所への婚姻届に適しています。裁判手続きや公証が必要な法的書類には使用できません。' +
+    '</div>' +
     '</div>' +
     '</div>' +
     '<script>window.onload=function(){window.print();}<\/script>' +
