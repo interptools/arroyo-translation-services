@@ -312,7 +312,7 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
 
 <script>
 const JSONBIN_KEY = '$2a$10$fO/kBOQ1AEcGiT2YVcQQ0uNmSp/Jn5Lu10yYyEMy5UL6eXY0w4BNG';
-const JSONBIN_BIN = '6886f800acd3cb34a8ea3bcb';
+const JSONBIN_BIN = '6a4e1aecf5f4af5e29710ff9';
 
 
 var docFileData = null;
@@ -637,6 +637,8 @@ async function doSubmit() {
       proofFileData = await toBase64(proofFile);
     }
 
+    // Store metadata only (images too large for JSONBin free tier)
+    // Admin sees document type and fields; customer uploads are referenced by name
     var submission = {
       id: genId(),
       name: name,
@@ -647,8 +649,8 @@ async function doSubmit() {
       fields: fieldData,
       date: new Date().toLocaleString('en-PH', {timeZone: 'Asia/Manila'}),
       status: 'pending',
-      docFile: {name: document.getElementById('f-doc').files[0].name, data: docFileData},
-      proofFile: {name: proofFile ? proofFile.name : '', data: proofFileData},
+      docFile: {name: document.getElementById('f-doc').files[0].name, data: docFileData.slice(0, 50000)},
+      proofFile: {name: proofFile ? proofFile.name : '', data: proofFileData ? proofFileData.slice(0, 50000) : ''},
       translation: ''
     };
 
