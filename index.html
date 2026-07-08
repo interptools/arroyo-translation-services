@@ -94,9 +94,6 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
 @keyframes spin{to{transform:rotate(360deg)}}
 @media(max-width:500px){.row2{grid-template-columns:1fr}.gcash-wrap{flex-direction:column;align-items:center}.card-section{padding:16px 14px}}
 </style>
-<script type="importmap">
-{"imports":{"@google/generative-ai":"https://esm.sh/@google/generative-ai"}}
-</script>
 </head>
 <body>
 
@@ -319,7 +316,7 @@ const JSONBIN_BIN = '6886f800acd3cb34a8ea3bcb';
 
 
 var docFileData = null;
-const GEMINI_KEY = 'AQ.Ab8RN6KKGXZ0qDSY4L61sUK-cCf5WRL0qCKieAu3sQ2nR44kpQ';
+
 var proofFileData = null;
 
 const DOC_FIELDS = {
@@ -503,13 +500,12 @@ async function onDocUpload(input) {
   try {
     var fields = DOC_FIELDS[doctype] || [];
     var fieldIds = fields.map(function(f){ return f.id; }).join(', ');
-
     var tips = {
-      'Birth Certificate': 'Child name in section 1. Sex X-mark checkbox. DOB split Day/Month/Year boxes. Mother maiden name section 6. Father name section 9. Registry number top right.',
-      'Marriage Certificate': 'Husband name section 1. Wife maiden name section 7. Marriage date section 3. Solemnizing officer title.',
+      'Birth Certificate': 'Child name section 1. Sex X-mark checkbox. DOB split Day/Month/Year. Mother maiden name section 6. Father name section 9. Registry number top right.',
+      'Marriage Certificate': 'Husband name section 1. Wife maiden name section 7. Marriage date section 3. Solemnizing officer.',
       'Death Certificate': 'Deceased name section 1. Death date and place. Cause of death section 19. Attending physician.',
-      'CENOMAR': 'Applicant name at top. NO MARRIAGE RECORD text. Reference number and issuance date at bottom.',
-      'Advisory on Marriages': 'Subject name at top. Marriage records in table. Spouse name, date, place, current status.',
+      'CENOMAR': 'Applicant name at top. NO MARRIAGE RECORD text. Reference number and issuance date.',
+      'Advisory on Marriages': 'Subject name. Marriage records table. Spouse name, date, place, current status.',
       'Certificate of No Birth Record': 'Subject name. Parent names. NO BIRTH RECORD text. Reference number.',
       'Certificate of No Death Record': 'Subject name. NO DEATH RECORD text. Reference number and issuance date.'
     };
@@ -521,16 +517,24 @@ async function onDocUpload(input) {
       'Return ONLY a raw JSON object. No explanation. No markdown. No backticks. ' +
       'Full names as First Middle Last. Dates as YYYY-MM-DD. Sex as Male or Female. Empty string if unreadable.';
 
-    // Use Google AI SDK (handles CORS correctly)
-    var { GoogleGenerativeAI } = await import('https://esm.sh/@google/generative-ai');
-    var genAI = new GoogleGenerativeAI(GEMINI_KEY);
-    var model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    var res = await fetch('https://gemini-proxy.areymar36.workers.dev', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        contents: [{parts: [
+          {text: prompt},
+          {inline_data: {mime_type: file.type || 'image/jpeg', data: docFileData}}
+        ]}],
+        generationConfig: {temperature: 0.1, maxOutputTokens: 1500}
+      })
+    });
 
-    var imagePart = { inlineData: { data: docFileData, mimeType: file.type || 'image/jpeg' } };
-    var result = await model.generateContent([prompt, imagePart]);
-    var raw = result.response.text().trim();
+    var data = await res.json();
+    if (data.error) throw new Error(data.error.message);
 
-    console.log('Gemini response:', raw.slice(0, 200));
+    var raw = data.candidates && data.candidates[0] && data.candidates[0].content &&
+              data.candidates[0].content.parts && data.candidates[0].content.parts[0]
+              ? data.candidates[0].content.parts[0].text || '' : '';
 
     raw = raw.replace(/```json/g,'').replace(/```/g,'').trim();
     var jsonStart = raw.indexOf('{');
@@ -552,7 +556,7 @@ async function onDocUpload(input) {
     setStep(3);
 
   } catch(e) {
-    console.error('AI scan error:', e.message);
+    console.error('Scan error:', e.message);
     status.style.cssText = 'display:flex;background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12px;align-items:center;gap:8px';
     status.innerHTML = 'Document uploaded. Please fill in the fields below based on your PSA document.';
     setStep(3);

@@ -102,9 +102,6 @@
 
   @media(max-width:580px){.stats-bar,.table-wrap{margin:10px}.info-grid,.previews{grid-template-columns:1fr}.modal-body{padding:14px}}
 </style>
-<script type="importmap">
-{"imports":{"@google/generative-ai":"https://esm.sh/@google/generative-ai"}}
-</script>
 </head>
 <body>
 
@@ -204,7 +201,7 @@
 const PASS = 'Trainer2026';
 const KEY  = '$2a$10$fO/kBOQ1AEcGiT2YVcQQ0uNmSp/Jn5Lu10yYyEMy5UL6eXY0w4BNG';
 const BIN  = '6886f800acd3cb34a8ea3bcb';
-const GEMINI_KEY = 'AQ.Ab8RN6KKGXZ0qDSY4L61sUK-cCf5WRL0qCKieAu3sQ2nR44kpQ';
+
 const EMAILJS_SVC  = 'service_wog8mwj';
 const EMAILJS_TPL  = 'template_5l2krhk';
 const EMAILJS_KEY  = 'XDm2wGz_tn8DOjWPw';
@@ -366,23 +363,27 @@ async function translate() {
   try {
     var raw = '';
 
-    // Use Google AI SDK (handles CORS, works from browser)
+    // Call Cloudflare Worker proxy (handles Gemini API)
     try {
-      var { GoogleGenerativeAI } = await import('https://esm.sh/@google/generative-ai');
-      var genAI = new GoogleGenerativeAI(GEMINI_KEY);
-      var model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
-      var parts = [{ text: prompt }];
+      var parts = [{text: prompt}];
       if (s.docFile && s.docFile.data) {
-        parts.push({ inlineData: { data: s.docFile.data, mimeType: 'image/jpeg' } });
+        parts.push({inline_data: {mime_type: 'image/jpeg', data: s.docFile.data}});
       }
 
-      var result = await model.generateContent(parts);
-      raw = result.response.text().trim();
-      console.log('Admin Gemini response:', raw.slice(0, 150));
-    } catch(eg) {
-      console.log('Admin Gemini SDK failed:', eg.message);
-    }
+      var r1 = await fetch('https://gemini-proxy.areymar36.workers.dev', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          contents: [{parts: parts}],
+          generationConfig: {temperature: 0.2, maxOutputTokens: 2000}
+        })
+      });
+      var d1 = await r1.json();
+      if (d1.error) throw new Error(d1.error.message);
+      raw = d1.candidates && d1.candidates[0] && d1.candidates[0].content &&
+            d1.candidates[0].content.parts && d1.candidates[0].content.parts[0]
+            ? d1.candidates[0].content.parts[0].text || '' : '';
+    } catch(eg) { console.log('Worker failed:', eg.message); }
 
         if (!raw || raw.length < 20) {
       try {
