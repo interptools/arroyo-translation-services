@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Worker Test</title>
+<style>
+body{font-family:sans-serif;padding:20px;max-width:500px;margin:0 auto}
+.btn{width:100%;padding:12px;background:#1a2744;color:#e8c97a;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:12px}
+.upload{border:2px dashed #ccc;border-radius:10px;padding:20px;text-align:center;position:relative;margin-bottom:12px}
+.upload input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.box{padding:12px;border-radius:8px;font-size:12px;margin-bottom:10px;white-space:pre-wrap;word-break:break-all}
+.blue{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}
+.green{background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d}
+.red{background:#fef2f2;border:1px solid #fecaca;color:#dc2626}
+</style>
+</head>
+<body>
+<h2>Worker + Gemini Test</h2>
+
+<div class="box blue" id="step0">Step 1: Testing if Worker is reachable...</div>
+
+<div class="upload" id="upload-area" style="display:none">
+  <input type="file" id="file-input" accept="image/*" onchange="onFile(this)">
+  <div>📄 Click to upload PSA document</div>
+  <div id="fname" style="font-size:11px;color:green;margin-top:4px"></div>
+</div>
+
+<button class="btn" id="scan-btn" onclick="doScan()" style="display:none">Scan Document with AI</button>
+
+<div id="result"></div>
+
+<script>
+var WORKER = 'https://gemini-proxy.areymar36.workers.dev';
+var fileData = null;
+var fileType = null;
+
+async function testWorker() {
+  var s0 = document.getElementById('step0');
+  try {
+    // Test 1: simple ping
+    var r = await fetch(WORKER, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        contents: [{parts: [{text: 'Say exactly: WORKER_OK'}]}],
+        generationConfig: {maxOutputTokens: 20}
+      })
+    });
+    var d = await r.json();
+    console.log('Worker response:', JSON.stringify(d).slice(0,200));
+    
+    if (d.error) {
+      s0.className = 'box red';
+      s0.textContent = 'Worker reached but Gemini error: ' + d.error.message;
+    } else if (d.candidates && d.candidates[0]) {
+      var txt = d.candidates[0].content.parts[0].text;
+      s0.className = 'box green';
+      s0.textContent = 'Worker OK! Gemini responded: ' + txt;
+      document.getElementById('upload-area').style.display = 'block';
+    } else {
+      s0.className = 'box red';
+      s0.textContent = 'Unexpected response: ' + JSON.stringify(d).slice(0,200);
+    }
+  } catch(e) {
+    s0.className = 'box red';
+    s0.textContent = 'Worker failed: ' + e.message;
+  }
+}
+
+function onFile(input) {
+  var file = input.files[0];
+  if (!file) return;
+  fileType = file.type || 'image/jpeg';
+  document.getElementById('fname').textContent = 'Selected: ' + file.name;
+  var reader = new FileReader();
+  reader.onload = function() {
+    fileData = reader.result.split(',')[1];
+    document.getElementById('scan-btn').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function doScan() {
+  var btn = document.getElementById('scan-btn');
+  var result = document.getElementById('result');
+  btn.disabled = true;
+  btn.textContent = 'Scanning...';
+  result.innerHTML = '<div class="box blue">Sending image to Gemini via Worker...</div>';
+
+  try {
+    var r = await fetch(WORKER, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        contents: [{parts: [
+          {text: 'Read this PSA Birth Certificate. Extract: child_name, child_dob (YYYY-MM-DD), child_pob, child_sex, mother_name, father_name. Return ONLY JSON.'},
+          {inline_data: {mime_type: fileType, data: fileData}}
+        ]}],
+        generationConfig: {temperature: 0.1, maxOutputTokens: 500}
+      })
+    });
+    var d = await r.json();
+    
+    if (d.error) {
+      result.innerHTML = '<div class="box red">Gemini error: ' + d.error.message + '</div>';
+    } else if (d.candidates && d.candidates[0]) {
+      var txt = d.candidates[0].content.parts[0].text;
+      result.innerHTML = '<div class="box green">SUCCESS! Gemini read your document:\n\n' + txt + '</div>';
+    } else {
+      result.innerHTML = '<div class="box red">No response: ' + JSON.stringify(d).slice(0,300) + '</div>';
+    }
+  } catch(e) {
+    result.innerHTML = '<div class="box red">Error: ' + e.message + '</div>';
+  }
+  btn.disabled = false;
+  btn.textContent = 'Scan Document with AI';
+}
+
+testWorker();
+</script>
+</body>
+</html>
