@@ -519,16 +519,16 @@ async function onDocUpload(input) {
     // Try Pollinations AI first (free, no key needed), fallback to OpenRouter
     var raw = '';
     try {
-      var encoded = encodeURIComponent(
-        'You are an expert at reading Philippine PSA civil registry documents. ' +
-        'Read this ' + doctype + ' and extract: ' + fieldIds + '. ' +
-        'Return ONLY raw JSON with those field IDs as keys. ' +
-        'Full names as First Middle Last. Dates as YYYY-MM-DD. Sex as Male or Female. Empty string if unreadable.'
-      );
-      var r1 = await fetch('https://text.pollinations.ai/' + encoded + '?model=openai', {method:'GET'});
+      var strictPrompt = 'Extract fields from this PSA ' + doctype + ' document. ' +
+        'Fields needed: ' + fieldIds + '. ' +
+        'IMPORTANT: Respond with ONLY a JSON object, nothing else. No sentences. No explanation. ' +
+        'Example format: {"child_name":"JUAN DELA CRUZ","child_dob":"1993-04-22","child_sex":"Male"} ' +
+        'Use empty string for unreadable fields. Dates as YYYY-MM-DD. Sex as Male or Female exactly.';
+      var encoded = encodeURIComponent(strictPrompt);
+      var r1 = await fetch('https://text.pollinations.ai/' + encoded + '?model=openai&json=true', {method:'GET'});
       if (r1.ok) {
         var t = (await r1.text()).trim();
-        if (t && t.length > 10) raw = t;
+        if (t && t.indexOf('{') >= 0) raw = t;
       }
     } catch(e1) { console.log('Pollinations failed:', e1); }
 
@@ -539,9 +539,12 @@ async function onDocUpload(input) {
           headers: {'Content-Type':'application/json','Authorization':'Bearer sk-or-free','HTTP-Referer':'https://interptools.github.io'},
           body: JSON.stringify({
             model: 'mistralai/mistral-7b-instruct:free',
-            messages: [{role:'user', content:
-              'Read this PSA ' + doctype + ' image and extract these fields: ' + fieldIds + '. ' +
-              'Return ONLY raw JSON. Dates as YYYY-MM-DD. Sex as Male or Female.'
+            messages: [
+              {role:'system', content:'You are a JSON extractor. Always respond with ONLY a valid JSON object. Never include explanations or sentences.'},
+              {role:'user', content:
+              'Extract these fields from a PSA ' + doctype + ': ' + fieldIds + '. ' +
+              'Respond with ONLY a JSON object like: {"field_id":"value",...}. ' +
+              'Dates as YYYY-MM-DD. Sex as Male or Female. Empty string if unknown.'
             }],
             max_tokens: 800
           })
@@ -552,11 +555,20 @@ async function onDocUpload(input) {
     }
 
     if (!raw) throw new Error('All AI services unavailable. Please fill fields manually.');
+    // Clean and extract JSON from response
     raw = raw.replace(/```json/g,'').replace(/```/g,'').trim();
     var jsonStart = raw.indexOf('{');
     var jsonEnd = raw.lastIndexOf('}');
-    if (jsonStart >= 0 && jsonEnd >= 0) raw = raw.slice(jsonStart, jsonEnd+1);
-    var extracted = JSON.parse(raw);
+    if (jsonStart < 0 || jsonEnd < 0) throw new Error('No JSON found in AI response. Please fill fields manually.');
+    raw = raw.slice(jsonStart, jsonEnd+1);
+    var extracted;
+    try {
+      extracted = JSON.parse(raw);
+    } catch(parseErr) {
+      // Try to fix common JSON issues
+      var fixed = raw.replace(/'/g, '"').replace(/([{,]\s*)(\w+)(\s*:)/g, '$1"$2"$3');
+      extracted = JSON.parse(fixed);
+    }
     var filled = 0;
     Object.keys(extracted).forEach(function(id) {
       var el = document.getElementById(id);
