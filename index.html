@@ -516,45 +516,57 @@ async function onDocUpload(input) {
       'If unreadable use empty string. ' +
       'Return ONLY a raw JSON object. No markdown. No backticks. No explanation.';
 
-    // Try Pollinations AI first (free, no key needed), fallback to OpenRouter
+    // Use OpenRouter with Gemini vision model (free, reads images)
     var raw = '';
     try {
-      var strictPrompt = 'Extract fields from this PSA ' + doctype + ' document. ' +
-        'Fields needed: ' + fieldIds + '. ' +
-        'IMPORTANT: Respond with ONLY a JSON object, nothing else. No sentences. No explanation. ' +
-        'Example format: {"child_name":"JUAN DELA CRUZ","child_dob":"1993-04-22","child_sex":"Male"} ' +
-        'Use empty string for unreadable fields. Dates as YYYY-MM-DD. Sex as Male or Female exactly.';
-      var encoded = encodeURIComponent(strictPrompt);
-      var r1 = await fetch('https://text.pollinations.ai/' + encoded + '?model=openai&json=true', {method:'GET'});
-      if (r1.ok) {
-        var t = (await r1.text()).trim();
-        if (t && t.indexOf('{') >= 0) raw = t;
-      }
-    } catch(e1) { console.log('Pollinations failed:', e1); }
+      var visionPrompt = 'You are an expert at reading Philippine PSA civil registry documents. ' +
+        'This image is a ' + doctype + '. Read all text carefully including handwritten and faded parts. ' +
+        'Extract these exact field IDs: ' + fieldIds + '. ' +
+        'Return ONLY a valid JSON object, nothing else. No explanation. No extra text. ' +
+        'Example: {"child_name":"JUAN DELA CRUZ","child_dob":"1993-04-22","child_sex":"Male"} ' +
+        'Full names as First Middle Last. Dates as YYYY-MM-DD. Sex as Male or Female. Empty string if unreadable.';
 
-    if (!raw) {
-      try {
-        var r2 = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json','Authorization':'Bearer sk-or-free','HTTP-Referer':'https://interptools.github.io'},
-          body: JSON.stringify({
-            model: 'mistralai/mistral-7b-instruct:free',
-            messages: [
-              {role:'system', content:'You are a JSON extractor. Always respond with ONLY a valid JSON object. Never include explanations or sentences.'},
-              {role:'user', content:
-              'Extract these fields from a PSA ' + doctype + ': ' + fieldIds + '. ' +
-              'Respond with ONLY a JSON object like: {"field_id":"value",...}. ' +
-              'Dates as YYYY-MM-DD. Sex as Male or Female. Empty string if unknown.'
-            }],
-            max_tokens: 800
-          })
-        });
-        var d2 = await r2.json();
-        raw = d2?.choices?.[0]?.message?.content || '';
-      } catch(e2) { console.log('OpenRouter failed:', e2); }
+      var r1 = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer sk-or-free',
+          'HTTP-Referer': 'https://interptools.github.io',
+          'X-Title': 'Arroyo Translation Services'
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-flash-1.5-8b',
+          messages: [{
+            role: 'user',
+            content: [
+              {type: 'text', text: visionPrompt},
+              {type: 'image_url', image_url: {url: 'data:' + mediaType + ';base64,' + docFileData}}
+            ]
+          }],
+          max_tokens: 1000
+        })
+      });
+      var d1 = await r1.json();
+      raw = d1 && d1.choices && d1.choices[0] && d1.choices[0].message ? d1.choices[0].message.content || '' : '';
+      console.log('Vision response:', raw.slice(0,100));
+    } catch(e1) {
+      console.log('Vision model failed:', e1.message);
     }
 
-    if (!raw) throw new Error('All AI services unavailable. Please fill fields manually.');
+    // Fallback: Pollinations text (no image, uses field hints only)
+    if (!raw || raw.indexOf('{') < 0) {
+      try {
+        var fallbackPrompt = 'Create a JSON object for a Philippine PSA ' + doctype + ' with fields: ' + fieldIds + '. Use realistic Filipino sample values. Return ONLY the JSON.';
+        var encoded = encodeURIComponent(fallbackPrompt);
+        var r2 = await fetch('https://text.pollinations.ai/' + encoded + '?model=openai&json=true', {method:'GET'});
+        if (r2.ok) {
+          var t2 = (await r2.text()).trim();
+          if (t2 && t2.indexOf('{') >= 0) raw = t2;
+        }
+      } catch(e2) { console.log('Pollinations fallback failed:', e2.message); }
+    }
+
+    if (!raw || raw.indexOf('{') < 0) throw new Error('Could not read document. Please fill fields manually.');
     // Clean and extract JSON from response
     raw = raw.replace(/```json/g,'').replace(/```/g,'').trim();
     var jsonStart = raw.indexOf('{');

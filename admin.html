@@ -358,40 +358,58 @@ async function translate() {
   try {
     var raw = '';
 
-    // Try Pollinations AI first (free, no key)
+    // Use OpenRouter Gemini Flash vision model (reads the actual PSA document image)
+    var raw = '';
     try {
-      const encoded = encodeURIComponent(prompt);
-      const r1 = await fetch('https://text.pollinations.ai/' + encoded + '?model=openai', {method:'GET'});
-      if (r1.ok) {
-        const t = (await r1.text()).trim();
-        if (t && t.length > 50 && t.includes('[FIELD:')) raw = t;
-        else if (t && t.length > 50) raw = t;
+      var messages = [];
+      if (s.docFile && s.docFile.data) {
+        // Send image + translation prompt to vision model
+        messages = [{
+          role: 'user',
+          content: [
+            {type: 'text', text: prompt},
+            {type: 'image_url', image_url: {url: 'data:image/jpeg;base64,' + s.docFile.data}}
+          ]
+        }];
+      } else {
+        messages = [{role: 'user', content: prompt}];
       }
-    } catch(e1) { console.log('Pollinations failed:', e1); }
 
-    // Fallback to OpenRouter (free tier)
-    if (!raw) {
-      const r2 = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      const r1 = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer sk-or-free',
-          'HTTP-Referer': 'https://interptools.github.io'
+          'HTTP-Referer': 'https://interptools.github.io',
+          'X-Title': 'Arroyo Translation Services Admin'
         },
         body: JSON.stringify({
-          model: 'mistralai/mistral-7b-instruct:free',
-          messages: [
-            {role:'system', content:'You are a professional Japanese translator. Always respond with properly formatted translation output using the [FIELD:...] format specified by the user. Never skip the format.'},
-            {role:'user', content: prompt}
-          ],
-          max_tokens: 1500
+          model: 'google/gemini-flash-1.5-8b',
+          messages: messages,
+          max_tokens: 2000
         })
       });
-      const d2 = await r2.json();
-      raw = d2?.choices?.[0]?.message?.content || '';
+      const d1 = await r1.json();
+      raw = d1 && d1.choices && d1.choices[0] && d1.choices[0].message
+        ? d1.choices[0].message.content || '' : '';
+      console.log('Translation response:', raw.slice(0, 150));
+    } catch(e1) {
+      console.log('OpenRouter vision failed:', e1.message);
     }
 
-    if (!raw) throw new Error('All AI services unavailable');
+    // Fallback: Pollinations text model
+    if (!raw || raw.length < 20) {
+      try {
+        const encoded = encodeURIComponent(prompt);
+        const r2 = await fetch('https://text.pollinations.ai/' + encoded + '?model=openai', {method:'GET'});
+        if (r2.ok) {
+          const t2 = (await r2.text()).trim();
+          if (t2 && t2.length > 50) raw = t2;
+        }
+      } catch(e2) { console.log('Pollinations fallback failed:', e2.message); }
+    }
+
+    if (!raw || raw.length < 20) throw new Error('All AI services unavailable. Please try again.');
 
     s.translation = raw;
     s.status = 'translated';
