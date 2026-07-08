@@ -581,13 +581,13 @@ function doDownloadPDF() {
           {num:'4', en:'Sex', jp:'性別', id:'child_sex'},
           {num:'5', en:'Birth Order', jp:'出生順位', id:'child_order'},
         ]},
-        { label: 'B', en: "MOTHER'S INFORMATION", jp: '母の情報', fields: [
+        { label: 'B', en: "MOTHER'S INFORMATION", jp: '母の情報', twoCol: true, fields: [
           {num:'6', en:"Mother's Maiden Name", jp:'母の旧姓', id:'mother_name'},
           {num:'7', en:'Citizenship', jp:'国籍', id:'mother_citizen'},
           {num:'8', en:'Religion', jp:'宗教', id:'mother_religion'},
           {num:'', en:'Occupation', jp:'職業', id:'mother_occ'},
         ]},
-        { label: 'C', en: "FATHER'S INFORMATION", jp: '父の情報', fields: [
+        { label: 'C', en: "FATHER'S INFORMATION", jp: '父の情報', twoCol: true, fields: [
           {num:'9', en:"Father's Name", jp:'父の氏名', id:'father_name'},
           {num:'10', en:'Citizenship', jp:'国籍', id:'father_citizen'},
           {num:'11', en:'Religion', jp:'宗教', id:'father_religion'},
@@ -603,7 +603,7 @@ function doDownloadPDF() {
     'Marriage Certificate': {
       jpTitle: '婚姻証明書',
       sections: [
-        { label: 'A', en: "HUSBAND'S INFORMATION", jp: '夫の情報', fields: [
+        { label: 'A', en: "HUSBAND'S INFORMATION", jp: '夫の情報', twoCol: true, fields: [
           {num:'1', en:"Husband's Name", jp:'夫の氏名', id:'husband_name'},
           {num:'2', en:'Date of Birth', jp:'生年月日', id:'husband_dob'},
           {num:'3', en:'Place of Birth', jp:'出生地', id:'husband_pob'},
@@ -611,7 +611,7 @@ function doDownloadPDF() {
           {num:'5', en:'Religion', jp:'宗教', id:'husband_religion'},
           {num:'6', en:'Civil Status', jp:'婚姻状況', id:'husband_civil'},
         ]},
-        { label: 'B', en: "WIFE'S INFORMATION", jp: '妻の情報', fields: [
+        { label: 'B', en: "WIFE'S INFORMATION", jp: '妻の情報', twoCol: true, fields: [
           {num:'7', en:"Wife's Maiden Name", jp:'妻の旧姓', id:'wife_name'},
           {num:'8', en:'Date of Birth', jp:'生年月日', id:'wife_dob'},
           {num:'9', en:'Place of Birth', jp:'出生地', id:'wife_pob'},
@@ -633,7 +633,7 @@ function doDownloadPDF() {
     'Death Certificate': {
       jpTitle: '死亡証明書',
       sections: [
-        { label: 'A', en: "DECEASED'S INFORMATION", jp: '故人の情報', fields: [
+        { label: 'A', en: "DECEASED'S INFORMATION", jp: '故人の情報', twoCol: true, fields: [
           {num:'1', en:'Name of Deceased', jp:'故人の氏名', id:'deceased_name'},
           {num:'2', en:'Sex', jp:'性別', id:'deceased_sex'},
           {num:'3', en:'Date of Birth', jp:'生年月日', id:'deceased_dob'},
@@ -645,7 +645,7 @@ function doDownloadPDF() {
           {num:'7', en:'Date of Death', jp:'死亡日', id:'death_date'},
           {num:'8', en:'Place of Death', jp:'死亡場所', id:'death_place'},
         ]},
-        { label: 'C', en: 'CAUSES OF DEATH', jp: '死因', fields: [
+        { label: 'C', en: 'CAUSES OF DEATH', jp: '死因', twoCol: true, fields: [
           {num:'19a', en:'Immediate Cause', jp:'直接死因', id:'cause_immediate'},
           {num:'19b', en:'Antecedent Cause', jp:'先行死因', id:'cause_antecedent'},
           {num:'19c', en:'Underlying Cause', jp:'根本死因', id:'cause_underlying'},
@@ -868,7 +868,7 @@ function doDownloadPDF() {
   var sectionsHtml = '';
   config.sections.forEach(function(sec) {
     sectionsHtml += '<div class="sec-hdr">' + sec.label + '.&nbsp;&nbsp;' + sec.en + '&nbsp;&nbsp;/&nbsp;&nbsp;' + sec.jp + '</div>';
-    sectionsHtml += '<div class="sec-body">';
+    sectionsHtml += '<div class="sec-body' + (sec.twoCol ? ' two-col' : '') + '">';
     sec.fields.forEach(function(field) {
       var enVal = field.val || (field.id ? (f[field.id] || '') : '');
       var jpVal = field.jpval || getJP(field.id || '', enVal);
@@ -900,7 +900,7 @@ function doDownloadPDF() {
     '.gold-line{border:none;border-top:2px solid #c9a84c;margin:8px 0}' +
     '.ref-row{display:flex;justify-content:space-between;font-size:8px;color:#888;margin-bottom:12px}' +
     '.sec-hdr{background:#1a2744;color:#fff;padding:5px 10px;font-size:9px;font-weight:700;letter-spacing:0.5px;margin-top:8px}' +
-    '.sec-body{border:1px solid #ddd;border-top:none}' +
+    '.sec-body{border:1px solid #ddd;border-top:none}' +'.sec-body.two-col{display:grid;grid-template-columns:1fr 1fr}' +
     '.field-row{display:flex;border-bottom:1px solid #eee;background:#f5f5dc}' +
     '.field-row:nth-child(even){background:#efedde}' +
     '.field-num{width:28px;min-width:28px;padding:6px 4px;text-align:center;font-size:8px;color:#888;border-right:1px solid #ddd;display:flex;align-items:center;justify-content:center}' +
@@ -915,7 +915,7 @@ function doDownloadPDF() {
     '@page{margin:0;size:A4}' +
     'body{background:#faf8f0;-webkit-print-color-adjust:exact;print-color-adjust:exact;margin:0;padding:0}' +
     '.page{width:100%;max-width:100%;margin:0;padding:0}' +
-    '.content{padding:12px 20px}' +
+    '.content{padding:12px 20px}' +'.sec-body.two-col{display:grid;grid-template-columns:1fr 1fr}' +
     '}' +
     '</style></head><body>' +
     '<div class="page">' +
