@@ -560,48 +560,77 @@ function doDownloadPDF() {
   if (!s) return;
   if (!s.translation) { alert('Please translate the document first.'); return; }
 
-  var doc = new jspdf.jsPDF();
-  var pageW = doc.internal.pageSize.getWidth();
+  // Parse translation into sections for clean display
+  var translationLines = s.translation.split('\n');
+  var formattedLines = translationLines.map(function(line) {
+    if (line.startsWith('===') && line.endsWith('===')) {
+      return '<div class="pdf-section-hdr">' + line.replace(/===/g,'').trim() + '</div>';
+    } else if (line.trim().startsWith('【') || line.trim().startsWith('CERTIFICATION')) {
+      return '<div class="pdf-cert">' + line + '</div>';
+    } else if (line.trim()) {
+      var parts = line.split(':');
+      if (parts.length >= 2) {
+        var label = parts[0].trim();
+        var value = parts.slice(1).join(':').trim();
+        return '<div class="pdf-field"><span class="pdf-label">' + label + '</span><span class="pdf-value">' + value + '</span></div>';
+      }
+      return '<div class="pdf-line">' + line + '</div>';
+    }
+    return '<div class="pdf-spacer"></div>';
+  }).join('');
 
-  // Header
-  doc.setFillColor(26, 39, 68);
-  doc.rect(0, 0, pageW, 30, 'F');
-  doc.setTextColor(232, 201, 122);
-  doc.setFontSize(14);
-  doc.text('Arroyo Translation Services', pageW/2, 13, {align:'center'});
-  doc.setFontSize(9);
-  doc.text('Official Japanese Translation', pageW/2, 21, {align:'center'});
+  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+    '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">' +
+    '<style>' +
+    'body{font-family:"Noto Sans JP","Inter",sans-serif;margin:0;padding:0;background:#fff;color:#1a2744;font-size:11px}' +
+    '.header{background:#1a2744;padding:18px 30px;text-align:center}' +
+    '.header h1{color:#e8c97a;font-size:16px;margin:0 0 4px;font-family:Inter,sans-serif}' +
+    '.header p{color:rgba(255,255,255,0.6);font-size:10px;margin:0}' +
+    '.content{padding:24px 30px}' +
+    '.doc-title{font-size:14px;font-weight:600;text-align:center;margin-bottom:16px;color:#1a2744}' +
+    '.meta{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:16px;padding:12px;background:#f5f5f5;border-radius:6px;font-size:10px;color:#555}' +
+    '.divider{border:none;border-top:2px solid #c9a84c;margin:12px 0}' +
+    '.pdf-section-hdr{background:#1a2744;color:#e8c97a;padding:7px 12px;font-size:10px;font-weight:700;margin:14px 0 6px;border-radius:4px;letter-spacing:0.5px}' +
+    '.pdf-field{display:flex;padding:5px 8px;border-bottom:1px solid #f0ede8;gap:8px}' +
+    '.pdf-field:nth-child(even){background:#faf8f4}' +
+    '.pdf-label{color:#6b7280;font-size:10px;min-width:120px;flex-shrink:0;font-weight:500}' +
+    '.pdf-value{color:#1a2744;font-size:10px;font-weight:500;line-height:1.5}' +
+    '.pdf-cert{background:#f0f4ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 12px;margin:16px 0;font-size:9px;color:#1e40af;line-height:1.6}' +
+    '.pdf-line{padding:3px 8px;font-size:10px}' +
+    '.pdf-spacer{height:4px}' +
+    '.disclaimer{background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:10px 12px;margin-top:16px;font-size:9px;color:#92400e;line-height:1.6}' +
+    '.footer{background:#1a2744;padding:10px 30px;text-align:center;margin-top:24px}' +
+    '.footer p{color:rgba(255,255,255,0.5);font-size:8px;margin:0}' +
+    '@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}' +
+    '</style></head><body>' +
+    '<div class="header"><h1>Arroyo Translation Services</h1><p>Official Japanese Translation of PSA Civil Registry Document</p></div>' +
+    '<div class="content">' +
+    '<div class="doc-title">' + s.doctype + ' — 日本語翻訳 / Japanese Translation</div>' +
+    '<div class="meta">' +
+    '<div><strong>お客様 / Customer:</strong> ' + s.name + '</div>' +
+    '<div><strong>参照番号 / Reference:</strong> ' + s.id + '</div>' +
+    '<div><strong>目的 / Purpose:</strong> ' + (s.purpose||'—') + '</div>' +
+    '<div><strong>翻訳日 / Date:</strong> ' + s.date + '</div>' +
+    '</div>' +
+    '<hr class="divider">' +
+    formattedLines +
+    '<div class="disclaimer">【承認された使用用途】本翻訳は日本のビザ申請・市区町村役所への婚姻届に適しています。裁判手続きや公証が必要な法的書類には使用できません。<br>' +
+    'ACCEPTED USE: Suitable for Japanese visa applications and marriage registration. NOT valid for court proceedings or notarized legal submissions.</div>' +
+    '</div>' +
+    '<div class="footer"><p>Arroyo Translation Services &copy; 2025 — PSA Document Translation EN to JP</p></div>' +
+    '<script>window.onload=function(){window.print();}<\/script>' +
+    '</body></html>';
 
-  doc.setTextColor(0, 0, 0);
-  doc.setFontSize(11);
-  doc.text(s.doctype + ' — Japanese Translation', pageW/2, 40, {align:'center'});
-
-  // Info
-  doc.setFontSize(9);
-  doc.setTextColor(100, 100, 100);
-  doc.text('Customer: ' + s.name, 15, 52);
-  doc.text('Reference: ' + s.id, 15, 58);
-  doc.text('Date: ' + s.date, 15, 64);
-
-  doc.setDrawColor(201, 168, 76);
-  doc.line(15, 68, pageW-15, 68);
-
-  // Translation content
-  doc.setTextColor(0, 0, 0);
-  doc.setFontSize(10);
-  var lines = doc.splitTextToSize(s.translation, pageW - 30);
-  doc.text(lines, 15, 76);
-
-  // Footer
-  doc.setFillColor(26, 39, 68);
-  var pageH = doc.internal.pageSize.getHeight();
-  doc.rect(0, pageH-16, pageW, 16, 'F');
-  doc.setTextColor(232, 201, 122);
-  doc.setFontSize(8);
-  doc.text('Arroyo Translation Services — For Japanese visa and marriage registration use', pageW/2, pageH-6, {align:'center'});
-
-  doc.save(s.id + '-' + s.doctype.replace(/ /g,'-') + '-JP.pdf');
-  toast('PDF downloaded');
+  var blob = new Blob([html], {type: 'text/html'});
+  var url = URL.createObjectURL(blob);
+  var win = window.open(url, '_blank');
+  if (!win) {
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = s.id + '-' + s.doctype.replace(/ /g,'-') + '-JP.html';
+    a.click();
+  }
+  toast('PDF ready — use Print > Save as PDF');
 }
 
 async function doEmail() {
