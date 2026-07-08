@@ -196,6 +196,7 @@
 const PASS = 'Trainer2026';
 const KEY  = '$2a$10$fO/kBOQ1AEcGiT2YVcQQ0uNmSp/Jn5Lu10yYyEMy5UL6eXY0w4BNG';
 const BIN  = '6886f800acd3cb34a8ea3bcb';
+// Free AI - no key needed
 const EMAILJS_SVC  = 'service_wog8mwj';
 const EMAILJS_TPL  = 'template_5l2krhk';
 const EMAILJS_KEY  = 'XDm2wGz_tn8DOjWPw';
@@ -334,58 +335,69 @@ async function translate() {
   const s = subs.find(x => x.id === activeId); if (!s) return;
   const btn = document.getElementById('b-translate');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Translating…';
+  btn.innerHTML = '<span class="spinner"></span> Translating...';
   const tout = document.getElementById('t-out');
   tout.style.display = 'block';
-  tout.textContent = 'Reading document and generating Japanese translation…';
+  tout.textContent = 'Generating Japanese translation...';
 
-  const messages = [{
-    role: 'user',
-    content: [
-      {
-        type: 'text',
-        text: `You are a professional document translator specializing in PSA (Philippine Statistics Authority) civil registry documents from English to Japanese.
+  const fieldData = s.fields || {};
+  const fieldList = Object.entries(fieldData)
+    .filter(([k,v]) => v)
+    .map(([k,v]) => k.replace(/_/g,' ') + ': ' + v)
+    .join('\n');
 
-The customer has submitted a ${s.doctype} for translation.
-Customer name: ${s.name}
-Purpose: ${s.purpose}
-
-${s.docFile?.data ? 'I am also attaching the actual scanned PSA document image for you to read and extract the real data from.' : ''}
-
-Please produce a complete, properly formatted Japanese translation of this ${s.doctype}. 
-
-Format your response as structured field data using this exact format for each field:
-[FIELD:English Label|Japanese Label|English Value|Japanese Value]
-
-Then after all fields, add:
-[CERT:certification text in Japanese and English]
-
-Use appropriate Japanese labels and translate all values accurately. For names, use katakana transliteration.`
-      },
-      ...(s.docFile?.data && s.docFile.type.startsWith('image/') ? [{
-        type: 'image',
-        source: { type: 'base64', media_type: s.docFile.type, data: s.docFile.data }
-      }] : [])
-    ]
-  }];
+  const prompt = 'You are a professional Japanese translator specializing in Philippine PSA civil registry documents.\n' +
+    'Translate this ' + s.doctype + ' from English to Japanese.\n\n' +
+    'Customer: ' + s.name + '\nPurpose: ' + (s.purpose||'') + '\n\n' +
+    'Fields:\n' + fieldList + '\n\n' +
+    'Format each field as: [FIELD:English Label|Japanese Label|English Value|Japanese Value]\n' +
+    'Rules: Names use katakana. Dates as Japanese format (e.g. 1993年4月22日). Keep numbers unchanged.\n' +
+    'After all fields add: [CERT:certification in Japanese then English]\n' +
+    'Return ONLY the formatted output.';
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1500, messages })
-    });
-    const data = await res.json();
-    const text = data.content?.map(c => c.text || '').join('') || 'Translation failed.';
-    s.translation = text;
+    var raw = '';
+
+    // Try Pollinations AI first (free, no key)
+    try {
+      const encoded = encodeURIComponent(prompt);
+      const r1 = await fetch('https://text.pollinations.ai/' + encoded + '?model=openai', {method:'GET'});
+      if (r1.ok) {
+        const t = (await r1.text()).trim();
+        if (t && t.length > 50) raw = t;
+      }
+    } catch(e1) { console.log('Pollinations failed:', e1); }
+
+    // Fallback to OpenRouter (free tier)
+    if (!raw) {
+      const r2 = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer sk-or-free',
+          'HTTP-Referer': 'https://interptools.github.io'
+        },
+        body: JSON.stringify({
+          model: 'mistralai/mistral-7b-instruct:free',
+          messages: [{role:'user', content: prompt}],
+          max_tokens: 1500
+        })
+      });
+      const d2 = await r2.json();
+      raw = d2?.choices?.[0]?.message?.content || '';
+    }
+
+    if (!raw) throw new Error('All AI services unavailable');
+
+    s.translation = raw;
     s.status = 'translated';
-    tout.textContent = text;
+    tout.textContent = raw;
     await save(); render(); updateStats(); openModal(activeId);
-    toast('✅ Translation complete');
+    toast('Translation complete for ' + s.name);
   } catch(e) {
-    tout.textContent = 'Error: ' + e.message;
+    tout.textContent = 'Translation error: ' + (e.message || e);
     btn.disabled = false;
-    btn.textContent = '⚡ Translate (AI)';
+    btn.innerHTML = '⚡ Translate (AI)';
   }
 }
 
