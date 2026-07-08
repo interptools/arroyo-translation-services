@@ -428,16 +428,97 @@ async function doTranslate() {
   tout.style.display = 'block';
   tout.textContent = 'Generating Japanese translation...';
 
-  var fieldList = s.fields ? Object.entries(s.fields).filter(function(e){return e[1];}).map(function(e){return e[0].replace(/_/g,' ') + ': ' + e[1];}).join('\n') : '';
+  var fields = s.fields || {};
 
-  var prompt = 'You are a professional Japanese translator specializing in Philippine PSA civil registry documents.\n' +
-    'Translate this ' + s.doctype + ' document from English to Japanese.\n\n' +
-    'Customer: ' + s.name + '\nPurpose: ' + (s.purpose||'') + '\n\n' +
-    'Document fields:\n' + fieldList + '\n\n' +
-    'For each field provide the translation in this format:\n' +
-    'Field name in Japanese: translated value in Japanese\n\n' +
-    'Then provide a certification statement in Japanese confirming this is an accurate translation of the original PSA document.\n' +
-    'Return the translation in a clean, professional format suitable for official use.';
+  // Build section-based field list matching PSA document structure
+  var docSections = {
+    'Birth Certificate': {
+      'A. 子の情報 / CHILD INFORMATION': ['child_name','child_dob','child_pob','child_sex','child_order'],
+      'B. 母の情報 / MOTHER INFORMATION': ['mother_name','mother_citizen','mother_religion','mother_occ'],
+      'C. 父の情報 / FATHER INFORMATION': ['father_name','father_citizen','father_religion','father_occ'],
+      'D. 登録情報 / REGISTRATION INFORMATION': ['reg_number','reg_date']
+    },
+    'Marriage Certificate': {
+      'A. 夫の情報 / HUSBAND INFORMATION': ['husband_name','husband_dob','husband_pob','husband_citizen','husband_religion','husband_civil'],
+      'B. 妻の情報 / WIFE INFORMATION': ['wife_name','wife_dob','wife_pob','wife_citizen','wife_religion','wife_civil'],
+      'C. 婚姻情報 / MARRIAGE INFORMATION': ['marriage_date','marriage_place','officer'],
+      'D. 登録情報 / REGISTRATION INFORMATION': ['reg_number']
+    },
+    'Death Certificate': {
+      'A. 故人の情報 / DECEASED INFORMATION': ['deceased_name','deceased_sex','deceased_dob','civil_status','deceased_occ','deceased_residence'],
+      'B. 死亡情報 / DEATH INFORMATION': ['death_date','death_place'],
+      'C. 死因 / CAUSE OF DEATH': ['cause_immediate','cause_antecedent','cause_underlying','physician'],
+      'D. 登録情報 / REGISTRATION INFORMATION': ['reg_number']
+    },
+    'CENOMAR': {
+      'A. 申請者情報 / APPLICANT INFORMATION': ['applicant_name','applicant_dob','applicant_pob','applicant_sex','applicant_citizen'],
+      'B. 証明内容 / CERTIFICATION': ['issuance_date','ref_number']
+    },
+    'Advisory on Marriages': {
+      'A. 照会対象者 / SUBJECT INFORMATION': ['subject_name','subject_dob','subject_pob','subject_sex'],
+      'B. 婚姻記録 / MARRIAGE RECORDS': ['num_marriages','spouse_name','marriage_date','marriage_status'],
+      'C. 発行情報 / ISSUANCE': ['issuance_date']
+    },
+    'Certificate of No Birth Record': {
+      'A. 照会対象者 / SUBJECT INFORMATION': ['subject_name','subject_dob','subject_pob','subject_sex'],
+      'B. 親の情報 / PARENT INFORMATION': ['father_name','mother_name'],
+      'C. 発行情報 / ISSUANCE': ['issuance_date','ref_number']
+    },
+    'Certificate of No Death Record': {
+      'A. 照会対象者 / SUBJECT INFORMATION': ['subject_name','subject_dob','subject_pob','subject_sex'],
+      'B. 発行情報 / ISSUANCE': ['issuance_date','ref_number']
+    }
+  };
+
+  var jpLabels = {
+    'child_name':'氏名','child_dob':'生年月日','child_pob':'出生地','child_sex':'性別','child_order':'出生順位',
+    'mother_name':'母の旧姓','mother_citizen':'国籍','mother_religion':'宗教','mother_occ':'職業',
+    'father_name':'父の氏名','father_citizen':'国籍','father_religion':'宗教','father_occ':'職業',
+    'husband_name':'夫の氏名','husband_dob':'生年月日','husband_pob':'出生地','husband_citizen':'国籍','husband_religion':'宗教','husband_civil':'婚姻状況',
+    'wife_name':'妻の旧姓','wife_dob':'生年月日','wife_pob':'出生地','wife_citizen':'国籍','wife_religion':'宗教','wife_civil':'婚姻状況',
+    'marriage_date':'婚姻日','marriage_place':'婚姻地','officer':'挙式執行者',
+    'deceased_name':'故人の氏名','deceased_sex':'性別','deceased_dob':'生年月日','civil_status':'婚姻状況','deceased_occ':'職業','deceased_residence':'常住地',
+    'death_date':'死亡日','death_place':'死亡場所',
+    'cause_immediate':'直接死因','cause_antecedent':'先行死因','cause_underlying':'根本死因','physician':'担当医師',
+    'applicant_name':'氏名','applicant_dob':'生年月日','applicant_pob':'出生地','applicant_sex':'性別','applicant_citizen':'国籍',
+    'subject_name':'氏名','subject_dob':'生年月日','subject_pob':'出生地','subject_sex':'性別',
+    'num_marriages':'婚姻件数','spouse_name':'配偶者名','marriage_status':'婚姻状況',
+    'father_name':'父の氏名','mother_name':'母の旧姓',
+    'reg_number':'登録番号','reg_date':'登録日','issuance_date':'発行日','ref_number':'参照番号',
+    'purpose':'目的'
+  };
+
+  var sections = docSections[s.doctype] || {};
+  var sectionText = '';
+  Object.entries(sections).forEach(function(sec) {
+    sectionText += '\n' + sec[0] + '\n';
+    sec[1].forEach(function(fid) {
+      if (fields[fid]) {
+        sectionText += '  ' + (jpLabels[fid] || fid) + ': ' + fields[fid] + '\n';
+      }
+    });
+  });
+
+  var prompt = 'You are a professional Japanese translator for Philippine PSA civil registry documents.\n\n' +
+    'DOCUMENT TYPE: ' + s.doctype + '\n' +
+    'CUSTOMER: ' + s.name + '\n' +
+    'PURPOSE: ' + (s.purpose || 'Japanese visa application') + '\n\n' +
+    'Translate the following document fields to Japanese. For each field provide BOTH the English value and Japanese translation.\n\n' +
+    'OUTPUT FORMAT - follow this exact structure:\n\n' +
+    '=== [SECTION NAME IN JAPANESE / ENGLISH] ===\n' +
+    '[Japanese label]: [English value] / [Japanese translation]\n\n' +
+    'DOCUMENT FIELDS TO TRANSLATE:\n' + sectionText + '\n\n' +
+    'TRANSLATION RULES:\n' +
+    '- Names: use katakana phonetic spelling\n' +
+    '- Dates: convert to Japanese format (例: April 22, 1993 → 1993年4月22日)\n' +
+    '- Places: use Japanese pronunciation in katakana\n' +
+    '- Sex: Male=男性, Female=女性\n' +
+    '- Filipino=フィリピン国籍\n' +
+    '- Roman Catholic=ローマ・カトリック\n' +
+    '- Single=未婚, Married=既婚, Widowed=寡婦/鰥夫\n\n' +
+    'After all fields, add this certification:\n' +
+    '【翻訳証明】本翻訳はフィリピン統計局（PSA）発行の原文書を正確に日本語に翻訳したものです。\n' +
+    'CERTIFICATION: This is a faithful Japanese translation of the original document issued by the Philippine Statistics Authority (PSA).';
 
   try {
     // Use text-only prompt (image causes 3030 errors with vision model)
