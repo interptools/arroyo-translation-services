@@ -594,6 +594,29 @@ function toggleSample() {
   arrow.style.transform = open ? '' : 'rotate(180deg)';
 }
 
+function resizeImage(file, maxWidth) {
+  return new Promise(function(resolve) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var img = new Image();
+      img.onload = function() {
+        var canvas = document.createElement('canvas');
+        var ratio = Math.min(maxWidth / img.width, maxWidth / img.height, 1);
+        canvas.width = img.width * ratio;
+        canvas.height = img.height * ratio;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        var b64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
+        resolve(b64);
+      };
+      img.onerror = function() { resolve(''); };
+      img.src = e.target.result;
+    };
+    reader.onerror = function() { resolve(''); };
+    reader.readAsDataURL(file);
+  });
+}
+
 async function doSubmit() {
   var name    = document.getElementById('f-name').value.trim();
   var email   = document.getElementById('f-email').value.trim();
@@ -636,6 +659,10 @@ async function doSubmit() {
     }
 
     // Build submission — keep images small to fit JSONBin 100KB limit
+    // Resize images to fit JSONBin 100KB limit
+    var docResized   = await resizeImage(document.getElementById('f-doc').files[0], 400);
+    var proofResized = await resizeImage(proofFile, 400);
+
     var submission = {
       id: genId(),
       name: name,
@@ -646,14 +673,8 @@ async function doSubmit() {
       fields: fieldData,
       date: new Date().toLocaleString('en-PH', {timeZone: 'Asia/Manila'}),
       status: 'pending',
-      docFile: {
-        name: document.getElementById('f-doc').files[0].name,
-        data: docFileData ? docFileData.slice(0, 20000) : ''
-      },
-      proofFile: {
-        name: proofFile.name,
-        data: proofFileData ? proofFileData.slice(0, 20000) : ''
-      },
+      docFile: {name: document.getElementById('f-doc').files[0].name, data: docResized},
+      proofFile: {name: proofFile.name, data: proofResized},
       translation: ''
     };
 
