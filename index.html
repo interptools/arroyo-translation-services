@@ -308,7 +308,7 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
 <script>
 const JSONBIN_KEY = '$2a$10$fO/kBOQ1AEcGiT2YVcQQ0uNmSp/Jn5Lu10yYyEMy5UL6eXY0w4BNG';
 const JSONBIN_BIN = '6886f800acd3cb34a8ea3bcb';
-// No API key needed - using free AI services
+const GEMINI_KEY = 'AQ.Ab8RN6KKGXZ0qDSY4L61sUK-cCf5WRL0qCKieAu3sQ2nR44kpQ';
 
 var docFileData = null;
 var proofFileData = null;
@@ -518,56 +518,66 @@ async function onDocUpload(input) {
 
     // Use OpenRouter with Gemini vision model (free, reads images)
     var raw = '';
+    // Use Gemini Vision API (Bearer token auth for AQ. keys)
     try {
       var visionPrompt = 'You are an expert at reading Philippine PSA civil registry documents. ' +
-        'This image is a ' + doctype + '. Read all text carefully including handwritten and faded parts. ' +
+        'This is a ' + doctype + ' image. Read ALL text carefully including handwritten, faded, and stamped text. ' +
         'Extract these exact field IDs: ' + fieldIds + '. ' +
-        'Return ONLY a valid JSON object, nothing else. No explanation. No extra text. ' +
-        'Example: {"child_name":"JUAN DELA CRUZ","child_dob":"1993-04-22","child_sex":"Male"} ' +
-        'Full names as First Middle Last. Dates as YYYY-MM-DD. Sex as Male or Female. Empty string if unreadable.';
+        'Return ONLY a valid JSON object. No sentences. No explanation. ' +
+        'Full names as First Middle Last. Dates as YYYY-MM-DD. Sex as Male or Female exactly. Empty string if unreadable.';
 
-      var r1 = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer sk-or-free',
-          'HTTP-Referer': 'https://interptools.github.io',
-          'X-Title': 'Arroyo Translation Services'
-        },
-        body: JSON.stringify({
-          model: 'google/gemini-flash-1.5-8b',
-          messages: [{
-            role: 'user',
-            content: [
-              {type: 'text', text: visionPrompt},
-              {type: 'image_url', image_url: {url: 'data:' + mediaType + ';base64,' + docFileData}}
-            ]
-          }],
-          max_tokens: 1000
-        })
-      });
-      var d1 = await r1.json();
-      raw = d1 && d1.choices && d1.choices[0] && d1.choices[0].message ? d1.choices[0].message.content || '' : '';
-      console.log('Vision response:', raw.slice(0,100));
-    } catch(e1) {
-      console.log('Vision model failed:', e1.message);
-    }
+      var geminiRes = await fetch(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + GEMINI_KEY
+          },
+          body: JSON.stringify({
+            contents: [{parts: [
+              {text: visionPrompt},
+              {inline_data: {mime_type: mediaType, data: docFileData}}
+            ]}],
+            generationConfig: {temperature: 0.1, maxOutputTokens: 1500}
+          })
+        }
+      );
+      var geminiData = await geminiRes.json();
+      console.log('Gemini status:', geminiRes.status, JSON.stringify(geminiData).slice(0,200));
+      if (!geminiData.error && geminiData.candidates && geminiData.candidates[0]) {
+        raw = geminiData.candidates[0].content.parts[0].text || '';
+      } else if (geminiData.error) {
+        console.log('Gemini error:', geminiData.error.message);
+      }
+    } catch(eg) { console.log('Gemini failed:', eg.message); }
 
-    // Fallback: Pollinations text (no image, uses field hints only)
+    // Fallback: OpenRouter vision
     if (!raw || raw.indexOf('{') < 0) {
       try {
-        var fallbackPrompt = 'Create a JSON object for a Philippine PSA ' + doctype + ' with fields: ' + fieldIds + '. Use realistic Filipino sample values. Return ONLY the JSON.';
-        var encoded = encodeURIComponent(fallbackPrompt);
-        var r2 = await fetch('https://text.pollinations.ai/' + encoded + '?model=openai&json=true', {method:'GET'});
-        if (r2.ok) {
-          var t2 = (await r2.text()).trim();
-          if (t2 && t2.indexOf('{') >= 0) raw = t2;
-        }
-      } catch(e2) { console.log('Pollinations fallback failed:', e2.message); }
+        var orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer sk-or-free',
+            'HTTP-Referer': 'https://interptools.github.io'
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-flash-1.5-8b',
+            messages: [{role: 'user', content: [
+              {type: 'text', text: 'Read this PSA ' + doctype + '. Extract: ' + fieldIds + '. Return ONLY JSON.'},
+              {type: 'image_url', image_url: {url: 'data:' + mediaType + ';base64,' + docFileData}}
+            ]}],
+            max_tokens: 1000
+          })
+        });
+        var orData = await orRes.json();
+        raw = orData && orData.choices && orData.choices[0] ? orData.choices[0].message.content || '' : '';
+        console.log('OpenRouter response:', raw.slice(0,100));
+      } catch(eo) { console.log('OpenRouter failed:', eo.message); }
     }
 
-    if (!raw || raw.indexOf('{') < 0) throw new Error('Could not read document. Please fill fields manually.');
-    // Clean and extract JSON from response
+        // Clean and extract JSON from response
     raw = raw.replace(/```json/g,'').replace(/```/g,'').trim();
     var jsonStart = raw.indexOf('{');
     var jsonEnd = raw.lastIndexOf('}');

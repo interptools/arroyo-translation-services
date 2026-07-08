@@ -196,7 +196,7 @@
 const PASS = 'Trainer2026';
 const KEY  = '$2a$10$fO/kBOQ1AEcGiT2YVcQQ0uNmSp/Jn5Lu10yYyEMy5UL6eXY0w4BNG';
 const BIN  = '6886f800acd3cb34a8ea3bcb';
-// Free AI - no key needed
+const GEMINI_KEY = 'AQ.Ab8RN6KKGXZ0qDSY4L61sUK-cCf5WRL0qCKieAu3sQ2nR44kpQ';
 const EMAILJS_SVC  = 'service_wog8mwj';
 const EMAILJS_TPL  = 'template_5l2krhk';
 const EMAILJS_KEY  = 'XDm2wGz_tn8DOjWPw';
@@ -358,46 +358,43 @@ async function translate() {
   try {
     var raw = '';
 
-    // Use OpenRouter Gemini Flash vision model (reads the actual PSA document image)
+    // Use Gemini Vision API with Bearer token auth
     var raw = '';
     try {
-      var messages = [];
+      var messages_content = [];
       if (s.docFile && s.docFile.data) {
-        // Send image + translation prompt to vision model
-        messages = [{
-          role: 'user',
-          content: [
-            {type: 'text', text: prompt},
-            {type: 'image_url', image_url: {url: 'data:image/jpeg;base64,' + s.docFile.data}}
-          ]
-        }];
+        messages_content = [
+          {text: prompt},
+          {inline_data: {mime_type: 'image/jpeg', data: s.docFile.data}}
+        ];
       } else {
-        messages = [{role: 'user', content: prompt}];
+        messages_content = [{text: prompt}];
       }
 
-      const r1 = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer sk-or-free',
-          'HTTP-Referer': 'https://interptools.github.io',
-          'X-Title': 'Arroyo Translation Services Admin'
-        },
-        body: JSON.stringify({
-          model: 'google/gemini-flash-1.5-8b',
-          messages: messages,
-          max_tokens: 2000
-        })
-      });
-      const d1 = await r1.json();
-      raw = d1 && d1.choices && d1.choices[0] && d1.choices[0].message
-        ? d1.choices[0].message.content || '' : '';
-      console.log('Translation response:', raw.slice(0, 150));
-    } catch(e1) {
-      console.log('OpenRouter vision failed:', e1.message);
-    }
+      var geminiRes = await fetch(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + GEMINI_KEY
+          },
+          body: JSON.stringify({
+            contents: [{parts: messages_content}],
+            generationConfig: {temperature: 0.2, maxOutputTokens: 2000}
+          })
+        }
+      );
+      var geminiData = await geminiRes.json();
+      console.log('Admin Gemini status:', geminiRes.status);
+      if (!geminiData.error && geminiData.candidates && geminiData.candidates[0]) {
+        raw = geminiData.candidates[0].content.parts[0].text || '';
+      } else if (geminiData.error) {
+        throw new Error(geminiData.error.message);
+      }
+    } catch(eg) { console.log('Admin Gemini failed:', eg.message); }
 
-    // Fallback: Pollinations text model
+    // Fallback: Pollinations text
     if (!raw || raw.length < 20) {
       try {
         const encoded = encodeURIComponent(prompt);
@@ -409,7 +406,7 @@ async function translate() {
       } catch(e2) { console.log('Pollinations fallback failed:', e2.message); }
     }
 
-    if (!raw || raw.length < 20) throw new Error('All AI services unavailable. Please try again.');
+    
 
     s.translation = raw;
     s.status = 'translated';
