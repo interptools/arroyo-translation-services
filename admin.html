@@ -352,8 +352,8 @@ async function translate() {
     'Fields:\n' + fieldList + '\n\n' +
     'Format each field as: [FIELD:English Label|Japanese Label|English Value|Japanese Value]\n' +
     'Rules: Names use katakana. Dates as Japanese format (e.g. 1993年4月22日). Keep numbers unchanged.\n' +
-    'After all fields add: [CERT:certification in Japanese then English]\n' +
-    'Return ONLY the formatted output.';
+    'After all fields add: [CERT:certification in Japanese then English]\n\n' +
+    'IMPORTANT: Return ONLY the [FIELD:...] lines and [CERT:...] line. No other text. No introduction. No explanation.';
 
   try {
     var raw = '';
@@ -364,7 +364,8 @@ async function translate() {
       const r1 = await fetch('https://text.pollinations.ai/' + encoded + '?model=openai', {method:'GET'});
       if (r1.ok) {
         const t = (await r1.text()).trim();
-        if (t && t.length > 50) raw = t;
+        if (t && t.length > 50 && t.includes('[FIELD:')) raw = t;
+        else if (t && t.length > 50) raw = t;
       }
     } catch(e1) { console.log('Pollinations failed:', e1); }
 
@@ -379,7 +380,10 @@ async function translate() {
         },
         body: JSON.stringify({
           model: 'mistralai/mistral-7b-instruct:free',
-          messages: [{role:'user', content: prompt}],
+          messages: [
+            {role:'system', content:'You are a professional Japanese translator. Always respond with properly formatted translation output using the [FIELD:...] format specified by the user. Never skip the format.'},
+            {role:'user', content: prompt}
+          ],
           max_tokens: 1500
         })
       });
@@ -395,7 +399,7 @@ async function translate() {
     await save(); render(); updateStats(); openModal(activeId);
     toast('Translation complete for ' + s.name);
   } catch(e) {
-    tout.textContent = 'Translation error: ' + (e.message || e);
+    tout.textContent = 'Translation failed: ' + (e.message || e) + '\n\nPlease try again or check your connection.';
     btn.disabled = false;
     btn.innerHTML = '⚡ Translate (AI)';
   }
