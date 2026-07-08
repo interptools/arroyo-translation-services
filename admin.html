@@ -516,7 +516,13 @@ async function doTranslate() {
     '- Filipino=フィリピン国籍\n' +
     '- Roman Catholic=ローマ・カトリック\n' +
     '- Single=未婚, Married=既婚, Widowed=寡婦/鰥夫\n\n' +
-    'After all fields, add this certification:\n' +
+    'STRICT OUTPUT RULES:\n' +
+    '- Every single field MUST have a Japanese translation - never leave blank\n' +
+    '- Person names: convert to katakana (e.g. REYMAR → レイマール, ARROYO → アロヨ, NELLY → ネリー)\n' +
+    '- Place names: use standard Japanese katakana (e.g. Bato → バト, Camarines Sur → カマリネス・スール州)\n' +
+    '- Occupations: translate to Japanese (Housewife→主婦, Farmer→農業, Carpenter→大工)\n' +
+    '- Use exactly this format for each field: [Japanese label]: [English value] / [Japanese translation]\n\n' +
+    'After all fields add:\n' +
     '【翻訳証明】本翻訳はフィリピン統計局（PSA）発行の原文書を正確に日本語に翻訳したものです。\n' +
     'CERTIFICATION: This is a faithful Japanese translation of the original document issued by the Philippine Statistics Authority (PSA).';
 
@@ -734,18 +740,56 @@ function doDownloadPDF() {
 
   // Build JP translations from the AI translation text
   var jpMap = {};
-  var lines = s.translation.split('\n');
-  lines.forEach(function(line) {
-    var slash = line.lastIndexOf('/');
-    if (slash > 0) {
+  if (s.translation) {
+    var tlines = s.translation.split('\n');
+    tlines.forEach(function(line) {
+      line = line.trim();
+      if (!line || line.startsWith('===') || line.startsWith('#')) return;
+
+      // Try format: "Label: EN value / JP value"
+      var slash = line.lastIndexOf('/');
       var colon = line.indexOf(':');
-      if (colon > 0 && colon < slash) {
-        var jpVal = line.slice(slash+1).trim();
-        var fieldId = line.slice(0, colon).trim().toLowerCase().replace(/\s+/g,'_').replace(/[^a-z_]/g,'');
-        if (jpVal) jpMap[fieldId] = jpVal;
+      if (slash > 0 && colon > 0 && colon < slash) {
+        var jpVal = line.slice(slash + 1).trim();
+        var labelPart = line.slice(0, colon).trim();
+        // Map label to field ID
+        var labelMap = {
+          '氏名':'child_name','名前':'child_name','子の氏名':'child_name',
+          '生年月日':'child_dob','出生地':'child_pob','性別':'child_sex','出生順位':'child_order',
+          '母の旧姓':'mother_name','母の氏名':'mother_name',
+          '父の氏名':'father_name','父の名前':'father_name',
+          '職業':'mother_occ',
+          '夫の氏名':'husband_name','妻の旧姓':'wife_name','妻の氏名':'wife_name',
+          '婚姻日':'marriage_date','婚姻地':'marriage_place','挙式執行者':'officer',
+          '故人の氏名':'deceased_name','死亡日':'death_date','死亡場所':'death_place',
+          '直接死因':'cause_immediate','先行死因':'cause_antecedent','根本死因':'cause_underlying',
+          '担当医師':'physician','常住地':'deceased_residence',
+          '登録番号':'reg_number','登録日':'reg_date',
+          '申請者':'applicant_name','照会対象者':'subject_name',
+          '発行日':'issuance_date','参照番号':'ref_number',
+          '配偶者名':'spouse_name','婚姻件数':'num_marriages',
+        };
+        if (jpVal && labelMap[labelPart]) {
+          jpMap[labelMap[labelPart]] = jpVal;
+        }
+        // Also try matching by EN field value in the line
+        var enVal = line.slice(colon+1, slash).trim();
+        if (jpVal && enVal) {
+          // Store by value for reverse lookup
+          jpMap['__val__' + enVal.toLowerCase()] = jpVal;
+        }
       }
-    }
-  });
+
+      // Try format: "EN value / JP value" (no label)
+      if (slash > 0 && colon < 0) {
+        var enPart = line.slice(0, slash).trim();
+        var jpPart = line.slice(slash+1).trim();
+        if (enPart && jpPart) {
+          jpMap['__val__' + enPart.toLowerCase()] = jpPart;
+        }
+      }
+    });
+  }
 
   // Month names for date conversion
   var monthJP = ['','1','2','3','4','5','6','7','8','9','10','11','12'];
@@ -753,8 +797,18 @@ function doDownloadPDF() {
   // Helper to get JP translation
   function getJP(fieldId, enVal) {
     if (!enVal) return '';
-    // Try AI translation map first
+    // Try AI translation map by field ID
     if (jpMap[fieldId]) return jpMap[fieldId];
+    // Try AI translation map by value
+    if (jpMap['__val__' + enVal.toLowerCase()]) return jpMap['__val__' + enVal.toLowerCase()];
+    // Try partial value match
+    var lowerVal = enVal.toLowerCase();
+    var keys = Object.keys(jpMap);
+    for (var ki = 0; ki < keys.length; ki++) {
+      if (keys[ki].startsWith('__val__') && lowerVal.includes(keys[ki].slice(7))) {
+        return jpMap[keys[ki]];
+      }
+    }
 
     // Date YYYY-MM-DD → Japanese
     if (enVal.match(/^\d{4}-\d{2}-\d{2}$/)) {
@@ -789,10 +843,19 @@ function doDownloadPDF() {
     // Place names - add katakana for common Philippine places
     var places = {
       'Manila':'マニラ市','Bato':'バト','Camarines Sur':'カマリネス・スール州',
-      'Bato, Camarines Sur':'カマリネス・スール州バト',
+      'Bato, Camarines Sur':'カマリネス・スール州、バト',
       'Quezon City':'ケソン市','Cebu City':'セブ市','Davao City':'ダバオ市',
       'Iloilo City':'イロイロ市','Batangas City':'バタンガス市',
-      'Metro Manila':'メトロ・マニラ',
+      'Metro Manila':'メトロ・マニラ','Makati City':'マカティ市',
+      'Pasig City':'パシグ市','Taguig City':'タギッグ市',
+      'Mandaluyong City':'マンダルヨン市','Marikina City':'マリキナ市',
+      'Caloocan City':'カロオカン市','Las Pinas City':'ラス・ピニャス市',
+      'Paranaque City':'パラニャーケ市','Muntinlupa City':'ムンティンルパ市',
+      'Laguna':'ラグナ州','Cavite':'カビテ州','Rizal':'リサール州',
+      'Bulacan':'ブラカン州','Pampanga':'パンパンガ州','Bataan':'バターン州',
+      'Bicol':'ビコル地方','Albay':'アルバイ州','Sorsogon':'ソルソゴン州',
+      'Camarines Norte':'カマリネス・ノルテ州',
+      'Neighborhood':'地区','San Juan':'サン・フアン',
     };
     if (places[enVal]) return places[enVal];
 
