@@ -89,6 +89,16 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
 .abtn-translate{background:#1a2744;color:#e8c97a}
 .abtn-pdf{background:#dbeafe;color:#1d4ed8}
 .abtn-email{background:#f3e8ff;color:#7c3aed}
+  .abtn-edit{background:#fef9c3;color:#854d0e}
+  .edit-panel{display:none;background:#faf8f4;border:1px solid #e5e0d8;border-radius:8px;padding:14px;margin-top:12px}
+  .edit-panel h4{font-size:11px;font-weight:600;color:#1a2744;margin-bottom:12px;text-transform:uppercase;letter-spacing:1px}
+  .edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .edit-field label{font-size:11px;font-weight:500;color:#1a2744;display:block;margin-bottom:4px}
+  .edit-field input,.edit-field select{width:100%;padding:7px 10px;border:1px solid #e5e0d8;border-radius:6px;font-size:12px;font-family:Inter,sans-serif;background:#fff;color:#1a2744}
+  .edit-field input:focus,.edit-field select:focus{outline:none;border-color:#1a2744}
+  .edit-save-row{display:flex;gap:8px;margin-top:12px}
+  .edit-save-btn{padding:8px 18px;background:#1a2744;color:#e8c97a;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif}
+  .edit-cancel-btn{padding:8px 18px;background:#f0ede8;color:#6b7280;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif}
 .abtn:disabled{opacity:0.5;cursor:not-allowed}
 .t-out{background:#f8fafc;border:1px solid #e5e0d8;border-radius:8px;padding:12px;font-size:12px;color:#1a2744;white-space:pre-wrap;max-height:200px;overflow-y:auto;display:none;margin-top:10px;line-height:1.6}
 .toast{position:fixed;bottom:20px;right:20px;background:#1a2744;color:#e8c97a;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:500;opacity:0;transition:opacity .3s;z-index:99999;pointer-events:none}
@@ -216,9 +226,18 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
         <button class="abtn abtn-translate" id="b-translate" onclick="doTranslate()">⚡ Translate (AI)</button>
         <button class="abtn abtn-pdf" id="b-pdf" onclick="doDownloadPDF()">↓ Download PDF</button>
         <button class="abtn abtn-email" id="b-email" onclick="doEmail()">✉ Email Customer</button>
+        <button class="abtn abtn-edit" id="b-edit" onclick="toggleEdit()">✏ Edit Details</button>
       </div>
 
       <div class="t-out" id="t-out"></div>
+      <div class="edit-panel" id="edit-panel">
+        <h4>Edit Document Details</h4>
+        <div class="edit-grid" id="edit-fields-grid"></div>
+        <div class="edit-save-row">
+          <button class="edit-save-btn" onclick="saveEdit()">Save Changes</button>
+          <button class="edit-cancel-btn" onclick="toggleEdit()">Cancel</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -975,25 +994,29 @@ function doDownloadPDF() {
     '.disc-box{background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:5px 8px;margin-top:5px;font-size:7.5px;color:#92400e;line-height:1.4}' +
     '@media print{' +
     '@page{margin:0;size:A4}' +
-    'body{background:#faf8f0;-webkit-print-color-adjust:exact;print-color-adjust:exact;margin:0;padding:0}' +
-    '.page{width:100%;max-width:100%;margin:0;padding:0}' +
-    '.content{padding:8px 16px}' +'.sec-body.two-col{display:grid;grid-template-columns:1fr 1fr}' +
+    'html{height:297mm}' +
+    'body{background:#faf8f0;-webkit-print-color-adjust:exact;print-color-adjust:exact;margin:0;padding:0;height:297mm;overflow:hidden}' +
+    '.page{width:100%;height:297mm;display:flex;flex-direction:column;margin:0;padding:0}' +
+    '.page-hdr{flex-shrink:0}' +
+    '.page-body{flex:1;padding:6px 20px;display:flex;flex-direction:column;justify-content:space-between}' +
+    '.page-ftr{flex-shrink:0}' +
+    '.sec-body.two-col{display:grid;grid-template-columns:1fr 1fr}' +
     '}' +
     '</style></head><body>' +
     '<div class="page">' +
-    '<div style="background:#1a2744;padding:10px 20px;text-align:center">' +
+    '<div class="page-hdr" style="background:#1a2744;padding:10px 20px;text-align:center">' +
     '<div style="font-size:7.5px;color:rgba(255,255,255,0.5);letter-spacing:1px;margin-bottom:2px">REPUBLIKA NG PILIPINAS / REPUBLIC OF THE PHILIPPINES</div>' +
     '<div style="font-size:20px;font-weight:700;color:#e8c97a;margin-bottom:1px">' + config.jpTitle + '</div>' +
     '<div style="font-size:9px;color:rgba(255,255,255,0.5);letter-spacing:1px">' + s.doctype.toUpperCase() + ' &mdash; Japanese Translation</div>' +
     '</div>' +
-    '<div style="padding:8px 20px">' +
+    '</div>' +
+    '<div class="page-body">' +
     '<div style="display:flex;justify-content:space-between;font-size:7.5px;color:#888;margin-bottom:4px;padding-bottom:4px;border-bottom:1.5px solid #c9a84c">' +
     '<span>登録番号 / Registry No.: ' + (f.reg_number || f.ref_number || '—') + '</span>' +
     '<span>翻訳日 / Date: ' + today + '</span>' +
     '</div>' +
     sectionsHtml +
-    '</div>' +
-    '<div style="padding:0 20px 10px">' +
+    '<div class="page-ftr">' +
     '<div class="cert-box">' +
     '本翻訳は、フィリピン統計局（PSA）が発行した原文書（' + config.jpTitle + '）を忠実に日本語に翻訳したものです。翻訳者はその正確性について責任を負います。<br><br>' +
     'This is a faithful Japanese translation of the original ' + s.doctype + ' issued by the Philippine Statistics Authority (PSA). The translator certifies the accuracy of this translation.' +
@@ -1001,6 +1024,7 @@ function doDownloadPDF() {
     '<div class="disc-box">' +
     'ACCEPTED USE: Suitable for Japanese visa applications and marriage registration at a Japanese municipal office (役所). NOT valid for court proceedings or notarized legal submissions.<br>' +
     '【ご注意】本翻訳は日本のビザ申請・市区町村役所への婚姻届に適しています。裁判手続きや公証が必要な法的書類には使用できません。' +
+    '</div>' +
     '</div>' +
     '</div>' +
     '</div>' +
@@ -1033,6 +1057,97 @@ async function doEmail() {
   } catch(e) {
     toast('Email failed: ' + e.message);
   }
+}
+
+// ── EDIT ──────────────────────────────────────
+var DOC_FIELDS_ADMIN = {
+  'Birth Certificate': [
+    {id:'child_name',label:'Child Full Name'},{id:'child_dob',label:'Date of Birth',type:'date'},
+    {id:'child_pob',label:'Place of Birth'},{id:'child_sex',label:'Sex'},
+    {id:'child_order',label:'Birth Order'},{id:'mother_name',label:"Mother's Maiden Name"},
+    {id:'mother_citizen',label:'Mother Citizenship'},{id:'mother_religion',label:'Mother Religion'},
+    {id:'mother_occ',label:'Mother Occupation'},{id:'father_name',label:"Father's Name"},
+    {id:'father_citizen',label:'Father Citizenship'},{id:'father_religion',label:'Father Religion'},
+    {id:'father_occ',label:'Father Occupation'},{id:'reg_number',label:'Registry Number'},
+    {id:'reg_date',label:'Date of Registration',type:'date'},{id:'purpose',label:'Purpose'}
+  ],
+  'Marriage Certificate': [
+    {id:'husband_name',label:"Husband's Name"},{id:'husband_dob',label:'Husband DOB',type:'date'},
+    {id:'husband_pob',label:'Husband POB'},{id:'husband_citizen',label:'Husband Citizenship'},
+    {id:'husband_religion',label:'Husband Religion'},{id:'husband_civil',label:'Husband Civil Status'},
+    {id:'wife_name',label:"Wife's Maiden Name"},{id:'wife_dob',label:'Wife DOB',type:'date'},
+    {id:'wife_pob',label:'Wife POB'},{id:'wife_citizen',label:'Wife Citizenship'},
+    {id:'wife_religion',label:'Wife Religion'},{id:'wife_civil',label:'Wife Civil Status'},
+    {id:'marriage_date',label:'Date of Marriage',type:'date'},{id:'marriage_place',label:'Place of Marriage'},
+    {id:'officer',label:'Solemnizing Officer'},{id:'reg_number',label:'Registry Number'},
+    {id:'purpose',label:'Purpose'}
+  ],
+  'Death Certificate': [
+    {id:'deceased_name',label:'Deceased Name'},{id:'deceased_sex',label:'Sex'},
+    {id:'deceased_dob',label:'Date of Birth',type:'date'},{id:'civil_status',label:'Civil Status'},
+    {id:'deceased_occ',label:'Occupation'},{id:'deceased_residence',label:'Usual Residence'},
+    {id:'death_date',label:'Date of Death',type:'date'},{id:'death_place',label:'Place of Death'},
+    {id:'cause_immediate',label:'Immediate Cause'},{id:'cause_antecedent',label:'Antecedent Cause'},
+    {id:'cause_underlying',label:'Underlying Cause'},{id:'physician',label:'Attending Physician'},
+    {id:'reg_number',label:'Registry Number'},{id:'purpose',label:'Purpose'}
+  ],
+  'CENOMAR': [
+    {id:'applicant_name',label:'Full Name'},{id:'applicant_dob',label:'Date of Birth',type:'date'},
+    {id:'applicant_pob',label:'Place of Birth'},{id:'applicant_sex',label:'Sex'},
+    {id:'applicant_citizen',label:'Citizenship'},{id:'issuance_date',label:'Date of Issuance',type:'date'},
+    {id:'ref_number',label:'Reference Number'},{id:'purpose',label:'Purpose'}
+  ],
+  'Advisory on Marriages': [
+    {id:'subject_name',label:'Subject Name'},{id:'subject_dob',label:'Date of Birth',type:'date'},
+    {id:'subject_pob',label:'Place of Birth'},{id:'subject_sex',label:'Sex'},
+    {id:'num_marriages',label:'Number of Marriages'},{id:'spouse_name',label:'Spouse Name'},
+    {id:'marriage_date',label:'Date of Marriage',type:'date'},{id:'marriage_status',label:'Marriage Status'},
+    {id:'issuance_date',label:'Date of Issuance',type:'date'},{id:'purpose',label:'Purpose'}
+  ],
+  'Certificate of No Birth Record': [
+    {id:'subject_name',label:'Subject Name'},{id:'subject_dob',label:'Date of Birth',type:'date'},
+    {id:'subject_pob',label:'Place of Birth'},{id:'subject_sex',label:'Sex'},
+    {id:'father_name',label:"Father's Name"},{id:'mother_name',label:"Mother's Name"},
+    {id:'issuance_date',label:'Date of Issuance',type:'date'},{id:'ref_number',label:'Reference Number'},
+    {id:'purpose',label:'Purpose'}
+  ],
+  'Certificate of No Death Record': [
+    {id:'subject_name',label:'Subject Name'},{id:'subject_dob',label:'Date of Birth',type:'date'},
+    {id:'subject_pob',label:'Place of Birth'},{id:'subject_sex',label:'Sex'},
+    {id:'issuance_date',label:'Date of Issuance',type:'date'},{id:'ref_number',label:'Reference Number'},
+    {id:'purpose',label:'Purpose'}
+  ]
+};
+
+function toggleEdit() {
+  var s = subs.find(function(x) { return x.id === activeId; });
+  if (!s) return;
+  var panel = document.getElementById('edit-panel');
+  var isOpen = panel.style.display === 'block';
+  if (isOpen) { panel.style.display = 'none'; return; }
+
+  var fields = DOC_FIELDS_ADMIN[s.doctype] || [];
+  var grid = document.getElementById('edit-fields-grid');
+  grid.innerHTML = fields.map(function(f) {
+    var val = (s.fields && s.fields[f.id]) ? s.fields[f.id] : '';
+    return '<div class="edit-field"><label>' + f.label + '</label>' +
+      '<input type="' + (f.type || 'text') + '" id="ef-' + f.id + '" value="' + val.replace(/"/g,'&quot;') + '"></div>';
+  }).join('');
+  panel.style.display = 'block';
+}
+
+async function saveEdit() {
+  var s = subs.find(function(x) { return x.id === activeId; });
+  if (!s) return;
+  var fields = DOC_FIELDS_ADMIN[s.doctype] || [];
+  fields.forEach(function(f) {
+    var el = document.getElementById('ef-' + f.id);
+    if (el) s.fields[f.id] = el.value.trim();
+  });
+  await saveSubs();
+  document.getElementById('edit-panel').style.display = 'none';
+  openModal(activeId);
+  toast('Details updated for ' + s.name);
 }
 
 // Init
