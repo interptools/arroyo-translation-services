@@ -892,8 +892,8 @@ function doDownloadPDF() {
     '<title>' + s.doctype + ' — Japanese Translation</title>' +
     '<style>' +
     '*{box-sizing:border-box;margin:0;padding:0}' +
-    'body{font-family:"Noto Sans JP",sans-serif;background:#faf8f0;color:#1a2744;font-size:10px;padding:20px}' +
-    '.page{max-width:740px;margin:0 auto;background:#faf8f0}' +
+    'body{font-family:"Noto Sans JP",sans-serif;background:#faf8f0;color:#1a2744;font-size:10px;padding:0;margin:0}' +
+    '.page{width:100%;max-width:100%;margin:0;background:#faf8f0}' +
     '.top-label{text-align:center;font-size:8px;color:#888;margin-bottom:4px;letter-spacing:1px}' +
     '.jp-title{text-align:center;font-size:22px;font-weight:700;color:#1a2744;margin-bottom:2px}' +
     '.en-title{text-align:center;font-size:10px;color:#888;margin-bottom:6px;letter-spacing:1px}' +
@@ -912,9 +912,10 @@ function doDownloadPDF() {
     '.cert-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;padding:10px;margin:12px 0;font-size:9px;color:#1e40af;line-height:1.7}' +
     '.disc-box{background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:8px;margin-top:8px;font-size:8px;color:#92400e;line-height:1.6}' +
     '@media print{' +
-    '@page{margin:8mm;size:A4}' +
-    'body{background:#faf8f0;-webkit-print-color-adjust:exact;print-color-adjust:exact;margin:0}' +
-    '.page{max-width:100%}' +
+    '@page{margin:0;size:A4}' +
+    'body{background:#faf8f0;-webkit-print-color-adjust:exact;print-color-adjust:exact;margin:0;padding:0}' +
+    '.page{width:100%;max-width:100%;margin:0;padding:0}' +
+    '.content{padding:12px 20px}' +
     '}' +
     '</style></head><body>' +
     '<div class="page">' +
