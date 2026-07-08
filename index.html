@@ -166,7 +166,7 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
       <input type="file" id="f-doc" accept="image/*" onchange="onDocUpload(this)">
       <div class="upload-icon">&#128196;</div>
       <div class="upload-hint"><strong>Click to upload</strong> or drag and drop</div>
-      <div class="upload-hint">JPG or PNG &middot; Max 10MB &middot; AI will auto-fill your details</div>
+      <div class="upload-hint">JPG or PNG &middot; Max 10MB &middot; Upload clear photo of your PSA document</div>
       <div class="file-ok" id="doc-ok"></div>
     </div>
     <div class="scan-status" id="scan-status"></div>
@@ -175,7 +175,7 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
   <!-- SECTION 3: DOCUMENT DETAILS (dynamic, hidden until doc uploaded) -->
   <div class="card-section" id="details-section" style="display:none">
     <div class="sec-title"><div class="sec-num">3</div>Document details</div>
-    <p style="font-size:11px;color:var(--muted);margin:-8px 0 12px;line-height:1.5">AI has pre-filled the fields below. Please review and correct if needed.</p>
+    <p style="font-size:11px;color:var(--muted);margin:-8px 0 12px;line-height:1.5">Please fill in the details below based on your PSA document.</p>
     <div id="details-fields"></div>
   </div>
 
@@ -308,7 +308,7 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
 <script>
 const JSONBIN_KEY = '$2a$10$fO/kBOQ1AEcGiT2YVcQQ0uNmSp/Jn5Lu10yYyEMy5UL6eXY0w4BNG';
 const JSONBIN_BIN = '6886f800acd3cb34a8ea3bcb';
-const GEMINI_KEY = 'AQ.Ab8RN6KKGXZ0qDSY4L61sUK-cCf5WRL0qCKieAu3sQ2nR44kpQ';
+
 
 var docFileData = null;
 var proofFileData = null;
@@ -478,136 +478,28 @@ async function onDocUpload(input) {
     return;
   }
 
+  // Store file data for submission
+  docFileData = await toBase64(file);
+
+  // Show file selected
   document.getElementById('doc-ok').textContent = 'Selected: ' + file.name;
   document.getElementById('doc-ok').style.display = 'block';
 
+  // Show fields for manual entry
   var detailsSection = document.getElementById('details-section');
   var detailsFields = document.getElementById('details-fields');
   detailsSection.style.display = 'block';
   detailsFields.innerHTML = buildFields(doctype);
 
+  // Show helpful status message
   var status = document.getElementById('scan-status');
-  status.style.cssText = 'display:flex;background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12px;align-items:center;gap:8px';
-  status.innerHTML = '<span style="display:inline-block;width:13px;height:13px;border:2px solid #2563eb;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0"></span> Scanning document with AI...';
+  status.style.cssText = 'display:flex;background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12px;align-items:flex-start;gap:8px;line-height:1.5';
+  status.innerHTML = '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' +
+    'Document uploaded. Please fill in the fields below by referring to your PSA document.';
 
-  try {
-    docFileData = await toBase64(file);
-    var mediaType = file.type || 'image/jpeg';
-
-    var fields = DOC_FIELDS[doctype] || [];
-    var fieldIds = fields.map(function(f) { return f.id; }).join(', ');
-
-    var tips = {
-      'Birth Certificate': 'Child name section 1. Sex X-mark checkbox. DOB split Day/Month/Year. Mother maiden name section 6. Father name section 9. Registry number top right.',
-      'Marriage Certificate': 'Husband name section 1. Wife maiden name section 7. Marriage date section 3. Solemnizing officer. Registry number top right.',
-      'Death Certificate': 'Deceased name section 1. Date and place of death. Causes of death section 19. Attending physician.',
-      'CENOMAR': 'Applicant name. NO MARRIAGE RECORD text. Reference number and issuance date at bottom.',
-      'Advisory on Marriages': 'Subject name. Marriage records in table. Spouse name, date, place, status.',
-      'Certificate of No Birth Record': 'Subject name. Parent names. NO BIRTH RECORD text. Reference number.',
-      'Certificate of No Death Record': 'Subject name. NO DEATH RECORD text. Reference number and issuance date.'
-    };
-
-    var prompt = 'You are an expert at reading Philippine PSA civil registry documents. ' +
-      'These documents may be old, yellowed, handwritten, stamped, or faded. ' +
-      'Read this ' + doctype + ' image carefully. ' +
-      'Tips: ' + (tips[doctype] || 'Read all fields carefully.') + ' ' +
-      'Extract these exact field IDs: ' + fieldIds + '. ' +
-      'Rules: Full names as First Middle Last. Dates as YYYY-MM-DD. Sex as Male or Female. ' +
-      'If unreadable use empty string. ' +
-      'Return ONLY a raw JSON object. No markdown. No backticks. No explanation.';
-
-    // Use OpenRouter with Gemini vision model (free, reads images)
-    var raw = '';
-    // Use Gemini Vision API (Bearer token auth for AQ. keys)
-    try {
-      var visionPrompt = 'You are an expert at reading Philippine PSA civil registry documents. ' +
-        'This is a ' + doctype + ' image. Read ALL text carefully including handwritten, faded, and stamped text. ' +
-        'Extract these exact field IDs: ' + fieldIds + '. ' +
-        'Return ONLY a valid JSON object. No sentences. No explanation. ' +
-        'Full names as First Middle Last. Dates as YYYY-MM-DD. Sex as Male or Female exactly. Empty string if unreadable.';
-
-      var geminiRes = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + GEMINI_KEY
-          },
-          body: JSON.stringify({
-            contents: [{parts: [
-              {text: visionPrompt},
-              {inline_data: {mime_type: mediaType, data: docFileData}}
-            ]}],
-            generationConfig: {temperature: 0.1, maxOutputTokens: 1500}
-          })
-        }
-      );
-      var geminiData = await geminiRes.json();
-      console.log('Gemini status:', geminiRes.status, JSON.stringify(geminiData).slice(0,200));
-      if (!geminiData.error && geminiData.candidates && geminiData.candidates[0]) {
-        raw = geminiData.candidates[0].content.parts[0].text || '';
-      } else if (geminiData.error) {
-        console.log('Gemini error:', geminiData.error.message);
-      }
-    } catch(eg) { console.log('Gemini failed:', eg.message); }
-
-    // Fallback: OpenRouter vision
-    if (!raw || raw.indexOf('{') < 0) {
-      try {
-        var orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer sk-or-free',
-            'HTTP-Referer': 'https://interptools.github.io'
-          },
-          body: JSON.stringify({
-            model: 'google/gemini-flash-1.5-8b',
-            messages: [{role: 'user', content: [
-              {type: 'text', text: 'Read this PSA ' + doctype + '. Extract: ' + fieldIds + '. Return ONLY JSON.'},
-              {type: 'image_url', image_url: {url: 'data:' + mediaType + ';base64,' + docFileData}}
-            ]}],
-            max_tokens: 1000
-          })
-        });
-        var orData = await orRes.json();
-        raw = orData && orData.choices && orData.choices[0] ? orData.choices[0].message.content || '' : '';
-        console.log('OpenRouter response:', raw.slice(0,100));
-      } catch(eo) { console.log('OpenRouter failed:', eo.message); }
-    }
-
-        // Clean and extract JSON from response
-    raw = raw.replace(/```json/g,'').replace(/```/g,'').trim();
-    var jsonStart = raw.indexOf('{');
-    var jsonEnd = raw.lastIndexOf('}');
-    if (jsonStart < 0 || jsonEnd < 0) throw new Error('No JSON found in AI response. Please fill fields manually.');
-    raw = raw.slice(jsonStart, jsonEnd+1);
-    var extracted;
-    try {
-      extracted = JSON.parse(raw);
-    } catch(parseErr) {
-      // Try to fix common JSON issues
-      var fixed = raw.replace(/'/g, '"').replace(/([{,]\s*)(\w+)(\s*:)/g, '$1"$2"$3');
-      extracted = JSON.parse(fixed);
-    }
-    var filled = 0;
-    Object.keys(extracted).forEach(function(id) {
-      var el = document.getElementById(id);
-      if (el && extracted[id]) { el.value = extracted[id]; filled++; }
-    });
-
-    status.style.cssText = 'display:flex;background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12px;align-items:center;gap:8px';
-    status.innerHTML = 'AI filled ' + filled + ' fields. Please review and correct if needed.';
-    setStep(3);
-
-  } catch(e) {
-    console.error('Scan error:', e);
-    status.style.cssText = 'display:flex;background:#fffbeb;border:1px solid #fde68a;color:#92400e;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12px;align-items:center;gap:8px';
-    status.innerHTML = 'Auto-fill failed (' + (e.message || 'error') + '). Please fill in the fields manually below.';
-    setStep(3);
-  }
+  setStep(3);
 }
+
 
 function onProofUpload(input) {
   var file = input.files[0];
