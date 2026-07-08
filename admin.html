@@ -3,194 +3,222 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin · Arroyo Translation Services</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj4KICA8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzFhMjc0NCIvPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDUwLDUyKSI+CiAgICA8bGluZSB4MT0iMCIgeTE9Ii0yNiIgeDI9IjAiIHkyPSItMzgiIHN0cm9rZT0iI2M5YTg0YyIgc3Ryb2tlLXdpZHRoPSIxLjUiIG9wYWNpdHk9IjAuNSIvPgogICAgPGxpbmUgeDE9IjAiIHkxPSItMjYiIHgyPSI4IiB5Mj0iLTM2IiBzdHJva2U9IiNjOWE4NGMiIHN0cm9rZS13aWR0aD0iMS41IiBvcGFjaXR5PSIwLjQiIHRyYW5zZm9ybT0icm90YXRlKDI1KSIvPgogICAgPGxpbmUgeDE9IjAiIHkxPSItMjYiIHgyPSI4IiB5Mj0iLTM2IiBzdHJva2U9IiNjOWE4NGMiIHN0cm9rZS13aWR0aD0iMS41IiBvcGFjaXR5PSIwLjQiIHRyYW5zZm9ybT0icm90YXRlKC0yNSkiLz4KICAgIDxsaW5lIHgxPSIwIiB5MT0iLTI2IiB4Mj0iOCIgeTI9Ii0zNiIgc3Ryb2tlPSIjYzlhODRjIiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC4zIiB0cmFuc2Zvcm09InJvdGF0ZSg1MCkiLz4KICAgIDxsaW5lIHgxPSIwIiB5MT0iLTI2IiB4Mj0iOCIgeTI9Ii0zNiIgc3Ryb2tlPSIjYzlhODRjIiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC4zIiB0cmFuc2Zvcm09InJvdGF0ZSgtNTApIi8+CiAgPC9nPgogIDxjaXJjbGUgY3g9IjUwIiBjeT0iNDQiIHI9IjkiIGZpbGw9IiNlOGM5N2EiLz4KICA8cmVjdCB4PSIzMCIgeT0iMzYiIHdpZHRoPSI1IiBoZWlnaHQ9IjM2IiByeD0iMS41IiBmaWxsPSIjYzlhODRjIi8+CiAgPHJlY3QgeD0iNjUiIHk9IjM2IiB3aWR0aD0iNSIgaGVpZ2h0PSIzNiIgcng9IjEuNSIgZmlsbD0iI2M5YTg0YyIvPgogIDxyZWN0IHg9IjI2IiB5PSI0NyIgd2lkdGg9IjQ4IiBoZWlnaHQ9IjUiIHJ4PSIxLjUiIGZpbGw9IiNjOWE4NGMiLz4KICA8cGF0aCBkPSJNMjQgMzggUTUwIDI5IDc2IDM4IEw3NiAzMyBRNTAgMjMgMjQgMzMgWiIgZmlsbD0iI2M5YTg0YyIvPgogIDxyZWN0IHg9IjI0IiB5PSIzMiIgd2lkdGg9IjUyIiBoZWlnaHQ9IjciIHJ4PSIxLjUiIGZpbGw9IiNlOGM5N2EiLz4KICA8cmVjdCB4PSIyNiIgeT0iNDQiIHdpZHRoPSI5IiBoZWlnaHQ9IjciIHJ4PSIxLjUiIGZpbGw9IiNlOGM5N2EiLz4KICA8cmVjdCB4PSI2NSIgeT0iNDQiIHdpZHRoPSI5IiBoZWlnaHQ9IjciIHJ4PSIxLjUiIGZpbGw9IiNlOGM5N2EiLz4KPC9zdmc+">
-<link rel="shortcut icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj4KICA8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzFhMjc0NCIvPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDUwLDUyKSI+CiAgICA8bGluZSB4MT0iMCIgeTE9Ii0yNiIgeDI9IjAiIHkyPSItMzgiIHN0cm9rZT0iI2M5YTg0YyIgc3Ryb2tlLXdpZHRoPSIxLjUiIG9wYWNpdHk9IjAuNSIvPgogICAgPGxpbmUgeDE9IjAiIHkxPSItMjYiIHgyPSI4IiB5Mj0iLTM2IiBzdHJva2U9IiNjOWE4NGMiIHN0cm9rZS13aWR0aD0iMS41IiBvcGFjaXR5PSIwLjQiIHRyYW5zZm9ybT0icm90YXRlKDI1KSIvPgogICAgPGxpbmUgeDE9IjAiIHkxPSItMjYiIHgyPSI4IiB5Mj0iLTM2IiBzdHJva2U9IiNjOWE4NGMiIHN0cm9rZS13aWR0aD0iMS41IiBvcGFjaXR5PSIwLjQiIHRyYW5zZm9ybT0icm90YXRlKC0yNSkiLz4KICAgIDxsaW5lIHgxPSIwIiB5MT0iLTI2IiB4Mj0iOCIgeTI9Ii0zNiIgc3Ryb2tlPSIjYzlhODRjIiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC4zIiB0cmFuc2Zvcm09InJvdGF0ZSg1MCkiLz4KICAgIDxsaW5lIHgxPSIwIiB5MT0iLTI2IiB4Mj0iOCIgeTI9Ii0zNiIgc3Ryb2tlPSIjYzlhODRjIiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC4zIiB0cmFuc2Zvcm09InJvdGF0ZSgtNTApIi8+CiAgPC9nPgogIDxjaXJjbGUgY3g9IjUwIiBjeT0iNDQiIHI9IjkiIGZpbGw9IiNlOGM5N2EiLz4KICA8cmVjdCB4PSIzMCIgeT0iMzYiIHdpZHRoPSI1IiBoZWlnaHQ9IjM2IiByeD0iMS41IiBmaWxsPSIjYzlhODRjIi8+CiAgPHJlY3QgeD0iNjUiIHk9IjM2IiB3aWR0aD0iNSIgaGVpZ2h0PSIzNiIgcng9IjEuNSIgZmlsbD0iI2M5YTg0YyIvPgogIDxyZWN0IHg9IjI2IiB5PSI0NyIgd2lkdGg9IjQ4IiBoZWlnaHQ9IjUiIHJ4PSIxLjUiIGZpbGw9IiNjOWE4NGMiLz4KICA8cGF0aCBkPSJNMjQgMzggUTUwIDI5IDc2IDM4IEw3NiAzMyBRNTAgMjMgMjQgMzMgWiIgZmlsbD0iI2M5YTg0YyIvPgogIDxyZWN0IHg9IjI0IiB5PSIzMiIgd2lkdGg9IjUyIiBoZWlnaHQ9IjciIHJ4PSIxLjUiIGZpbGw9IiNlOGM5N2EiLz4KICA8cmVjdCB4PSIyNiIgeT0iNDQiIHdpZHRoPSI5IiBoZWlnaHQ9IjciIHJ4PSIxLjUiIGZpbGw9IiNlOGM5N2EiLz4KICA8cmVjdCB4PSI2NSIgeT0iNDQiIHdpZHRoPSI5IiBoZWlnaHQ9IjciIHJ4PSIxLjUiIGZpbGw9IiNlOGM5N2EiLz4KPC9zdmc+">
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<title>Admin — Arroyo Translation Services</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  :root{
-    --navy:#1a2744;--navy2:#243560;
-    --gold:#c9a84c;--goldl:#e8c97a;
-    --cream:#faf8f4;--white:#fff;
-    --text:#1a2744;--muted:#6b7280;--border:#e5e0d8;--bdr2:#ccc7bc;
-    --green:#16a34a;--gbg:#f0fdf4;--gbr:#bbf7d0;
-    --red:#dc2626;--rbg:#fef2f2;--rbr:#fecaca;
-    --amber:#d97706;--abg:#fffbeb;--abr:#fde68a;
-    --blue:#2563eb;--bbg:#eff6ff;--bbr:#bfdbfe;
-    --purple:#7c3aed;--pbg:#f5f3ff;--pbr:#ddd6fe;
-  }
-  body{font-family:'Inter',sans-serif;background:#f1ede8;color:var(--text);min-height:100vh}
-
-  #login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center}
-  .login-card{background:#fff;border-radius:16px;border:1px solid var(--border);padding:36px;width:100%;max-width:340px;text-align:center}
-  .login-card h2{font-family:'DM Serif Display',serif;font-size:22px;color:var(--navy);margin-bottom:4px}
-  .login-card p{font-size:12px;color:var(--muted);margin-bottom:20px}
-  .login-card input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;margin-bottom:10px;outline:none}
-  .login-card input:focus{border-color:var(--navy)}
-  .login-btn{width:100%;padding:11px;background:var(--navy);color:var(--goldl);font-family:'Inter',sans-serif;font-size:13px;font-weight:600;border:none;border-radius:8px;cursor:pointer}
-  .login-err{font-size:11px;color:var(--red);margin-top:6px;display:none}
-
-  #main-app{display:none}
-  header{background:var(--navy);padding:13px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-  .logo-name{font-family:'DM Serif Display',serif;color:var(--goldl);font-size:17px}
-  .logo-sub{font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:1px;text-transform:uppercase}
-  .admin-badge{background:rgba(201,168,76,0.2);border:1px solid rgba(201,168,76,0.35);color:var(--goldl);font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px}
-  .sign-out{background:none;border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.55);font-family:'Inter',sans-serif;font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer}
-
-  .stats-bar{display:flex;gap:10px;padding:18px 24px 0;flex-wrap:wrap}
-  .stat-card{background:#fff;border-radius:10px;border:1px solid var(--border);padding:14px 18px;flex:1;min-width:110px}
-  .stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
-  .stat-num{font-family:'DM Serif Display',serif;font-size:26px;color:var(--navy)}
-  .stat-num.amber{color:var(--amber)}.stat-num.green{color:var(--green)}.stat-num.navy{color:var(--navy)}
-
-  .table-wrap{margin:16px 24px;background:#fff;border-radius:10px;border:1px solid var(--border);overflow:hidden}
-  .table-hdr{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-  .table-title{font-size:13px;font-weight:600;color:var(--navy)}
-  .refresh-btn{background:none;border:1px solid var(--border);color:var(--muted);font-family:'Inter',sans-serif;font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer}
-  .refresh-btn:hover{border-color:var(--navy);color:var(--navy)}
-  .filters{display:flex;gap:6px;flex-wrap:wrap}
-  .fbtn{padding:4px 12px;border-radius:20px;border:1px solid var(--border);font-family:'Inter',sans-serif;font-size:11px;font-weight:500;cursor:pointer;background:var(--cream);color:var(--muted);transition:all .15s}
-  .fbtn.active{background:var(--navy);color:var(--goldl);border-color:var(--navy)}
-  table{width:100%;border-collapse:collapse}
-  thead th{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:9px 14px;text-align:left;background:var(--cream);border-bottom:1px solid var(--border)}
-  tbody tr{border-bottom:1px solid var(--border);transition:background .1s;cursor:pointer!important}
-  tbody tr:last-child{border-bottom:none}
-  tbody tr:hover{background:var(--cream)}
-  td{padding:11px 14px;font-size:12px}
-  .td-name{font-weight:500;color:var(--navy)}
-  .td-sub{font-size:10px;color:var(--muted);margin-top:1px}
-  .pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600}
-  .pill.pending{background:var(--abg);color:var(--amber);border:1px solid var(--abr)}
-  .pill.approved{background:var(--bbg);color:var(--blue);border:1px solid var(--bbr)}
-  .pill.translated{background:var(--gbg);color:var(--green);border:1px solid var(--gbr)}
-  .pill.rejected{background:var(--rbg);color:var(--red);border:1px solid var(--rbr)}
-  .empty{text-align:center;padding:40px;color:var(--muted);font-size:13px}
-
-  .overlay{display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.6);z-index:99999;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
-  .overlay.open{display:flex}
-  .modal{background:#fff;border-radius:14px;width:100%;max-width:700px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.2);margin:auto}
-  .modal-head{background:var(--navy);padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
-  .modal-head h3{font-family:'DM Serif Display',serif;color:var(--goldl);font-size:17px}
-  .modal-close{background:none;border:none;color:rgba(255,255,255,0.55);font-size:20px;cursor:pointer;padding:0 2px;line-height:1}
-  .modal-close:hover{color:#fff}
-  .modal-body{padding:20px}
-  .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
-  .info-item label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:2px}
-  .info-item span{font-size:13px;font-weight:500;color:var(--navy)}
-  .previews{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
-  .prev-box{border:1px solid var(--border);border-radius:8px;overflow:hidden}
-  .prev-label{padding:6px 10px;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;background:var(--cream);border-bottom:1px solid var(--border)}
-  .prev-img{width:100%;height:160px;object-fit:contain;display:block;background:#f8f8f8}
-  .prev-ph{height:160px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:var(--muted);font-size:12px}
-  .prev-ph span{font-size:28px}
-  .actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-  .btn{padding:8px 16px;border-radius:7px;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;border:none;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
-  .btn:disabled{opacity:0.45;cursor:not-allowed}
-  .btn-approve{background:var(--gbg);color:var(--green);border:1px solid var(--gbr)}.btn-approve:not(:disabled):hover{background:var(--green);color:#fff}
-  .btn-reject{background:var(--rbg);color:var(--red);border:1px solid var(--rbr)}.btn-reject:not(:disabled):hover{background:var(--red);color:#fff}
-  .btn-translate{background:var(--navy);color:var(--goldl)}.btn-translate:not(:disabled):hover{background:var(--navy2)}
-  .btn-pdf{background:var(--pbg);color:var(--purple);border:1px solid var(--pbr)}.btn-pdf:not(:disabled):hover{background:var(--purple);color:#fff}
-  .btn-email{background:var(--bbg);color:var(--blue);border:1px solid var(--bbr)}.btn-email:not(:disabled):hover{background:var(--blue);color:#fff}
-  .translation-out{margin-top:12px;padding:14px;background:var(--cream);border:1px solid var(--border);border-radius:8px;font-size:12px;line-height:1.8;color:var(--text);display:none;max-height:220px;overflow-y:auto;white-space:pre-wrap}
-  .spinner{display:inline-block;width:12px;height:12px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle}
-  @keyframes spin{to{transform:rotate(360deg)}}
-
-  .toast{position:fixed;bottom:20px;right:20px;z-index:999;background:var(--navy);color:var(--goldl);padding:10px 18px;border-radius:10px;font-size:12px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,0.2);transform:translateY(60px);opacity:0;transition:all .3s;pointer-events:none}
-  .toast.show{transform:translateY(0);opacity:1}
-
-  @media(max-width:580px){.stats-bar,.table-wrap{margin:10px}.info-grid,.previews{grid-template-columns:1fr}.modal-body{padding:14px}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,sans-serif;background:#f0ede8;min-height:100vh}
+/* LOGIN */
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.login-card{background:#fff;border-radius:16px;padding:36px 32px;width:100%;max-width:360px;box-shadow:0 4px 24px rgba(0,0,0,0.08)}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:24px}
+.login-logo img{width:40px;height:40px;border-radius:8px}
+.login-logo-text{font-size:15px;font-weight:600;color:#1a2744}
+.login-title{font-size:20px;font-weight:600;color:#1a2744;margin-bottom:6px}
+.login-sub{font-size:13px;color:#6b7280;margin-bottom:24px}
+.login-label{font-size:12px;font-weight:500;color:#1a2744;margin-bottom:5px;display:block}
+.login-input{width:100%;padding:10px 12px;border:1px solid #e5e0d8;border-radius:8px;font-size:14px;font-family:Inter,sans-serif;outline:none;margin-bottom:16px}
+.login-input:focus{border-color:#1a2744}
+.login-btn{width:100%;padding:12px;background:#1a2744;color:#e8c97a;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif}
+.login-err{font-size:12px;color:#dc2626;margin-top:8px;display:none}
+/* MAIN */
+.main{display:none}
+header{background:#1a2744;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+.hdr-left{display:flex;align-items:center;gap:10px}
+.hdr-left img{width:34px;height:34px;border-radius:7px}
+.hdr-name{font-size:15px;font-weight:600;color:#e8c97a}
+.hdr-sub{font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:1px;text-transform:uppercase}
+.hdr-right{display:flex;align-items:center;gap:8px}
+.hdr-btn{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif;border:none}
+.hdr-admin{background:rgba(201,168,76,0.15);color:#e8c97a}
+.hdr-out{background:transparent;color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.15)!important}
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:20px 20px 0}
+.stat{background:#fff;border-radius:12px;padding:16px 18px;border:1px solid #e5e0d8}
+.stat-label{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;margin-bottom:8px}
+.stat-val{font-size:28px;font-weight:600;color:#1a2744}
+.stat-val.orange{color:#f59e0b}
+.stat-val.green{color:#16a34a}
+/* TABLE */
+.table-wrap{margin:16px 20px;background:#fff;border-radius:12px;border:1px solid #e5e0d8;overflow:hidden}
+.table-head{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e5e0d8}
+.table-title{font-size:14px;font-weight:600;color:#1a2744}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.fbtn{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid #e5e0d8;background:#fff;color:#6b7280;font-family:Inter,sans-serif}
+.fbtn.active{background:#1a2744;color:#e8c97a;border-color:#1a2744}
+.refresh-btn{padding:6px 12px;border-radius:8px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid #e5e0d8;background:#fff;color:#1a2744;font-family:Inter,sans-serif}
+table{width:100%;border-collapse:collapse}
+thead th{font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#6b7280;padding:10px 16px;text-align:left;border-bottom:1px solid #e5e0d8;background:#faf8f4}
+tbody tr{border-bottom:1px solid #f0ede8;cursor:pointer;transition:background .15s}
+tbody tr:hover{background:#faf8f4}
+tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
+.td-name{font-weight:500}
+.td-sub{font-size:11px;color:#6b7280;margin-top:2px}
+.pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.pill.pending{background:#fef3c7;color:#d97706}
+.pill.approved{background:#dbeafe;color:#1d4ed8}
+.pill.translated{background:#dcfce7;color:#15803d}
+.pill.rejected{background:#fee2e2;color:#dc2626}
+.empty{padding:40px;text-align:center;color:#6b7280;font-size:13px;display:none}
+/* MODAL */
+.overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:9999;overflow-y:auto;padding:20px}
+.modal{background:#fff;border-radius:14px;max-width:720px;margin:0 auto;overflow:hidden}
+.modal-head{background:#1a2744;padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+.modal-head h3{color:#e8c97a;font-size:15px;font-weight:600}
+.mclose{background:rgba(255,255,255,0.1);border:none;color:#fff;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.modal-body{padding:20px}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.mfield label{font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px}
+.mfield span{font-size:13px;color:#1a2744;font-weight:500}
+.img-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.img-box{border:1px solid #e5e0d8;border-radius:8px;overflow:hidden}
+.img-box-label{font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:1px;padding:8px 12px;background:#faf8f4;border-bottom:1px solid #e5e0d8}
+.img-box img{width:100%;display:block;max-height:200px;object-fit:contain;background:#f5f5f5}
+.img-box .no-img{padding:20px;text-align:center;font-size:12px;color:#6b7280}
+.fields-box{background:#faf8f4;border:1px solid #e5e0d8;border-radius:8px;padding:14px;margin-bottom:16px}
+.fields-box-title{font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.fields-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.field-item label{font-size:10px;color:#6b7280;display:block;margin-bottom:2px}
+.field-item span{font-size:12px;color:#1a2744;font-weight:500}
+.action-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #e5e0d8}
+.abtn{padding:9px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:Inter,sans-serif;display:flex;align-items:center;gap:5px}
+.abtn-approve{background:#dcfce7;color:#15803d}
+.abtn-reject{background:#fee2e2;color:#dc2626}
+.abtn-translate{background:#1a2744;color:#e8c97a}
+.abtn-pdf{background:#dbeafe;color:#1d4ed8}
+.abtn-email{background:#f3e8ff;color:#7c3aed}
+.abtn:disabled{opacity:0.5;cursor:not-allowed}
+.t-out{background:#f8fafc;border:1px solid #e5e0d8;border-radius:8px;padding:12px;font-size:12px;color:#1a2744;white-space:pre-wrap;max-height:200px;overflow-y:auto;display:none;margin-top:10px;line-height:1.6}
+.toast{position:fixed;bottom:20px;right:20px;background:#1a2744;color:#e8c97a;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:500;opacity:0;transition:opacity .3s;z-index:99999;pointer-events:none}
+.toast.show{opacity:1}
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,0.3);border-top-color:#e8c97a;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:600px){
+  .stats{grid-template-columns:1fr 1fr}
+  .modal-grid{grid-template-columns:1fr}
+  .img-row{grid-template-columns:1fr}
+  .fields-grid{grid-template-columns:1fr}
+  .stats{padding:12px 12px 0}
+  .table-wrap{margin:12px}
+}
 </style>
 </head>
 <body>
 
-<div id="login-screen">
+<!-- LOGIN -->
+<div class="login-wrap" id="login-wrap">
   <div class="login-card">
-    <h2>Admin Login</h2>
-    <p>Arroyo Translation Services</p>
-    <input type="password" id="pwd" placeholder="Admin password" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="login-logo">
+      <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj4KICA8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzFhMjc0NCIvPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDUwLDUyKSI+CiAgICA8bGluZSB4MT0iMCIgeTE9Ii0yNiIgeDI9IjAiIHkyPSItMzgiIHN0cm9rZT0iI2M5YTg0YyIgc3Ryb2tlLXdpZHRoPSIxLjUiIG9wYWNpdHk9IjAuNSIvPgogICAgPGxpbmUgeDE9IjAiIHkxPSItMjYiIHgyPSI4IiB5Mj0iLTM2IiBzdHJva2U9IiNjOWE4NGMiIHN0cm9rZS13aWR0aD0iMS41IiBvcGFjaXR5PSIwLjQiIHRyYW5zZm9ybT0icm90YXRlKDI1KSIvPgogICAgPGxpbmUgeDE9IjAiIHkxPSItMjYiIHgyPSI4IiB5Mj0iLTM2IiBzdHJva2U9IiNjOWE4NGMiIHN0cm9rZS13aWR0aD0iMS41IiBvcGFjaXR5PSIwLjQiIHRyYW5zZm9ybT0icm90YXRlKC0yNSkiLz4KICAgIDxsaW5lIHgxPSIwIiB5MT0iLTI2IiB4Mj0iOCIgeTI9Ii0zNiIgc3Ryb2tlPSIjYzlhODRjIiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC4zIiB0cmFuc2Zvcm09InJvdGF0ZSg1MCkiLz4KICAgIDxsaW5lIHgxPSIwIiB5MT0iLTI2IiB4Mj0iOCIgeTI9Ii0zNiIgc3Ryb2tlPSIjYzlhODRjIiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC4zIiB0cmFuc2Zvcm09InJvdGF0ZSgtNTApIi8+CiAgPC9nPgogIDxjaXJjbGUgY3g9IjUwIiBjeT0iNDQiIHI9IjkiIGZpbGw9IiNlOGM5N2EiLz4KICA8cmVjdCB4PSIzMCIgeT0iMzYiIHdpZHRoPSI1IiBoZWlnaHQ9IjM2IiByeD0iMS41IiBmaWxsPSIjYzlhODRjIi8+CiAgPHJlY3QgeD0iNjUiIHk9IjM2IiB3aWR0aD0iNSIgaGVpZ2h0PSIzNiIgcng9IjEuNSIgZmlsbD0iI2M5YTg0YyIvPgogIDxyZWN0IHg9IjI2IiB5PSI0NyIgd2lkdGg9IjQ4IiBoZWlnaHQ9IjUiIHJ4PSIxLjUiIGZpbGw9IiNjOWE4NGMiLz4KICA8cGF0aCBkPSJNMjQgMzggUTUwIDI5IDc2IDM4IEw3NiAzMyBRNTAgMjMgMjQgMzMgWiIgZmlsbD0iI2M5YTg0YyIvPgogIDxyZWN0IHg9IjI0IiB5PSIzMiIgd2lkdGg9IjUyIiBoZWlnaHQ9IjciIHJ4PSIxLjUiIGZpbGw9IiNlOGM5N2EiLz4KICA8cmVjdCB4PSIyNiIgeT0iNDQiIHdpZHRoPSI5IiBoZWlnaHQ9IjciIHJ4PSIxLjUiIGZpbGw9IiNlOGM5N2EiLz4KICA8cmVjdCB4PSI2NSIgeT0iNDQiIHdpZHRoPSI5IiBoZWlnaHQ9IjciIHJ4PSIxLjUiIGZpbGw9IiNlOGM5N2EiLz4KPC9zdmc+" alt="logo">
+      <div class="login-logo-text">Arroyo Translation Services</div>
+    </div>
+    <div class="login-title">Admin Dashboard</div>
+    <div class="login-sub">Sign in to manage translation requests</div>
+    <label class="login-label">Password</label>
+    <input class="login-input" type="password" id="pw-input" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">Sign in</button>
-    <div class="login-err" id="login-err">Incorrect password.</div>
+    <div class="login-err" id="login-err">Incorrect password. Please try again.</div>
   </div>
 </div>
 
-<div id="main-app">
+<!-- MAIN -->
+<div class="main" id="main-wrap">
   <header>
-    <div style="display:flex;align-items:center;gap:12px">
-      <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj4KICA8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzFhMjc0NCIvPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDUwLDUyKSI+CiAgICA8bGluZSB4MT0iMCIgeTE9Ii0yNiIgeDI9IjAiIHkyPSItMzgiIHN0cm9rZT0iI2M5YTg0YyIgc3Ryb2tlLXdpZHRoPSIxLjUiIG9wYWNpdHk9IjAuNSIvPgogICAgPGxpbmUgeDE9IjAiIHkxPSItMjYiIHgyPSI4IiB5Mj0iLTM2IiBzdHJva2U9IiNjOWE4NGMiIHN0cm9rZS13aWR0aD0iMS41IiBvcGFjaXR5PSIwLjQiIHRyYW5zZm9ybT0icm90YXRlKDI1KSIvPgogICAgPGxpbmUgeDE9IjAiIHkxPSItMjYiIHgyPSI4IiB5Mj0iLTM2IiBzdHJva2U9IiNjOWE4NGMiIHN0cm9rZS13aWR0aD0iMS41IiBvcGFjaXR5PSIwLjQiIHRyYW5zZm9ybT0icm90YXRlKC0yNSkiLz4KICAgIDxsaW5lIHgxPSIwIiB5MT0iLTI2IiB4Mj0iOCIgeTI9Ii0zNiIgc3Ryb2tlPSIjYzlhODRjIiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC4zIiB0cmFuc2Zvcm09InJvdGF0ZSg1MCkiLz4KICAgIDxsaW5lIHgxPSIwIiB5MT0iLTI2IiB4Mj0iOCIgeTI9Ii0zNiIgc3Ryb2tlPSIjYzlhODRjIiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC4zIiB0cmFuc2Zvcm09InJvdGF0ZSgtNTApIi8+CiAgPC9nPgogIDxjaXJjbGUgY3g9IjUwIiBjeT0iNDQiIHI9IjkiIGZpbGw9IiNlOGM5N2EiLz4KICA8cmVjdCB4PSIzMCIgeT0iMzYiIHdpZHRoPSI1IiBoZWlnaHQ9IjM2IiByeD0iMS41IiBmaWxsPSIjYzlhODRjIi8+CiAgPHJlY3QgeD0iNjUiIHk9IjM2IiB3aWR0aD0iNSIgaGVpZ2h0PSIzNiIgcng9IjEuNSIgZmlsbD0iI2M5YTg0YyIvPgogIDxyZWN0IHg9IjI2IiB5PSI0NyIgd2lkdGg9IjQ4IiBoZWlnaHQ9IjUiIHJ4PSIxLjUiIGZpbGw9IiNjOWE4NGMiLz4KICA8cGF0aCBkPSJNMjQgMzggUTUwIDI5IDc2IDM4IEw3NiAzMyBRNTAgMjMgMjQgMzMgWiIgZmlsbD0iI2M5YTg0YyIvPgogIDxyZWN0IHg9IjI0IiB5PSIzMiIgd2lkdGg9IjUyIiBoZWlnaHQ9IjciIHJ4PSIxLjUiIGZpbGw9IiNlOGM5N2EiLz4KICA8cmVjdCB4PSIyNiIgeT0iNDQiIHdpZHRoPSI5IiBoZWlnaHQ9IjciIHJ4PSIxLjUiIGZpbGw9IiNlOGM5N2EiLz4KICA8cmVjdCB4PSI2NSIgeT0iNDQiIHdpZHRoPSI5IiBoZWlnaHQ9IjciIHJ4PSIxLjUiIGZpbGw9IiNlOGM5N2EiLz4KPC9zdmc+" alt="Logo" style="width:36px;height:36px;border-radius:7px;flex-shrink:0">
-      <div><div class="logo-name">Arroyo Translation Services</div><div class="logo-sub">Admin Dashboard</div></div>
+    <div class="hdr-left">
+      <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj4KICA8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzFhMjc0NCIvPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDUwLDUyKSI+CiAgICA8bGluZSB4MT0iMCIgeTE9Ii0yNiIgeDI9IjAiIHkyPSItMzgiIHN0cm9rZT0iI2M5YTg0YyIgc3Ryb2tlLXdpZHRoPSIxLjUiIG9wYWNpdHk9IjAuNSIvPgogICAgPGxpbmUgeDE9IjAiIHkxPSItMjYiIHgyPSI4IiB5Mj0iLTM2IiBzdHJva2U9IiNjOWE4NGMiIHN0cm9rZS13aWR0aD0iMS41IiBvcGFjaXR5PSIwLjQiIHRyYW5zZm9ybT0icm90YXRlKDI1KSIvPgogICAgPGxpbmUgeDE9IjAiIHkxPSItMjYiIHgyPSI4IiB5Mj0iLTM2IiBzdHJva2U9IiNjOWE4NGMiIHN0cm9rZS13aWR0aD0iMS41IiBvcGFjaXR5PSIwLjQiIHRyYW5zZm9ybT0icm90YXRlKC0yNSkiLz4KICAgIDxsaW5lIHgxPSIwIiB5MT0iLTI2IiB4Mj0iOCIgeTI9Ii0zNiIgc3Ryb2tlPSIjYzlhODRjIiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC4zIiB0cmFuc2Zvcm09InJvdGF0ZSg1MCkiLz4KICAgIDxsaW5lIHgxPSIwIiB5MT0iLTI2IiB4Mj0iOCIgeTI9Ii0zNiIgc3Ryb2tlPSIjYzlhODRjIiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC4zIiB0cmFuc2Zvcm09InJvdGF0ZSgtNTApIi8+CiAgPC9nPgogIDxjaXJjbGUgY3g9IjUwIiBjeT0iNDQiIHI9IjkiIGZpbGw9IiNlOGM5N2EiLz4KICA8cmVjdCB4PSIzMCIgeT0iMzYiIHdpZHRoPSI1IiBoZWlnaHQ9IjM2IiByeD0iMS41IiBmaWxsPSIjYzlhODRjIi8+CiAgPHJlY3QgeD0iNjUiIHk9IjM2IiB3aWR0aD0iNSIgaGVpZ2h0PSIzNiIgcng9IjEuNSIgZmlsbD0iI2M5YTg0YyIvPgogIDxyZWN0IHg9IjI2IiB5PSI0NyIgd2lkdGg9IjQ4IiBoZWlnaHQ9IjUiIHJ4PSIxLjUiIGZpbGw9IiNjOWE4NGMiLz4KICA8cGF0aCBkPSJNMjQgMzggUTUwIDI5IDc2IDM4IEw3NiAzMyBRNTAgMjMgMjQgMzMgWiIgZmlsbD0iI2M5YTg0YyIvPgogIDxyZWN0IHg9IjI0IiB5PSIzMiIgd2lkdGg9IjUyIiBoZWlnaHQ9IjciIHJ4PSIxLjUiIGZpbGw9IiNlOGM5N2EiLz4KICA8cmVjdCB4PSIyNiIgeT0iNDQiIHdpZHRoPSI5IiBoZWlnaHQ9IjciIHJ4PSIxLjUiIGZpbGw9IiNlOGM5N2EiLz4KICA8cmVjdCB4PSI2NSIgeT0iNDQiIHdpZHRoPSI5IiBoZWlnaHQ9IjciIHJ4PSIxLjUiIGZpbGw9IiNlOGM5N2EiLz4KPC9zdmc+" alt="logo">
+      <div>
+        <div class="hdr-name">Arroyo Translation Services</div>
+        <div class="hdr-sub">Admin Dashboard</div>
+      </div>
     </div>
-    <div style="display:flex;align-items:center;gap:10px">
-      <span class="admin-badge">Admin</span>
-      <button class="sign-out" onclick="doLogout()">Sign out</button>
+    <div class="hdr-right">
+      <div class="hdr-btn hdr-admin">Admin</div>
+      <button class="hdr-btn hdr-out" onclick="doLogout()">Sign out</button>
     </div>
   </header>
 
-  <div class="stats-bar">
-    <div class="stat-card"><div class="stat-label">Total</div><div class="stat-num navy" id="s-total">0</div></div>
-    <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-num amber" id="s-pending">0</div></div>
-    <div class="stat-card"><div class="stat-label">Translated</div><div class="stat-num green" id="s-translated">0</div></div>
-    <div class="stat-card"><div class="stat-label">Revenue ₱</div><div class="stat-num navy" id="s-revenue">0</div></div>
+  <div class="stats">
+    <div class="stat"><div class="stat-label">Total</div><div class="stat-val" id="s-total">0</div></div>
+    <div class="stat"><div class="stat-label">Pending</div><div class="stat-val orange" id="s-pending">0</div></div>
+    <div class="stat"><div class="stat-label">Translated</div><div class="stat-val green" id="s-translated">0</div></div>
+    <div class="stat"><div class="stat-label">Revenue ₱</div><div class="stat-val" id="s-revenue">0</div></div>
   </div>
 
   <div class="table-wrap">
-    <div class="table-hdr">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div class="table-title">Submissions</div>
-        <button class="refresh-btn" onclick="loadSubmissions()">↻ Refresh</button>
-      </div>
-      <div class="filters">
-        <button class="fbtn active" onclick="filter('all',this)">All</button>
-        <button class="fbtn" onclick="filter('pending',this)">Pending</button>
-        <button class="fbtn" onclick="filter('approved',this)">Approved</button>
-        <button class="fbtn" onclick="filter('translated',this)">Translated</button>
-        <button class="fbtn" onclick="filter('rejected',this)">Rejected</button>
+    <div class="table-head">
+      <div class="table-title">Submissions</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div class="filters">
+          <button class="fbtn active" onclick="setFilter('all',this)">All</button>
+          <button class="fbtn" onclick="setFilter('pending',this)">Pending</button>
+          <button class="fbtn" onclick="setFilter('approved',this)">Approved</button>
+          <button class="fbtn" onclick="setFilter('translated',this)">Translated</button>
+          <button class="fbtn" onclick="setFilter('rejected',this)">Rejected</button>
+        </div>
+        <button class="refresh-btn" onclick="loadSubs()">↺ Refresh</button>
       </div>
     </div>
     <table>
-      <thead><tr><th>Customer</th><th>Document</th><th>Purpose</th><th>Date</th><th>Status</th></tr></thead>
-      <tbody id="tbl"></tbody>
+      <thead>
+        <tr>
+          <th>Customer</th>
+          <th>Document</th>
+          <th>Purpose</th>
+          <th>Date</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
     </table>
-    <div class="empty" id="empty" style="display:none">No submissions yet.</div>
+    <div class="empty" id="empty">No submissions found.</div>
   </div>
 </div>
 
-<div class="overlay" id="overlay" onclick="closeOuter(event)">
+<!-- MODAL -->
+<div class="overlay" id="overlay">
   <div class="modal">
     <div class="modal-head">
       <h3 id="m-title">Submission</h3>
-      <button class="modal-close" onclick="closeModal()">×</button>
+      <button class="mclose" id="mclose-btn">×</button>
     </div>
     <div class="modal-body">
-      <div class="info-grid">
-        <div class="info-item"><label>Name</label><span id="m-name"></span></div>
-        <div class="info-item"><label>Email</label><span id="m-email"></span></div>
-        <div class="info-item"><label>Phone</label><span id="m-phone"></span></div>
-        <div class="info-item"><label>Document</label><span id="m-doc"></span></div>
-        <div class="info-item"><label>Purpose</label><span id="m-purpose"></span></div>
-        <div class="info-item"><label>Submitted</label><span id="m-date"></span></div>
-        <div class="info-item"><label>Status</label><span id="m-status"></span></div>
-        <div class="info-item"><label>Fee</label><span>₱300</span></div>
+      <div class="modal-grid">
+        <div class="mfield"><label>Name</label><span id="m-name"></span></div>
+        <div class="mfield"><label>Email</label><span id="m-email"></span></div>
+        <div class="mfield"><label>Phone</label><span id="m-phone"></span></div>
+        <div class="mfield"><label>Document</label><span id="m-doc"></span></div>
+        <div class="mfield"><label>Purpose</label><span id="m-purpose"></span></div>
+        <div class="mfield"><label>Date</label><span id="m-date"></span></div>
+        <div class="mfield"><label>Status</label><span id="m-status"></span></div>
       </div>
-      <div class="previews">
-        <div class="prev-box">
-          <div class="prev-label">PSA document</div>
-          <div id="doc-prev" class="prev-ph"><span>📄</span><span>Uploaded file</span></div>
+
+      <div class="img-row">
+        <div class="img-box">
+          <div class="img-box-label">PSA Document</div>
+          <div id="m-doc-img"></div>
         </div>
-        <div class="prev-box">
-          <div class="prev-label">Payment proof</div>
-          <div id="proof-prev" class="prev-ph"><span>🧾</span><span>GCash screenshot</span></div>
+        <div class="img-box">
+          <div class="img-box-label">Payment Proof</div>
+          <div id="m-proof-img"></div>
         </div>
       </div>
-      <div class="actions">
-        <button class="btn btn-approve" id="b-approve" onclick="approve()">✓ Approve</button>
-        <button class="btn btn-reject"  id="b-reject"  onclick="reject()">✕ Reject</button>
-        <button class="btn btn-translate" id="b-translate" onclick="translate()">⚡ Translate (AI)</button>
-        <button class="btn btn-pdf"   id="b-pdf"   onclick="downloadPDF()">↓ Download PDF</button>
-        <button class="btn btn-email" id="b-email" onclick="sendEmail()">✉ Email customer</button>
+
+      <div class="fields-box">
+        <div class="fields-box-title">Document Fields</div>
+        <div class="fields-grid" id="m-fields"></div>
       </div>
-      <div class="translation-out" id="t-out"></div>
+
+      <div class="action-row">
+        <button class="abtn abtn-approve" id="b-approve" onclick="doApprove()">✓ Approve</button>
+        <button class="abtn abtn-reject" id="b-reject" onclick="doReject()">✕ Reject</button>
+        <button class="abtn abtn-translate" id="b-translate" onclick="doTranslate()">⚡ Translate (AI)</button>
+        <button class="abtn abtn-pdf" id="b-pdf" onclick="doDownloadPDF()">↓ Download PDF</button>
+        <button class="abtn abtn-email" id="b-email" onclick="doEmail()">✉ Email Customer</button>
+      </div>
+
+      <div class="t-out" id="t-out"></div>
     </div>
   </div>
 </div>
@@ -198,390 +226,321 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const PASS = 'Trainer2026';
-const KEY  = '$2a$10$fO/kBOQ1AEcGiT2YVcQQ0uNmSp/Jn5Lu10yYyEMy5UL6eXY0w4BNG';
-const BIN  = '6a4e1aecf5f4af5e29710ff9';
+const PASS   = 'Trainer2026';
+const KEY    = '$2a$10$fO/kBOQ1AEcGiT2YVcQQ0uNmSp/Jn5Lu10yYyEMy5UL6eXY0w4BNG';
+const BIN    = '6a4e1aecf5f4af5e29710ff9';
+const WORKER = 'https://gemini-proxy.areymar36.workers.dev';
+const EMAILJS_SVC = 'service_wog8mwj';
+const EMAILJS_TPL = 'template_5l2krhk';
+const EMAILJS_KEY = 'XDm2wGz_tn8DOjWPw';
 
-const EMAILJS_SVC  = 'service_wog8mwj';
-const EMAILJS_TPL  = 'template_5l2krhk';
-const EMAILJS_KEY  = 'XDm2wGz_tn8DOjWPw';
+let subs = [], activeId = null, curFilter = 'all';
 
-let subs = [], curFilter = 'all', activeId = null;
-
+// ── AUTH ──────────────────────────────────────
 function doLogin() {
-  if (document.getElementById('pwd').value === PASS) {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('main-app').style.display = 'block';
-    loadSubmissions();
-
-// Event delegation for table rows - more reliable than inline onclick
-document.addEventListener('click', function(e) {
-  var tr = e.target.closest('tr[data-id]');
-  if (tr) {
-    var id = tr.getAttribute('data-id');
-    if (id) openModal(id);
-  }
-});
+  var pw = document.getElementById('pw-input').value;
+  if (pw === PASS) {
+    document.getElementById('login-wrap').style.display = 'none';
+    document.getElementById('main-wrap').style.display = 'block';
+    loadSubs();
   } else {
     document.getElementById('login-err').style.display = 'block';
   }
 }
 function doLogout() {
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('main-app').style.display = 'none';
-  document.getElementById('pwd').value = '';
+  document.getElementById('login-wrap').style.display = 'flex';
+  document.getElementById('main-wrap').style.display = 'none';
+  document.getElementById('pw-input').value = '';
 }
 
-async function loadSubmissions() {
+// ── DATA ──────────────────────────────────────
+async function loadSubs() {
   try {
-    const r = await fetch(`https://api.jsonbin.io/v3/b/${BIN}/latest`, { headers:{'X-Master-Key':KEY} });
-    const d = await r.json();
-    subs = d.record?.submissions || [];
-  } catch { subs = []; }
-  render(); updateStats();
-}
-
-async function save() {
-  await fetch(`https://api.jsonbin.io/v3/b/${BIN}`, {
-    method:'PUT',
-    headers:{'Content-Type':'application/json','X-Master-Key':KEY},
-    body: JSON.stringify({ submissions: subs })
-  });
-}
-
-function statusLabel(s) {
-  return {pending:'⏳ Pending',approved:'✓ Approved',translated:'✅ Translated',rejected:'✕ Rejected'}[s]||s;
-}
-
-function render() {
-  const tbody = document.getElementById('tbl');
-  const empty = document.getElementById('empty');
-  const list  = curFilter === 'all' ? subs : subs.filter(s => s.status === curFilter);
-  if (!list.length) { tbody.innerHTML=''; empty.style.display='block'; return; }
-  empty.style.display = 'none';
-  tbody.innerHTML = list.map(s => `
-    <tr data-id="${s.id}" style="cursor:pointer;background:white" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='white'">
-      <td><div class="td-name">${s.name}</div><div class="td-sub">${s.email}</div></td>
-      <td>${s.doctype}</td>
-      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">${s.purpose}</td>
-      <td style="white-space:nowrap;color:var(--muted);font-size:11px">${s.date}</td>
-      <td><span class="pill ${s.status}">${statusLabel(s.status)}</span></td>
-    </tr>`).join('');
-  // Attach click handlers to each row
-  Array.from(tbody.querySelectorAll('tr[data-id]')).forEach(function(tr) {
-    tr.addEventListener('click', function() {
-      openModal(this.getAttribute('data-id'));
+    var r = await fetch('https://api.jsonbin.io/v3/b/' + BIN + '/latest', {
+      headers: {'X-Master-Key': KEY}
     });
+    var d = await r.json();
+    subs = (d.record && d.record.submissions) ? d.record.submissions : [];
+  } catch(e) { subs = []; }
+  render();
+  updateStats();
+}
+
+async function saveSubs() {
+  await fetch('https://api.jsonbin.io/v3/b/' + BIN, {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json','X-Master-Key':KEY},
+    body: JSON.stringify({submissions: subs})
   });
 }
 
-function updateStats() {
-  document.getElementById('s-total').textContent     = subs.length;
-  document.getElementById('s-pending').textContent   = subs.filter(s=>s.status==='pending').length;
-  document.getElementById('s-translated').textContent= subs.filter(s=>s.status==='translated').length;
-  document.getElementById('s-revenue').textContent   = (subs.filter(s=>s.status!=='rejected').length*300).toLocaleString();
-}
-
-function filter(f, btn) {
+// ── RENDER ────────────────────────────────────
+function setFilter(f, btn) {
   curFilter = f;
-  document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.fbtn').forEach(function(b) { b.classList.remove('active'); });
   btn.classList.add('active');
   render();
 }
 
+function statusLabel(s) {
+  return {pending:'⏳ Pending', approved:'✓ Approved', translated:'✅ Translated', rejected:'✕ Rejected'}[s] || s;
+}
+
+function render() {
+  var tbody = document.getElementById('tbody');
+  var empty = document.getElementById('empty');
+  var list = curFilter === 'all' ? subs : subs.filter(function(s) { return s.status === curFilter; });
+
+  if (!list.length) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = '';
+  list.forEach(function(s) {
+    var tr = document.createElement('tr');
+    tr.setAttribute('data-id', s.id);
+    tr.innerHTML =
+      '<td><div class="td-name">' + s.name + '</div><div class="td-sub">' + s.email + '</div></td>' +
+      '<td>' + s.doctype + '</td>' +
+      '<td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#6b7280">' + (s.purpose || '') + '</td>' +
+      '<td style="white-space:nowrap;color:#6b7280;font-size:11px">' + s.date + '</td>' +
+      '<td><span class="pill ' + s.status + '">' + statusLabel(s.status) + '</span></td>';
+    tr.addEventListener('click', function() {
+      openModal(s.id);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+function updateStats() {
+  document.getElementById('s-total').textContent = subs.length;
+  document.getElementById('s-pending').textContent = subs.filter(function(s){return s.status==='pending';}).length;
+  document.getElementById('s-translated').textContent = subs.filter(function(s){return s.status==='translated';}).length;
+  document.getElementById('s-revenue').textContent = (subs.filter(function(s){return s.status!=='rejected';}).length * 300).toLocaleString();
+}
+
+// ── MODAL ─────────────────────────────────────
 function openModal(id) {
+  var s = subs.find(function(x) { return x.id === id; });
+  if (!s) return;
   activeId = id;
-  const s = subs.find(x => x.id === id);
-  if (!s) { console.log('Submission not found:', id); return; }
-  document.body.style.overflow = 'hidden';
-  document.getElementById('m-title').textContent   = `${s.id} · ${s.name}`;
-  document.getElementById('m-name').textContent    = s.name;
-  document.getElementById('m-email').textContent   = s.email;
-  document.getElementById('m-phone').textContent   = s.phone;
-  document.getElementById('m-doc').textContent     = s.doctype;
-  document.getElementById('m-purpose').textContent = s.purpose;
-  document.getElementById('m-date').textContent    = s.date;
-  document.getElementById('m-status').innerHTML    = `<span class="pill ${s.status}">${statusLabel(s.status)}</span>`;
 
-  const docPrev   = document.getElementById('doc-prev');
-  const proofPrev = document.getElementById('proof-prev');
+  document.getElementById('m-title').textContent = s.id + ' · ' + s.name;
+  document.getElementById('m-name').textContent = s.name;
+  document.getElementById('m-email').textContent = s.email;
+  document.getElementById('m-phone').textContent = s.phone;
+  document.getElementById('m-doc').textContent = s.doctype;
+  document.getElementById('m-purpose').textContent = s.purpose || '—';
+  document.getElementById('m-date').textContent = s.date;
+  document.getElementById('m-status').innerHTML = '<span class="pill ' + s.status + '">' + statusLabel(s.status) + '</span>';
 
-  if (s.docFile?.data) {
-    const isImg = s.docFile.type.startsWith('image/');
-    docPrev.innerHTML = isImg
-      ? `<img class="prev-img" src="data:${s.docFile.type};base64,${s.docFile.data}" alt="PSA doc">`
-      : `<div class="prev-ph"><span>📄</span><span>${s.docFile.name}</span></div>`;
+  // PSA doc image
+  var docImg = document.getElementById('m-doc-img');
+  if (s.docFile && s.docFile.data) {
+    docImg.innerHTML = '<img src="data:image/jpeg;base64,' + s.docFile.data + '" alt="PSA Document">';
   } else {
-    docPrev.innerHTML = `<div class="prev-ph"><span>📄</span><span>No file</span></div>`;
+    docImg.innerHTML = '<div class="no-img">No document image</div>';
   }
 
-  if (s.proofFile?.data) {
-    proofPrev.innerHTML = `<img class="prev-img" src="data:${s.proofFile.type};base64,${s.proofFile.data}" alt="Payment proof">`;
+  // Payment proof image
+  var proofImg = document.getElementById('m-proof-img');
+  if (s.proofFile && s.proofFile.data) {
+    proofImg.innerHTML = '<img src="data:image/jpeg;base64,' + s.proofFile.data + '" alt="Payment Proof">';
   } else {
-    proofPrev.innerHTML = `<div class="prev-ph"><span>🧾</span><span>No file</span></div>`;
+    proofImg.innerHTML = '<div class="no-img">No payment proof</div>';
   }
 
-  document.getElementById('b-approve').disabled   = s.status !== 'pending';
-  document.getElementById('b-reject').disabled    = s.status === 'rejected' || s.status === 'translated';
-  document.getElementById('b-translate').disabled = s.status !== 'approved';
-  document.getElementById('b-pdf').disabled       = !s.translation;
-  document.getElementById('b-email').disabled     = s.status !== 'translated';
+  // Document fields
+  var fieldsHtml = '';
+  if (s.fields) {
+    Object.entries(s.fields).forEach(function(entry) {
+      var k = entry[0], v = entry[1];
+      if (v) fieldsHtml += '<div class="field-item"><label>' + k.replace(/_/g,' ') + '</label><span>' + v + '</span></div>';
+    });
+  }
+  document.getElementById('m-fields').innerHTML = fieldsHtml || '<div style="color:#6b7280;font-size:12px">No fields recorded</div>';
 
-  const tout = document.getElementById('t-out');
+  // Translation output
+  var tout = document.getElementById('t-out');
   if (s.translation) { tout.textContent = s.translation; tout.style.display = 'block'; }
   else { tout.style.display = 'none'; tout.textContent = ''; }
 
-  document.getElementById('overlay').classList.add('open');
+  // Button states
+  document.getElementById('b-approve').disabled = s.status === 'approved' || s.status === 'translated';
+  document.getElementById('b-reject').disabled = s.status === 'rejected';
+
+  // Show modal
+  document.getElementById('overlay').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
 }
 
-function closeModal() { document.getElementById('overlay').classList.remove('open'); activeId = null; document.body.style.overflow = ''; }
-function closeOuter(e) { if (e.target === document.getElementById('overlay')) closeModal(); }
+function closeModal() {
+  document.getElementById('overlay').style.display = 'none';
+  document.body.style.overflow = '';
+  activeId = null;
+}
 
-async function approve() {
-  const s = subs.find(x => x.id === activeId); if (!s) return;
+// Close modal buttons
+document.getElementById('mclose-btn').addEventListener('click', closeModal);
+document.getElementById('overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ── ACTIONS ───────────────────────────────────
+function toast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 3000);
+}
+
+async function doApprove() {
+  var s = subs.find(function(x) { return x.id === activeId; });
+  if (!s) return;
   s.status = 'approved';
-  await save(); render(); updateStats(); openModal(activeId);
-  toast('✓ Payment approved');
+  await saveSubs();
+  render(); updateStats(); openModal(activeId);
+  toast('Approved: ' + s.name);
 }
 
-async function reject() {
-  if (!confirm('Reject this submission?')) return;
-  const s = subs.find(x => x.id === activeId); if (!s) return;
+async function doReject() {
+  var s = subs.find(function(x) { return x.id === activeId; });
+  if (!s) return;
+  if (!confirm('Reject this submission from ' + s.name + '?')) return;
   s.status = 'rejected';
-  await save(); render(); updateStats(); openModal(activeId);
-  toast('✕ Submission rejected');
+  await saveSubs();
+  render(); updateStats(); openModal(activeId);
+  toast('Rejected: ' + s.name);
 }
 
-async function translate() {
-  const s = subs.find(x => x.id === activeId); if (!s) return;
-  const btn = document.getElementById('b-translate');
+async function doTranslate() {
+  var s = subs.find(function(x) { return x.id === activeId; });
+  if (!s) return;
+  var btn = document.getElementById('b-translate');
+  var tout = document.getElementById('t-out');
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Translating...';
-  const tout = document.getElementById('t-out');
   tout.style.display = 'block';
   tout.textContent = 'Generating Japanese translation...';
 
-  const fieldData = s.fields || {};
-  const fieldList = Object.entries(fieldData)
-    .filter(([k,v]) => v)
-    .map(([k,v]) => k.replace(/_/g,' ') + ': ' + v)
-    .join('\n');
+  var fieldList = s.fields ? Object.entries(s.fields).filter(function(e){return e[1];}).map(function(e){return e[0].replace(/_/g,' ') + ': ' + e[1];}).join('\n') : '';
 
-  const prompt = 'You are a professional Japanese translator specializing in Philippine PSA civil registry documents.\n' +
-    'Translate this ' + s.doctype + ' from English to Japanese.\n\n' +
+  var prompt = 'You are a professional Japanese translator specializing in Philippine PSA civil registry documents.\n' +
+    'Translate this ' + s.doctype + ' document from English to Japanese.\n\n' +
     'Customer: ' + s.name + '\nPurpose: ' + (s.purpose||'') + '\n\n' +
-    'Fields:\n' + fieldList + '\n\n' +
-    'Format each field as: [FIELD:English Label|Japanese Label|English Value|Japanese Value]\n' +
-    'Rules: Names use katakana. Dates as Japanese format (e.g. 1993年4月22日). Keep numbers unchanged.\n' +
-    'After all fields add: [CERT:certification in Japanese then English]\n\n' +
-    'IMPORTANT: Return ONLY the [FIELD:...] lines and [CERT:...] line. No other text. No introduction. No explanation.';
+    'Document fields:\n' + fieldList + '\n\n' +
+    'For each field provide the translation in this format:\n' +
+    'Field name in Japanese: translated value in Japanese\n\n' +
+    'Then provide a certification statement in Japanese confirming this is an accurate translation of the original PSA document.\n' +
+    'Return the translation in a clean, professional format suitable for official use.';
 
   try {
-    var raw = '';
-
-    // Call Cloudflare Worker (Llama 4 vision model)
-    try {
-      var parts = [{text: prompt}];
-      if (s.docFile && s.docFile.data) {
-        parts.push({inline_data: {mime_type: 'image/jpeg', data: s.docFile.data}});
-      }
-      var r1 = await fetch('https://gemini-proxy.areymar36.workers.dev', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          contents: [{parts: parts}],
-          generationConfig: {temperature: 0.2, maxOutputTokens: 2000}
-        })
-      });
-      var d1 = await r1.json();
-      if (d1.error) throw new Error(d1.error.message);
-      var rawVal = d1.candidates && d1.candidates[0] && d1.candidates[0].content &&
-            d1.candidates[0].content.parts && d1.candidates[0].content.parts[0]
-            ? d1.candidates[0].content.parts[0].text : '';
-      raw = typeof rawVal === 'string' ? rawVal : JSON.stringify(rawVal);
-    } catch(eg) { console.log('Worker failed:', eg.message); }
-
-        if (!raw || raw.length < 20) {
-      try {
-        const encoded = encodeURIComponent(prompt);
-        const r2 = await fetch('https://text.pollinations.ai/' + encoded + '?model=openai', {method:'GET'});
-        if (r2.ok) {
-          const t2 = (await r2.text()).trim();
-          if (t2 && t2.length > 50) raw = t2;
-        }
-      } catch(e2) { console.log('Pollinations fallback failed:', e2.message); }
+    var parts = [{text: prompt}];
+    if (s.docFile && s.docFile.data) {
+      parts.push({inline_data: {mime_type: 'image/jpeg', data: s.docFile.data}});
     }
 
-    
+    var r = await fetch(WORKER, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        contents: [{parts: parts}],
+        generationConfig: {temperature: 0.2, maxOutputTokens: 2000}
+      })
+    });
+    var d = await r.json();
+    if (d.error) throw new Error(d.error.message);
+
+    var raw = d.candidates && d.candidates[0] && d.candidates[0].content &&
+              d.candidates[0].content.parts && d.candidates[0].content.parts[0]
+              ? d.candidates[0].content.parts[0].text : '';
+    if (typeof raw !== 'string') raw = JSON.stringify(raw);
 
     s.translation = raw;
     s.status = 'translated';
     tout.textContent = raw;
-    await save(); render(); updateStats(); openModal(activeId);
-    toast('Translation complete for ' + s.name);
+    await saveSubs();
+    render(); updateStats();
+    toast('Translation complete: ' + s.name);
   } catch(e) {
-    tout.textContent = 'Translation failed: ' + (e.message || e) + '\n\nPlease try again or check your connection.';
-    btn.disabled = false;
-    btn.innerHTML = '⚡ Translate (AI)';
+    tout.textContent = 'Translation error: ' + e.message;
+    toast('Translation failed');
   }
+  btn.disabled = false;
+  btn.innerHTML = '⚡ Translate (AI)';
 }
 
-function buildPDFContent(s) {
-  const lines = s.translation.split('\n');
-  const fields = [];
-  let cert = '';
-  for (const line of lines) {
-    const fm = line.match(/\[FIELD:(.+?)\|(.+?)\|(.+?)\|(.+?)\]/);
-    if (fm) fields.push({ enLbl: fm[1], jpLbl: fm[2], enVal: fm[3], jpVal: fm[4] });
-    const cm = line.match(/\[CERT:(.+?)\]/);
-    if (cm) cert = cm[1];
-  }
-  if (!fields.length) {
-    fields.push({ enLbl:'Translation', jpLbl:'翻訳', enVal: s.name, jpVal: s.name });
-  }
-  return { fields, cert };
-}
+function doDownloadPDF() {
+  var s = subs.find(function(x) { return x.id === activeId; });
+  if (!s) return;
+  if (!s.translation) { alert('Please translate the document first.'); return; }
 
-function downloadPDF() {
-  const s = subs.find(x => x.id === activeId); if (!s || !s.translation) return;
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const W = 210, margin = 20, colW = 55, valW = 115;
-  let y = 20;
-  const navy = [26, 39, 68], gold = [201, 168, 76], gray = [107, 114, 128];
-  const lightBg = [240, 237, 232], blueBg = [240, 244, 255], amberBg = [255, 251, 235];
+  var doc = new jspdf.jsPDF();
+  var pageW = doc.internal.pageSize.getWidth();
 
-  const titles = {
-    'Birth Certificate':['出生証明書','Certificate of Live Birth'],
-    'Marriage Certificate':['婚姻証明書','Marriage Certificate'],
-    'Death Certificate':['死亡証明書','Death Certificate'],
-    'CENOMAR':['未婚証明書（CENOMAR）','Certificate of No Marriage Record'],
-    'Advisory on Marriages':['婚姻記録照会書','Advisory on Marriages'],
-    'Certificate of No Birth Record':['出生記録なし証明書','Certificate of No Birth Record'],
-    'Certificate of No Death Record':['死亡記録なし証明書','Certificate of No Death Record'],
-  };
-  const [jpTitle, enTitle] = titles[s.doctype] || ['翻訳文書', s.doctype];
-
-  doc.setFillColor(...navy);
-  doc.rect(margin, y, W - 2*margin, 0.8, 'F');
-  y += 4;
-
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(16);
-  doc.setTextColor(...navy);
-  doc.text(jpTitle, W/2, y, { align:'center' });
-  y += 7;
-
-  doc.setFont('helvetica','normal');
+  // Header
+  doc.setFillColor(26, 39, 68);
+  doc.rect(0, 0, pageW, 30, 'F');
+  doc.setTextColor(232, 201, 122);
+  doc.setFontSize(14);
+  doc.text('Arroyo Translation Services', pageW/2, 13, {align:'center'});
   doc.setFontSize(9);
-  doc.setTextColor(...gray);
-  doc.text(enTitle + '  —  Japanese Translation', W/2, y, { align:'center' });
-  y += 5;
+  doc.text('Official Japanese Translation', pageW/2, 21, {align:'center'});
 
-  doc.setDrawColor(...gold);
-  doc.setLineWidth(0.6);
-  doc.line(margin, y, W - margin, y);
-  y += 4;
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(11);
+  doc.text(s.doctype + ' — Japanese Translation', pageW/2, 40, {align:'center'});
 
+  // Info
+  doc.setFontSize(9);
+  doc.setTextColor(100, 100, 100);
+  doc.text('Customer: ' + s.name, 15, 52);
+  doc.text('Reference: ' + s.id, 15, 58);
+  doc.text('Date: ' + s.date, 15, 64);
+
+  doc.setDrawColor(201, 168, 76);
+  doc.line(15, 68, pageW-15, 68);
+
+  // Translation content
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(10);
+  var lines = doc.splitTextToSize(s.translation, pageW - 30);
+  doc.text(lines, 15, 76);
+
+  // Footer
+  doc.setFillColor(26, 39, 68);
+  var pageH = doc.internal.pageSize.getHeight();
+  doc.rect(0, pageH-16, pageW, 16, 'F');
+  doc.setTextColor(232, 201, 122);
   doc.setFontSize(8);
-  doc.setTextColor(...gray);
-  doc.text(`Ref. No.: ${s.id}`, margin, y);
-  doc.text(`Date: ${new Date().toLocaleDateString('en-PH')}`, W - margin, y, { align:'right' });
-  y += 8;
+  doc.text('Arroyo Translation Services — For Japanese visa and marriage registration use', pageW/2, pageH-6, {align:'center'});
 
-  const { fields, cert } = buildPDFContent(s);
-
-  for (const f of fields) {
-    const rowH = 10;
-    doc.setFillColor(...lightBg);
-    doc.rect(margin, y, colW, rowH, 'F');
-    doc.setDrawColor(229, 224, 216);
-    doc.setLineWidth(0.3);
-    doc.rect(margin, y, W - 2*margin, rowH);
-
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(7.5);
-    doc.setTextColor(...gray);
-    doc.text(f.enLbl, margin + 2, y + 4);
-    doc.setFont('helvetica','normal');
-    doc.setFontSize(7);
-    doc.text(f.jpLbl, margin + 2, y + 8);
-
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(9);
-    doc.setTextColor(...navy);
-    const enTrunc = f.enVal.length > 40 ? f.enVal.substring(0,38)+'…' : f.enVal;
-    doc.text(enTrunc, margin + colW + 2, y + 4);
-    doc.setFont('helvetica','normal');
-    doc.setFontSize(8.5);
-    doc.setTextColor(30,30,30);
-    const jpTrunc = f.jpVal.length > 35 ? f.jpVal.substring(0,33)+'…' : f.jpVal;
-    doc.text(jpTrunc, margin + colW + 2, y + 8.5);
-    y += rowH;
-    if (y > 250) { doc.addPage(); y = 20; }
-  }
-  y += 6;
-
-  const certText = cert || `本翻訳は${s.doctype}を忠実に日本語に翻訳したものです。This is a faithful Japanese translation of the original ${s.doctype} issued by the Philippine Statistics Authority (PSA).`;
-  doc.setFillColor(...blueBg);
-  doc.rect(margin, y, W - 2*margin, 22, 'F');
-  doc.setDrawColor(191, 219, 254);
-  doc.setLineWidth(0.5);
-  doc.rect(margin, y, W - 2*margin, 22);
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(7.5);
-  doc.setTextColor(...navy);
-  const certLines = doc.splitTextToSize(certText, W - 2*margin - 6);
-  doc.text(certLines, margin + 3, y + 5);
-  y += 28;
-
-  doc.setFillColor(...amberBg);
-  doc.rect(margin, y, W - 2*margin, 20, 'F');
-  doc.setDrawColor(253, 230, 138);
-  doc.rect(margin, y, W - 2*margin, 20);
-  doc.setFontSize(7);
-  doc.setTextColor(146, 64, 14);
-  const disc = 'ACCEPTED USE: Suitable for Japanese visa applications and marriage registration at a Japanese municipal office (役所). NOT valid for court proceedings or notarized legal submissions.';
-  const discLines = doc.splitTextToSize(disc, W - 2*margin - 6);
-  doc.text(discLines, margin + 3, y + 5);
-
-  doc.save(`${s.id}-${s.doctype.replace(/ /g,'-')}-JP.pdf`);
-  toast('↓ PDF downloaded');
+  doc.save(s.id + '-' + s.doctype.replace(/ /g,'-') + '-JP.pdf');
+  toast('PDF downloaded');
 }
 
-async function sendEmail() {
-  const s = subs.find(x => x.id === activeId); if (!s || !s.translation) return;
-  const btn = document.getElementById('b-email');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Sending…';
+async function doEmail() {
+  var s = subs.find(function(x) { return x.id === activeId; });
+  if (!s) return;
   try {
-    await emailjs.init(EMAILJS_KEY);
+    emailjs.init(EMAILJS_KEY);
     await emailjs.send(EMAILJS_SVC, EMAILJS_TPL, {
-      to_email:      s.email,
+      to_email: s.email,
       customer_name: s.name,
-      doc_type:      s.doctype,
-      ref_no:        s.id,
-      purpose:       s.purpose,
+      doc_type: s.doctype,
+      ref_no: s.id
     });
-    s.status = 'translated';
-    await save();
-    toast('✉ Email sent to ' + s.email);
-    btn.innerHTML = '✉ Email customer';
-    btn.disabled = false;
+    toast('Email sent to ' + s.email);
   } catch(e) {
-    toast('Email failed: ' + (e.text || e.message));
-    btn.innerHTML = '✉ Email customer';
-    btn.disabled = false;
+    toast('Email failed: ' + e.message);
   }
 }
 
-function toast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
-}
+// Init
+loadSubs();
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </body>
 </html>
