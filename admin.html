@@ -363,13 +363,12 @@ async function translate() {
   try {
     var raw = '';
 
-    // Call Cloudflare Worker proxy (handles Gemini API)
+    // Call Cloudflare Worker (Llama 4 vision model)
     try {
       var parts = [{text: prompt}];
       if (s.docFile && s.docFile.data) {
         parts.push({inline_data: {mime_type: 'image/jpeg', data: s.docFile.data}});
       }
-
       var r1 = await fetch('https://gemini-proxy.areymar36.workers.dev', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},

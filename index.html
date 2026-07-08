@@ -500,22 +500,24 @@ async function onDocUpload(input) {
   try {
     var fields = DOC_FIELDS[doctype] || [];
     var fieldIds = fields.map(function(f){ return f.id; }).join(', ');
+
     var tips = {
-      'Birth Certificate': 'Child name section 1. Sex X-mark checkbox. DOB split Day/Month/Year. Mother maiden name section 6. Father name section 9. Registry number top right.',
-      'Marriage Certificate': 'Husband name section 1. Wife maiden name section 7. Marriage date section 3. Solemnizing officer.',
-      'Death Certificate': 'Deceased name section 1. Death date and place. Cause of death section 19. Attending physician.',
-      'CENOMAR': 'Applicant name at top. NO MARRIAGE RECORD text. Reference number and issuance date.',
-      'Advisory on Marriages': 'Subject name. Marriage records table. Spouse name, date, place, current status.',
-      'Certificate of No Birth Record': 'Subject name. Parent names. NO BIRTH RECORD text. Reference number.',
-      'Certificate of No Death Record': 'Subject name. NO DEATH RECORD text. Reference number and issuance date.'
+      'Birth Certificate': 'Child name section 1 (First Middle Last columns). Sex: X mark next to Male or Female. Date of birth split into Day Month Year boxes - combine them. Place of birth: hospital or street, city, province. Birth order: 1st 2nd etc. Mother maiden name section 6 (First Middle Last). Mother citizenship, religion, occupation. Father name section 9. Father citizenship, religion, occupation. Parents marriage date section 12. Registry number top right. Registration date near bottom.',
+      'Marriage Certificate': 'Husband full name section 1. Husband date of birth, place of birth, citizenship, religion, civil status. Wife maiden name section 7. Wife date of birth, place of birth, citizenship, religion, civil status. Date of marriage. Place of marriage. Solemnizing officer name and title. Registry number top right.',
+      'Death Certificate': 'Deceased full name section 1. Sex, date of birth, age, civil status, citizenship, religion, occupation, usual residence. Date of death. Place of death. Immediate cause, antecedent cause, underlying cause of death. Attending physician. Registry number.',
+      'CENOMAR': 'Applicant full name at top. Date of birth, place of birth, sex, citizenship. Father and mother names. NO MARRIAGE RECORD certification text. Reference number and date of issuance at bottom.',
+      'Advisory on Marriages': 'Subject full name. Date of birth, place of birth, sex. Number of marriages found. Spouse name, date of marriage, place of marriage, current status of marriage. Date of issuance and reference number.',
+      'Certificate of No Birth Record': 'Subject full name. Date of birth, place of birth, sex. Father name, mother name. NO BIRTH RECORD certification. Reference number and date of issuance.',
+      'Certificate of No Death Record': 'Subject full name. Date of birth, place of birth, sex. NO DEATH RECORD certification. Reference number and date of issuance.'
     };
 
-    var prompt = 'You are an expert at reading Philippine PSA civil registry documents. ' +
-      'This is a ' + doctype + ' image. Read ALL text including handwritten, faded, stamped text. ' +
-      'Tips: ' + (tips[doctype] || '') + ' ' +
-      'Extract these exact field IDs: ' + fieldIds + '. ' +
-      'Return ONLY a raw JSON object. No explanation. No markdown. No backticks. ' +
-      'Full names as First Middle Last. Dates as YYYY-MM-DD. Sex as Male or Female. Empty string if unreadable.';
+    var prompt = 'You are an expert at reading Philippine PSA (Philippine Statistics Authority) civil registry documents. ' +
+      'This image is a ' + doctype + '. Read ALL text very carefully including handwritten, faded, stamped, and cursive text. ' +
+      'Document reading tips: ' + (tips[doctype] || 'Read all visible fields carefully.') + ' ' +
+      'Extract ONLY these exact field IDs and their values: ' + fieldIds + '. ' +
+      'IMPORTANT: Return ONLY a raw JSON object. No markdown. No backticks. No explanation. No extra text. ' +
+      'Example format: {"child_name":"REYMAR B ARROYO","child_dob":"1993-04-22","child_sex":"Male"} ' +
+      'Rules: Full names as First Middle Last. Dates as YYYY-MM-DD. Sex as exactly Male or Female. Use empty string if unreadable.';
 
     var res = await fetch('https://gemini-proxy.areymar36.workers.dev', {
       method: 'POST',
@@ -539,7 +541,7 @@ async function onDocUpload(input) {
     raw = raw.replace(/```json/g,'').replace(/```/g,'').trim();
     var jsonStart = raw.indexOf('{');
     var jsonEnd = raw.lastIndexOf('}');
-    if (jsonStart < 0 || jsonEnd < 0) throw new Error('No JSON in response');
+    if (jsonStart < 0 || jsonEnd < 0) throw new Error('No JSON found in response');
     raw = raw.slice(jsonStart, jsonEnd + 1);
 
     var extracted = JSON.parse(raw);
@@ -557,8 +559,8 @@ async function onDocUpload(input) {
 
   } catch(e) {
     console.error('Scan error:', e.message);
-    status.style.cssText = 'display:flex;background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12px;align-items:center;gap:8px';
-    status.innerHTML = 'Document uploaded. Please fill in the fields below based on your PSA document.';
+    status.style.cssText = 'display:flex;background:#fffbeb;border:1px solid #fde68a;color:#92400e;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12px;align-items:center;gap:8px';
+    status.innerHTML = 'Could not auto-read document (' + (e.message || 'error') + '). Please fill in the fields manually below.';
     setStep(3);
   }
 }
