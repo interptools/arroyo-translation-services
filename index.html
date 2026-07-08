@@ -122,7 +122,7 @@
       <div class="row2">
         <div class="field"><label for="phone">Contact number<span class="req">*</span></label><input type="tel" id="phone" placeholder="09XX XXX XXXX" required></div>
         <div class="field"><label for="doctype">Document type<span class="req">*</span></label>
-          <select id="doctype" required>
+          <select id="doctype" required onchange="showDynamicFields(this.value)">
             <option value="" disabled selected>Select document</option>
             <option>Birth Certificate</option>
             <option>Marriage Certificate</option>
@@ -134,11 +134,16 @@
           </select>
         </div>
       </div>
-      <div class="row1"><div class="field"><label for="purpose">Purpose of translation<span class="req">*</span></label><input type="text" id="purpose" placeholder="e.g. Japanese visa application, marriage in Japan…" required></div></div>
+
+    </div>
+
+    <div class="card-section" id="dynamic-fields-section" style="display:none">
+      <div class="sec-title"><span>2</span>Document details</div>
+      <div id="dynamic-fields"></div>
     </div>
 
     <div class="card-section">
-      <div class="sec-title"><span>2</span>Upload your PSA document</div>
+      <div class="sec-title"><span>3</span>Upload your PSA document</div>
       <div class="upload-area">
         <input type="file" id="doc-file" accept=".pdf,.jpg,.jpeg,.png" onchange="showFile('doc-file','doc-name')">
         <div class="upload-icon">📄</div>
@@ -149,7 +154,7 @@
     </div>
 
     <div class="card-section">
-      <div class="sec-title"><span>3</span>Pay via GCash / InstaPay</div>
+      <div class="sec-title"><span>4</span>Pay via GCash / InstaPay</div>
       <div class="gcash-box">
         <div class="gcash-qr">
           <img id="qr-img" src="" alt="GCash QR Code">
@@ -169,7 +174,7 @@
     </div>
 
     <div class="card-section">
-      <div class="sec-title"><span>4</span>Upload payment screenshot</div>
+      <div class="sec-title"><span>5</span>Upload payment screenshot</div>
       <div class="upload-area">
         <input type="file" id="proof-file" accept=".jpg,.jpeg,.png" onchange="showFile('proof-file','proof-name')">
         <div class="upload-icon">🧾</div>
@@ -222,6 +227,131 @@ function toBase64(file) {
   });
 }
 
+const DOC_FIELDS = {
+  'Birth Certificate': [
+    { id:'child_name',     label:"Child's full name",        ph:'e.g. Juan dela Cruz Santos' },
+    { id:'child_dob',      label:"Date of birth",            ph:'e.g. March 15, 1990', type:'date' },
+    { id:'child_pob',      label:"Place of birth",           ph:'e.g. Manila, Metro Manila' },
+    { id:'child_sex',      label:"Sex",                      ph:'', type:'select', opts:['Male','Female'] },
+    { id:'child_order',    label:"Birth order",              ph:'e.g. 1st Child' },
+    { id:'mother_name',    label:"Mother's full maiden name",ph:'e.g. Maria Reyes dela Cruz' },
+    { id:'mother_citizen', label:"Mother's citizenship",     ph:'e.g. Filipino' },
+    { id:'mother_occ',     label:"Mother's occupation",      ph:'e.g. Teacher' },
+    { id:'father_name',    label:"Father's full name",       ph:'e.g. Pedro Santos Reyes' },
+    { id:'father_citizen', label:"Father's citizenship",     ph:'e.g. Filipino' },
+    { id:'father_occ',     label:"Father's occupation",      ph:'e.g. Engineer' },
+    { id:'reg_number',     label:"Registry number",          ph:'e.g. 1990-MCR-002341' },
+    { id:'reg_date',       label:"Date of registration",     ph:'e.g. March 22, 1990', type:'date' },
+    { id:'purpose',        label:"Purpose of translation",   ph:'e.g. Japanese visa application' },
+  ],
+  'Marriage Certificate': [
+    { id:'husband_name',   label:"Husband's full name",      ph:'e.g. Pedro Santos Reyes' },
+    { id:'husband_dob',    label:"Husband's date of birth",  ph:'', type:'date' },
+    { id:'husband_pob',    label:"Husband's place of birth", ph:'e.g. Cebu City' },
+    { id:'husband_citizen',label:"Husband's citizenship",    ph:'e.g. Filipino' },
+    { id:'wife_name',      label:"Wife's full name",         ph:'e.g. Maria Reyes dela Cruz' },
+    { id:'wife_dob',       label:"Wife's date of birth",     ph:'', type:'date' },
+    { id:'wife_pob',       label:"Wife's place of birth",    ph:'e.g. Manila' },
+    { id:'wife_citizen',   label:"Wife's citizenship",       ph:'e.g. Filipino' },
+    { id:'marriage_date',  label:"Date of marriage",         ph:'', type:'date' },
+    { id:'marriage_place', label:"Place of marriage",        ph:'e.g. Manila Cathedral, Manila City' },
+    { id:'officer',        label:"Solemnizing officer",      ph:'e.g. Rev. Father Jose Santos' },
+    { id:'reg_number',     label:"Registry number",          ph:'e.g. 2015-MCR-008812' },
+    { id:'purpose',        label:"Purpose of translation",   ph:'e.g. Marriage registration in Japan' },
+  ],
+  'Death Certificate': [
+    { id:'deceased_name',  label:"Deceased's full name",     ph:'e.g. Jose dela Cruz Santos' },
+    { id:'deceased_dob',   label:"Date of birth",            ph:'', type:'date' },
+    { id:'deceased_sex',   label:"Sex",                      ph:'', type:'select', opts:['Male','Female'] },
+    { id:'civil_status',   label:"Civil status",             ph:'', type:'select', opts:['Single','Married','Widowed','Separated'] },
+    { id:'deceased_occ',   label:"Occupation",               ph:'e.g. Retired' },
+    { id:'death_date',     label:"Date of death",            ph:'', type:'date' },
+    { id:'death_place',    label:"Place of death",           ph:'e.g. Philippine General Hospital, Manila' },
+    { id:'cause_of_death', label:"Cause of death",           ph:'e.g. Cardiopulmonary Arrest' },
+    { id:'physician',      label:"Attending physician",      ph:'e.g. Dr. Maria Santos' },
+    { id:'reg_number',     label:"Registry number",          ph:'e.g. 2022-MCR-004491' },
+    { id:'purpose',        label:"Purpose of translation",   ph:'e.g. Estate settlement in Japan' },
+  ],
+  'CENOMAR': [
+    { id:'applicant_name', label:"Full name",                ph:'e.g. Anna Marie Reyes Santos' },
+    { id:'applicant_dob',  label:"Date of birth",            ph:'', type:'date' },
+    { id:'applicant_pob',  label:"Place of birth",           ph:'e.g. Quezon City' },
+    { id:'applicant_sex',  label:"Sex",                      ph:'', type:'select', opts:['Male','Female'] },
+    { id:'issuance_date',  label:"Date of issuance",         ph:'', type:'date' },
+    { id:'ref_number',     label:"Reference number",         ph:'e.g. CENOMAR-2025-QC-00234' },
+    { id:'purpose',        label:"Purpose of translation",   ph:'e.g. Marriage application in Japan' },
+  ],
+  'Advisory on Marriages': [
+    { id:'subject_name',   label:"Subject's full name",      ph:'e.g. Pedro Jose Reyes' },
+    { id:'subject_dob',    label:"Date of birth",            ph:'', type:'date' },
+    { id:'subject_pob',    label:"Place of birth",           ph:'e.g. Davao City' },
+    { id:'num_marriages',  label:"Number of marriages found",ph:'e.g. One (1)' },
+    { id:'spouse_name',    label:"Spouse name (if any)",     ph:'e.g. Lucia Fernandez Cruz' },
+    { id:'marriage_date',  label:"Date of marriage (if any)",ph:'', type:'date' },
+    { id:'current_status', label:"Current status",           ph:'e.g. Annulled, Widowed, etc.' },
+    { id:'issuance_date',  label:"Date of issuance",         ph:'', type:'date' },
+    { id:'purpose',        label:"Purpose of translation",   ph:'e.g. Japanese visa application' },
+  ],
+  'Certificate of No Birth Record': [
+    { id:'subject_name',   label:"Full name",                ph:'e.g. Carlo Mendoza Garcia' },
+    { id:'subject_dob',    label:"Date of birth",            ph:'', type:'date' },
+    { id:'subject_pob',    label:"Place of birth",           ph:'e.g. Batangas City' },
+    { id:'subject_sex',    label:"Sex",                      ph:'', type:'select', opts:['Male','Female'] },
+    { id:'father_name',    label:"Father's name",            ph:'e.g. Roberto Garcia Mendoza' },
+    { id:'mother_name',    label:"Mother's name",            ph:'e.g. Elena Cruz Garcia' },
+    { id:'issuance_date',  label:"Date of issuance",         ph:'', type:'date' },
+    { id:'ref_number',     label:"Reference number",         ph:'e.g. NBR-2025-BT-00077' },
+    { id:'purpose',        label:"Purpose of translation",   ph:'e.g. Japanese visa application' },
+  ],
+  'Certificate of No Death Record': [
+    { id:'subject_name',   label:"Full name",                ph:'e.g. Rosa dela Cruz Villanueva' },
+    { id:'subject_dob',    label:"Date of birth",            ph:'', type:'date' },
+    { id:'subject_pob',    label:"Place of birth",           ph:'e.g. Iloilo City' },
+    { id:'subject_sex',    label:"Sex",                      ph:'', type:'select', opts:['Male','Female'] },
+    { id:'issuance_date',  label:"Date of issuance",         ph:'', type:'date' },
+    { id:'ref_number',     label:"Reference number",         ph:'e.g. NDR-2025-IL-00055' },
+    { id:'purpose',        label:"Purpose of translation",   ph:'e.g. Japanese visa application' },
+  ],
+};
+
+function showDynamicFields(doctype) {
+  const section = document.getElementById('dynamic-fields-section');
+  const container = document.getElementById('dynamic-fields');
+  if (!doctype || !DOC_FIELDS[doctype]) { section.style.display='none'; return; }
+  const fields = DOC_FIELDS[doctype];
+  section.style.display = 'block';
+  container.innerHTML = fields.map((f,i) => {
+    const isEven = i % 2 === 0;
+    const nextF  = fields[i+1];
+    if (!isEven) return '';
+    const buildInput = (field) => {
+      if (field.type === 'select') {
+        return `<select id="${field.id}" required><option value="" disabled selected>Select</option>${field.opts.map(o=>`<option>${o}</option>`).join('')}</select>`;
+      }
+      return `<input type="${field.type||'text'}" id="${field.id}" placeholder="${field.ph}" required>`;
+    };
+    if (nextF) {
+      return `<div class="row2">
+        <div class="field"><label for="${f.id}">${f.label}<span class="req">*</span></label>${buildInput(f)}</div>
+        <div class="field"><label for="${nextF.id}">${nextF.label}<span class="req">*</span></label>${buildInput(nextF)}</div>
+      </div>`;
+    } else {
+      return `<div class="row1"><div class="field"><label for="${f.id}">${f.label}<span class="req">*</span></label>${buildInput(f)}</div></div>`;
+    }
+  }).join('');
+}
+
+function getDynamicValues() {
+  const doctype = document.getElementById('doctype').value;
+  if (!doctype || !DOC_FIELDS[doctype]) return {};
+  const data = {};
+  DOC_FIELDS[doctype].forEach(f => {
+    const el = document.getElementById(f.id);
+    if (el) data[f.id] = el.value;
+  });
+  return data;
+}
+
 function genId() {
   return 'REQ-' + String(Date.now()).slice(-6);
 }
@@ -231,11 +361,13 @@ async function handleSubmit() {
   const email   = document.getElementById('email').value.trim();
   const phone   = document.getElementById('phone').value.trim();
   const doctype = document.getElementById('doctype').value;
-  const purpose = document.getElementById('purpose').value.trim();
   const docFile = document.getElementById('doc-file').files[0];
   const proofFile = document.getElementById('proof-file').files[0];
+  const dynamicData = getDynamicValues();
+  const purpose = dynamicData.purpose || '';
 
-  if (!name || !email || !phone || !doctype || !purpose) { alert('Please fill in all required fields.'); return; }
+  if (!name || !email || !phone || !doctype) { alert('Please fill in all required fields.'); return; }
+  if (DOC_FIELDS[doctype] && !purpose) { alert('Please fill in all document details.'); return; }
   if (!docFile)   { alert('Please upload your PSA document.'); return; }
   if (!proofFile) { alert('Please upload your GCash payment screenshot.'); return; }
 
