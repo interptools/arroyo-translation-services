@@ -905,9 +905,9 @@ function doDownloadPDF() {
     };
     if (places[enVal]) return places[enVal];
 
-    // For names - convert to katakana approximation
-    // Just return empty and let the AI translation handle it
-    return '';
+    // Last resort: return the English value itself
+    // so the PDF shows something rather than —
+    return enVal;
   }
 
   // Build sections HTML
