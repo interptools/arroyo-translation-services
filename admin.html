@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin — Arroyo Translation Services</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj4KICA8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzFhMjc0NCIvPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDUwLDUyKSI+CiAgICA8bGluZSB4MT0iMCIgeTE9Ii0yNiIgeDI9IjAiIHkyPSItMzgiIHN0cm9rZT0iI2M5YTg0YyIgc3Ryb2tlLXdpZHRoPSIxLjUiIG9wYWNpdHk9IjAuNSIvPgogICAgPGxpbmUgeDE9IjAiIHkxPSItMjYiIHgyPSI4IiB5Mj0iLTM2IiBzdHJva2U9IiNjOWE4NGMiIHN0cm9rZS13aWR0aD0iMS41IiBvcGFjaXR5PSIwLjQiIHRyYW5zZm9ybT0icm90YXRlKDI1KSIvPgogICAgPGxpbmUgeDE9IjAiIHkxPSItMjYiIHgyPSI4IiB5Mj0iLTM2IiBzdHJva2U9IiNjOWE4NGMiIHN0cm9rZS13aWR0aD0iMS41IiBvcGFjaXR5PSIwLjQiIHRyYW5zZm9ybT0icm90YXRlKC0yNSkiLz4KICAgIDxsaW5lIHgxPSIwIiB5MT0iLTI2IiB4Mj0iOCIgeTI9Ii0zNiIgc3Ryb2tlPSIjYzlhODRjIiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC4zIiB0cmFuc2Zvcm09InJvdGF0ZSg1MCkiLz4KICAgIDxsaW5lIHgxPSIwIiB5MT0iLTI2IiB4Mj0iOCIgeTI9Ii0zNiIgc3Ryb2tlPSIjYzlhODRjIiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC4zIiB0cmFuc2Zvcm09InJvdGF0ZSgtNTApIi8+CiAgPC9nPgogIDxjaXJjbGUgY3g9IjUwIiBjeT0iNDQiIHI9IjkiIGZpbGw9IiNlOGM5N2EiLz4KICA8cmVjdCB4PSIzMCIgeT0iMzYiIHdpZHRoPSI1IiBoZWlnaHQ9IjM2IiByeD0iMS41IiBmaWxsPSIjYzlhODRjIi8+CiAgPHJlY3QgeD0iNjUiIHk9IjM2IiB3aWR0aD0iNSIgaGVpZ2h0PSIzNiIgcng9IjEuNSIgZmlsbD0iI2M5YTg0YyIvPgogIDxyZWN0IHg9IjI2IiB5PSI0NyIgd2lkdGg9IjQ4IiBoZWlnaHQ9IjUiIHJ4PSIxLjUiIGZpbGw9IiNjOWE4NGMiLz4KICA8cGF0aCBkPSJNMjQgMzggUTUwIDI5IDc2IDM4IEw3NiAzMyBRNTAgMjMgMjQgMzMgWiIgZmlsbD0iI2M5YTg0YyIvPgogIDxyZWN0IHg9IjI0IiB5PSIzMiIgd2lkdGg9IjUyIiBoZWlnaHQ9IjciIHJ4PSIxLjUiIGZpbGw9IiNlOGM5N2EiLz4KICA8cmVjdCB4PSIyNiIgeT0iNDQiIHdpZHRoPSI5IiBoZWlnaHQ9IjciIHJ4PSIxLjUiIGZpbGw9IiNlOGM5N2EiLz4KICA8cmVjdCB4PSI2NSIgeT0iNDQiIHdpZHRoPSI5IiBoZWlnaHQ9IjciIHJ4PSIxLjUiIGZpbGw9IiNlOGM5N2EiLz4KPC9zdmc+">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -270,7 +271,7 @@ const EMAILJS_KEY = 'XDm2wGz_tn8DOjWPw';
 
 let subs = [], activeId = null, curFilter = 'all';
 
-// ── AUTH ──────────────────────────────────────
+// -- AUTH --------------------------------------
 function doLogin() {
   var pw = document.getElementById('pw-input').value;
   if (pw === PASS) {
@@ -287,7 +288,7 @@ function doLogout() {
   document.getElementById('pw-input').value = '';
 }
 
-// ── DATA ──────────────────────────────────────
+// -- DATA --------------------------------------
 async function loadSubs() {
   try {
     var r = await fetch('https://api.jsonbin.io/v3/b/' + BIN + '/latest', {
@@ -308,7 +309,7 @@ async function saveSubs() {
   });
 }
 
-// ── RENDER ────────────────────────────────────
+// -- RENDER ------------------------------------
 function setFilter(f, btn) {
   curFilter = f;
   document.querySelectorAll('.fbtn').forEach(function(b) { b.classList.remove('active'); });
@@ -317,7 +318,7 @@ function setFilter(f, btn) {
 }
 
 function statusLabel(s) {
-  return {pending:'⏳ Pending', approved:'✓ Approved', translated:'✅ Translated', rejected:'✕ Rejected'}[s] || s;
+  return {pending:'Pending', approved:'Approved', translated:'Translated', rejected:'Rejected'}[s] || s;
 }
 
 function render() {
@@ -356,35 +357,39 @@ function updateStats() {
   document.getElementById('s-revenue').textContent = (subs.filter(function(s){return s.status!=='rejected';}).length * 300).toLocaleString();
 }
 
-// ── MODAL ─────────────────────────────────────
+// -- MODAL -------------------------------------
 function openModal(id) {
   var s = subs.find(function(x) { return x.id === id; });
   if (!s) return;
   activeId = id;
 
-  document.getElementById('m-title').textContent = s.id + ' · ' + s.name;
+  document.getElementById('m-title').textContent = s.id + ' - ' + s.name;
   document.getElementById('m-name').textContent = s.name;
   document.getElementById('m-email').textContent = s.email;
   document.getElementById('m-phone').textContent = s.phone;
   document.getElementById('m-doc').textContent = s.doctype;
-  document.getElementById('m-purpose').textContent = s.purpose || '—';
+  document.getElementById('m-purpose').textContent = s.purpose || '-';
   document.getElementById('m-date').textContent = s.date;
   document.getElementById('m-status').innerHTML = '<span class="pill ' + s.status + '">' + statusLabel(s.status) + '</span>';
 
-  // PSA doc image
+  // PSA doc image - use Cloudinary URL if available, fallback to base64
   var docImg = document.getElementById('m-doc-img');
-  if (s.docFile && s.docFile.data && s.docFile.data.length > 100) {
-    var docMime = s.docFile.name && s.docFile.name.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
-    docImg.innerHTML = '<img src="data:' + docMime + ';base64,' + s.docFile.data + '" alt="PSA Document" onerror="this.parentNode.innerHTML=\'<div class=no-img>Image preview unavailable</div>\'">';
+  var docSrc = (s.docFile && s.docFile.url) ? s.docFile.url :
+               (s.docFile && s.docFile.data && s.docFile.data.length > 100) ?
+               'data:image/jpeg;base64,' + s.docFile.data : '';
+  if (docSrc) {
+    var _img = new Image(); _img.style.cssText='width:100%;display:block;max-height:200px;object-fit:contain'; _img.onload=function(){docImg.innerHTML=''; docImg.appendChild(this);}; _img.onerror=function(){docImg.innerHTML='<div class="no-img">Image unavailable</div>';}; _img.src=docSrc;
   } else {
     docImg.innerHTML = '<div class="no-img">No document uploaded</div>';
   }
 
-  // Payment proof image
+  // Payment proof image - use Cloudinary URL if available, fallback to base64
   var proofImg = document.getElementById('m-proof-img');
-  if (s.proofFile && s.proofFile.data && s.proofFile.data.length > 100) {
-    var proofMime = s.proofFile.name && s.proofFile.name.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
-    proofImg.innerHTML = '<img src="data:' + proofMime + ';base64,' + s.proofFile.data + '" alt="Payment Proof" onerror="this.parentNode.innerHTML=\'<div class=no-img>Image preview unavailable</div>\'">';
+  var proofSrc = (s.proofFile && s.proofFile.url) ? s.proofFile.url :
+                 (s.proofFile && s.proofFile.data && s.proofFile.data.length > 100) ?
+                 'data:image/jpeg;base64,' + s.proofFile.data : '';
+  if (proofSrc) {
+    var _img2 = new Image(); _img2.style.cssText='width:100%;display:block;max-height:200px;object-fit:contain'; _img2.onload=function(){proofImg.innerHTML=''; proofImg.appendChild(this);}; _img2.onerror=function(){proofImg.innerHTML='<div class="no-img">Image unavailable</div>';}; _img2.src=proofSrc;
   } else {
     proofImg.innerHTML = '<div class="no-img">No payment proof uploaded</div>';
   }
@@ -401,7 +406,7 @@ function openModal(id) {
 
   // Translation output
   var tout = document.getElementById('t-out');
-  if (s.translation) { tout.textContent = s.translation; tout.style.display = 'block'; }
+  if (s.translation && s.translation.trim()) { tout.textContent = s.translation; tout.style.display = 'block'; }
   else { tout.style.display = 'none'; tout.textContent = ''; }
 
   // Button states
@@ -425,7 +430,7 @@ document.getElementById('overlay').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
 
-// ── ACTIONS ───────────────────────────────────
+// -- ACTIONS -----------------------------------
 function toast(msg) {
   var t = document.getElementById('toast');
   t.textContent = msg;
@@ -544,7 +549,7 @@ async function doTranslate() {
     'DOCUMENT FIELDS TO TRANSLATE:\n' + sectionText + '\n\n' +
     'TRANSLATION RULES:\n' +
     '- Names: use katakana phonetic spelling\n' +
-    '- Dates: convert to Japanese format (例: April 22, 1993 → 1993年4月22日)\n' +
+    '- Dates: convert to Japanese format (: April 22, 1993 -> 1993年4月22日)\n' +
     '- Places: use Japanese pronunciation in katakana\n' +
     '- Sex: Male=男性, Female=女性\n' +
     '- Filipino=フィリピン国籍\n' +
@@ -552,9 +557,9 @@ async function doTranslate() {
     '- Single=未婚, Married=既婚, Widowed=寡婦/鰥夫\n\n' +
     'STRICT OUTPUT RULES:\n' +
     '- Every single field MUST have a Japanese translation - never leave blank\n' +
-    '- Person names: convert to katakana (e.g. REYMAR → レイマール, ARROYO → アロヨ, NELLY → ネリー)\n' +
-    '- Place names: use standard Japanese katakana (e.g. Bato → バト, Camarines Sur → カマリネス・スール州)\n' +
-    '- Occupations: translate to Japanese (Housewife→主婦, Farmer→農業, Carpenter→大工)\n' +
+    '- Person names: convert to katakana (e.g. REYMAR -> レイマール, ARROYO -> アロヨ, NELLY -> ネリー)\n' +
+    '- Place names: use standard Japanese katakana (e.g. Bato -> バト, Camarines Sur -> カマリネス・スール州)\n' +
+    '- Occupations: translate to Japanese (Housewife->主婦, Farmer->農業, Carpenter->大工)\n' +
     '- Use exactly this format for each field: [Japanese label]: [English value] / [Japanese translation]\n\n' +
     'After all fields add:\n' +
     '【翻訳証明】本翻訳はフィリピン統計局（PSA）発行の原文書を正確に日本語に翻訳したものです。\n' +
@@ -592,7 +597,7 @@ async function doTranslate() {
     toast('Translation failed: ' + e.message);
   }
   btn.disabled = false;
-  btn.innerHTML = '⚡ Translate (AI)';
+  btn.innerHTML = 'Translate (AI)';
 }
 
 function doDownloadPDF() {
@@ -851,7 +856,7 @@ function doDownloadPDF() {
       }
     }
 
-    // Date YYYY-MM-DD → Japanese
+    // Date YYYY-MM-DD -> Japanese
     if (enVal.match(/^\d{4}-\d{2}-\d{2}$/)) {
       var p = enVal.split('-');
       return p[0] + '年' + parseInt(p[1]) + '月' + parseInt(p[2]) + '日';
@@ -933,7 +938,7 @@ function doDownloadPDF() {
           '<div class="field-num">' + (field.num || '') + '</div>' +
           '<div class="field-content">' +
             '<div class="field-label-jp">' + field.jp + '</div>' +
-            '<div class="field-val-jp">' + (jpVal || '<span style="color:#ccc">—</span>') + '</div>' +
+            '<div class="field-val-jp">' + (jpVal || '<span style="color:#ccc">-</span>') + '</div>' +
             '<div class="field-label-en">' + field.en + '</div>' +
             '<div class="field-val-en">' + enVal + '</div>' +
           '</div>' +
@@ -951,7 +956,7 @@ function doDownloadPDF() {
           '<div class="field-num">' + (field.num || '') + '</div>' +
           '<div class="field-content">' +
             '<div class="field-label-jp">' + field.jp + '</div>' +
-            '<div class="field-val-jp">' + (jpVal || '<span style="color:#ccc">—</span>') + '</div>' +
+            '<div class="field-val-jp">' + (jpVal || '<span style="color:#ccc">-</span>') + '</div>' +
             '<div class="field-label-en">' + field.en + '</div>' +
             '<div class="field-val-en">' + enVal + '</div>' +
           '</div>' +
@@ -971,7 +976,7 @@ function doDownloadPDF() {
           '<div class="field-num">' + (field.num || '') + '</div>' +
           '<div class="field-content">' +
             '<div class="field-label-jp">' + field.jp + '</div>' +
-            '<div class="field-val-jp">' + (jpVal || '<span style="color:#ccc">—</span>') + '</div>' +
+            '<div class="field-val-jp">' + (jpVal || '<span style="color:#ccc">-</span>') + '</div>' +
             '<div class="field-label-en">' + field.en + '</div>' +
             '<div class="field-val-en">' + enVal + '</div>' +
           '</div>' +
@@ -981,10 +986,28 @@ function doDownloadPDF() {
     }
   });
 
+  // Fallback: if no sections rendered, show raw fields
+  if (!sectionsHtml.trim()) {
+    sectionsHtml = '<div class="sec-hdr">A.&nbsp;&nbsp;DOCUMENT FIELDS / 書類フィールド</div><div class="sec-body">';
+    Object.entries(f).forEach(function(entry, idx) {
+      var k = entry[0], v = entry[1];
+      if (!v || k === 'purpose') return;
+      var bg = idx % 2 === 0 ? '#f5f5dc' : '#efedde';
+      sectionsHtml += '<div class="field-row" style="background:' + bg + '">' +
+        '<div class="field-num"></div>' +
+        '<div class="field-content">' +
+          '<div class="field-label-jp">' + k.replace(/_/g,' ') + '</div>' +
+          '<div class="field-val-jp">' + v + '</div>' +
+        '</div>' +
+        '</div>';
+    });
+    sectionsHtml += '</div>';
+  }
+
   var docHtml = '<!DOCTYPE html><html lang="ja"><head>' +
     '<meta charset="UTF-8">' +
-    '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">' +
-    '<title>' + s.doctype + ' — Japanese Translation</title>' +
+    '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">' +
+    '<title>' + s.doctype + ' - Japanese Translation</title>' +
     '<style>' +
     '*{box-sizing:border-box;margin:0;padding:0}' +
     'body{font-family:"Noto Sans JP",sans-serif;background:#faf8f0;color:#1a2744;font-size:9.5px;padding:0;margin:0}' +
@@ -1025,7 +1048,7 @@ function doDownloadPDF() {
     '</div>' +
     '<div class="page-body" style="padding:0">' +
     '<div style="display:flex;justify-content:space-between;font-size:7.5px;color:#888;margin-bottom:4px;padding-bottom:4px;border-bottom:1.5px solid #c9a84c">' +
-    '<span>登録番号 / Registry No.: ' + (f.reg_number || f.ref_number || '—') + '</span>' +
+    '<span>登録番号 / Registry No.: ' + (f.reg_number || f.ref_number || '-') + '</span>' +
     '<span>翻訳日 / Date: ' + today + '</span>' +
     '</div>' +
     sectionsHtml +
@@ -1041,7 +1064,7 @@ function doDownloadPDF() {
     '</div>' +
     '</div>' +
     '</div>' +
-    '<script>window.onload=function(){window.print();}<\/script>' +
+    '<scr' + 'ipt>document.fonts.ready.then(function(){setTimeout(function(){window.print();},500);});</' + 'script>' +
     '</body></html>';
 
   var blob = new Blob([docHtml], {type:'text/html'});
@@ -1051,7 +1074,7 @@ function doDownloadPDF() {
     var a = document.createElement('a');
     a.href = url; a.download = s.id + '-JP.html'; a.click();
   }
-  toast('PDF ready — use Print > Save as PDF');
+  toast('PDF ready - use Print > Save as PDF');
 }
 
 
@@ -1072,7 +1095,7 @@ async function doEmail() {
   }
 }
 
-// ── EDIT ──────────────────────────────────────
+// -- EDIT --------------------------------------
 var DOC_FIELDS_ADMIN = {
   'Birth Certificate': [
     {id:'child_name',label:'Child Full Name'},{id:'child_dob',label:'Date of Birth',type:'date'},
