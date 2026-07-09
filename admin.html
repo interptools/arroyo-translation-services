@@ -522,12 +522,13 @@ async function doTranslate() {
     'purpose':'翻訳目的'
   };
 
+  var skipTranslation = {'reg_number':true,'ref_number':true,'reg_date':false};
   var sections = docSections[s.doctype] || {};
   var sectionText = '';
   Object.entries(sections).forEach(function(sec) {
     sectionText += '\n' + sec[0] + '\n';
     sec[1].forEach(function(fid) {
-      if (fields[fid]) {
+      if (fields[fid] && !skipTranslation[fid]) {
         sectionText += '  ' + fid + ' (' + (jpLabels[fid] || fid) + '): ' + fields[fid] + '\n';
       }
     });
@@ -537,29 +538,34 @@ async function doTranslate() {
     'DOCUMENT TYPE: ' + s.doctype + '\n' +
     'CUSTOMER: ' + s.name + '\n' +
     'PURPOSE: ' + (s.purpose || 'Japanese visa application') + '\n\n' +
-    'Translate the following document fields to Japanese. For each field provide BOTH the English value and Japanese translation.\n\n' +
-    'OUTPUT FORMAT - use EXACTLY this structure for EVERY field, no exceptions:\n\n' +
+    'Translate the following document fields to Japanese.\n\n' +
+    'OUTPUT FORMAT - use EXACTLY this pipe format for EVERY field:\n' +
     'FIELD_ID|Japanese Translation\n\n' +
     'Example:\n' +
     'child_name|レイマール・B・アロヨ\n' +
     'child_dob|1993年4月22日\n' +
-    'child_pob|カマリネス・スール州、バト\n\n' +
+    'child_pob|カマリネス・スール州、バト\n' +
+    'child_sex|男性\n' +
+    'mother_occ|主婦\n\n' +
     'DOCUMENT FIELDS TO TRANSLATE:\n' + sectionText + '\n\n' +
     'TRANSLATION RULES:\n' +
-    '- Names: use katakana phonetic spelling\n' +
-    '- Dates: convert to Japanese format (: April 22, 1993 -> 1993年4月22日)\n' +
-    '- Places: use Japanese pronunciation in katakana\n' +
+    '- Names: convert ALL names to katakana phonetic spelling (e.g. JUAN -> フアン, DELA CRUZ -> デラ・クルス, SANTOS -> サントス, REYES -> レイエス)\n' +
+    '- Dates in YYYY-MM-DD format: convert to Japanese (e.g. 1993-04-22 -> 1993年4月22日)\n' +
+    '- Dates as text: convert to Japanese (e.g. April 22, 1993 -> 1993年4月22日)\n' +
+    '- Places: use standard Japanese katakana pronunciation\n' +
     '- Sex: Male=男性, Female=女性\n' +
     '- Filipino=フィリピン国籍\n' +
-    '- Roman Catholic=ローマ・カトリック\n' +
-    '- Single=未婚, Married=既婚, Widowed=寡婦/鰥夫\n\n' +
-    'STRICT OUTPUT RULES:\n' +
-    '- Every single field MUST have a Japanese translation - never leave blank\n' +
-    '- Person names: convert to katakana (e.g. REYMAR -> レイマール, ARROYO -> アロヨ, NELLY -> ネリー)\n' +
-    '- Place names: use standard Japanese katakana (e.g. Bato -> バト, Camarines Sur -> カマリネス・スール州)\n' +
-    '- Occupations: translate to Japanese (Housewife->主婦, Farmer->農業, Carpenter->大工)\n' +
-    '- Use ONLY the FIELD_ID|Japanese format shown above. Do NOT use any other format.\n\n' +
-    'After all fields add:\n' +
+    '- Roman Catholic=ローマ・カトリック, Catholic=カトリック\n' +
+    '- Single=未婚, Married=既婚, Widowed=寡婦/鰥夫, Separated=別居, Annulled=婚姻無効\n' +
+    '- Occupations: Housewife/Housekeeper=主婦, Farmer=農業, Carpenter=大工, Teacher=教師, Nurse=看護師, Engineer=エンジニア, Retired=退職者, Driver=運転手\n' +
+    '- Registry/Reference numbers: output as-is (do NOT translate numbers or codes)\n' +
+    '- Purpose values: Japanese visa application=日本ビザ申請, Marriage registration in Japan=日本での婚姻届, Estate settlement in Japan=日本での相続手続き\n' +
+    '- Period covered: keep the year range as-is with 年 (e.g. 1945-2024 -> 1945年〜2024年)\n\n' +
+    'STRICT RULES:\n' +
+    '- Output ONLY lines in FIELD_ID|Japanese format — no headers, no explanations, no extra text\n' +
+    '- Every field listed above MUST have a translation line — never skip any field\n' +
+    '- Never leave the Japanese value blank\n' +
+    '- Do NOT translate field IDs — keep them exactly as shown (e.g. child_name, mother_occ)\n\n' +
     '【翻訳証明】本翻訳はフィリピン統計局（PSA）発行の原文書を正確に日本語に翻訳したものです。\n' +
     'CERTIFICATION: This is a faithful Japanese translation of the original document issued by the Philippine Statistics Authority (PSA).';
 
@@ -570,7 +576,7 @@ async function doTranslate() {
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         contents: [{parts: [{text: prompt}]}],
-        generationConfig: {temperature: 0.2, maxOutputTokens: 2000}
+        generationConfig: {temperature: 0.2, maxOutputTokens: 3500}
       })
     });
 
@@ -607,383 +613,41 @@ function doDownloadPDF() {
   var today = new Date().toLocaleDateString('en-PH', {year:'numeric',month:'long',day:'numeric'});
   var todayJP = (function(){ var d=new Date(); return d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日'; })();
 
-  // Build jpMap from translation text
+  // Build jpMap from FIELD_ID|Japanese lines
   var jpMap = {};
   if (s.translation) {
     s.translation.split('\n').forEach(function(line) {
-      line = line.trim();
-      if (!line) return;
+      line = line.trim(); if (!line) return;
       var pipe = line.indexOf('|');
-      if (pipe > 0) {
-        var fid = line.slice(0, pipe).trim();
-        var jv = line.slice(pipe + 1).trim();
-        if (fid && jv) jpMap[fid] = jv;
-      }
+      if (pipe > 0) { var fid=line.slice(0,pipe).trim(); var jval=line.slice(pipe+1).trim(); if(fid&&jval) jpMap[fid]=jval; }
     });
   }
 
-  function getJP(fieldId, enVal) {
-    if (jpMap[fieldId]) return jpMap[fieldId];
-    if (!enVal) return '';
-    if (enVal.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      var p = enVal.split('-');
-      return p[0]+'年'+parseInt(p[1])+'月'+parseInt(p[2])+'日';
-    }
-    var common = {
-      'Male':'男性','Female':'女性','Filipino':'フィリピン国籍',
-      'Roman Catholic':'ローマ・カトリック','Catholic':'カトリック',
-      'Single':'未婚','Married':'既婚','Widowed':'寡婦/鰥夫','Separated':'別居','Annulled':'婚姻無効',
-      '1st Child':'第1子','2nd Child':'第2子','3rd Child':'第3子','4th Child':'第4子',
-      '5th Child':'第5子','6th Child':'第6子','7th Child':'第7子','8th Child':'第8子',
-      'Housewife':'主婦','Housekeeper':'主婦','Farmer':'農業','Carpenter':'大工',
-      'Teacher':'教師','Engineer':'エンジニア','Driver':'運転手','Nurse':'看護師',
-      'Doctor':'医師','Retired':'退職者','Unemployed':'無職','Student':'学生',
-      'Philippine Statistics Authority (PSA)':'フィリピン統計局（PSA）',
-      'Japanese visa application':'日本ビザ申請',
-      'Marriage registration in Japan':'日本での婚姻届',
-      'Marriage application in Japan':'日本での婚姻申請',
-      'Estate settlement in Japan':'日本での相続手続き',
-      'Legal / Japanese visa application':'法的手続き・日本ビザ申請',
-      'Legal':'法的手続き',
-    };
-    if (common[enVal]) return common[enVal];
-    return enVal;
+  var COMMON = {
+    'Male':'男性','Female':'女性','Filipino':'フィリピン国籍',
+    'Roman Catholic':'ローマ・カトリック','Catholic':'カトリック',
+    'Single':'未婚','Married':'既婚','Widowed':'寡婦/鰥夫','Separated':'別居','Annulled':'婚姻無効',
+    '1st Child':'第1子','2nd Child':'第2子','3rd Child':'第3子','4th Child':'第4子',
+    '5th Child':'第5子','6th Child':'第6子','7th Child':'第7子','8th Child':'第8子',
+    'Housewife':'主婦','Housekeeper':'主婦','Farmer':'農業','Carpenter':'大工',
+    'Teacher':'教師','Engineer':'エンジニア','Driver':'運転手','Nurse':'看護師',
+    'Doctor':'医師','Retired':'退職者','Unemployed':'無職','Student':'学生',
+    'Philippine Statistics Authority (PSA)':'フィリピン統計局（PSA）',
+    'Japanese visa application':'日本ビザ申請','Marriage registration in Japan':'日本での婚姻届',
+    'Marriage application in Japan':'日本での婚姻申請','Estate settlement in Japan':'日本での相続手続き',
+    'Legal / Japanese visa application':'法的手続き・日本ビザ申請','Legal':'法的手続き'
+  };
+
+  function gv(id) { return f[id] || ''; }
+  function gj(id) {
+    if (jpMap[id]) return jpMap[id];
+    var en = gv(id); if (!en) return '';
+    if (en.match(/^\d{4}-\d{2}-\d{2}$/)) { var p=en.split('-'); return p[0]+'年'+parseInt(p[1])+'月'+parseInt(p[2])+'日'; }
+    return COMMON[en] || en;
   }
+  function gjv(id) { return gj(id) || gv(id) || '—'; }
 
-  function v(id) { return f[id] || ''; }
-  function jp(id) { return getJP(id, v(id)); }
-  function jv(id) { return jp(id) || v(id) || '—'; }
-
-  // Shared CSS
-  var BASE_CSS = [
-    '*{box-sizing:border-box;margin:0;padding:0}',
-    'body{font-family:"Noto Sans JP","Times New Roman",serif;background:#faf8f0;color:#222;font-size:9px;padding:8mm 10mm;margin:0}',
-    '.doc-wrap{background:#faf8f0;width:100%}',
-    // PSA header
-    '.psa-header{text-align:center;padding:6px 10px;border-bottom:1px solid #999;background:#faf8f0}',
-    '.psa-republic{font-size:7px;color:#444;letter-spacing:0.3px}',
-    '.psa-office{font-size:8px;font-weight:bold;color:#111;margin:1px 0}',
-    '.psa-civil{font-size:7px;color:#444;margin:1px 0}',
-    '.psa-doc-title{font-size:12px;font-weight:bold;color:#111;margin:4px 0 1px;letter-spacing:0.5px}',
-    '.psa-subtitle{font-size:7.5px;color:#555;font-style:italic}',
-    '.psa-jp-title{font-size:11px;font-weight:bold;color:#1a2744;margin:3px 0 0}',
-    // Meta row
-    '.meta-row{display:grid;padding:3px 8px;border-bottom:1px solid #aaa;font-size:7px;color:#333;background:#f0ece0}',
-    '.meta-3{grid-template-columns:1fr 1fr 1fr}',
-    // Section header
-    '.sec-label{background:#1a2744;color:#e8c97a;font-size:7.5px;font-weight:bold;padding:3px 8px;letter-spacing:0.5px;border-bottom:0.5px solid #aaa}',
-    // Field boxes
-    '.field-box{border-bottom:0.5px solid #bbb;border-right:0.5px solid #bbb;padding:2px 4px 3px;min-height:26px;background:#faf8f0;position:relative}',
-    '.field-box.sh{background:#f0ece0}',
-    '.fnum{font-size:6px;color:#999;margin-bottom:1px}',
-    '.flbl{font-size:6px;color:#777;margin-bottom:1px;line-height:1.2}',
-    '.fjp{font-size:9.5px;font-weight:bold;color:#1a2744;line-height:1.3}',
-    '.fen{font-size:6.5px;color:#999;font-style:italic;line-height:1.2}',
-    // Grid layouts
-    '.row-1{display:grid;grid-template-columns:1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb}',
-    '.row-2{display:grid;grid-template-columns:1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb}',
-    '.row-3{display:grid;grid-template-columns:1fr 1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb}',
-    '.row-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb}',
-    '.col-l{border-right:1.5px solid #888}',
-    // Letter format
-    '.letter-body{padding:10px 16px;font-size:8px;color:#222;line-height:1.9;background:#faf8f0}',
-    '.letter-date{text-align:right;margin-bottom:8px;font-size:7.5px}',
-    '.letter-concern{font-size:8px;font-weight:bold;margin-bottom:8px}',
-    '.letter-para{margin-bottom:8px;font-size:8px;line-height:1.9}',
-    '.fill{display:inline-block;border-bottom:1px solid #333;min-width:80px;font-weight:bold;color:#1a2744;font-size:8.5px;margin:0 2px;padding:0 2px}',
-    '.fill-lg{min-width:140px}',
-    '.detail-row{display:grid;grid-template-columns:130px 1fr;margin-bottom:4px;font-size:7.5px}',
-    '.detail-lbl{color:#666}',
-    '.detail-val{font-weight:bold;color:#1a2744;border-bottom:0.5px solid #bbb}',
-    '.sig-block{margin-top:14px;text-align:right;font-size:7.5px}',
-    '.sig-name{font-size:8px;font-weight:bold;text-decoration:underline}',
-    // Footer boxes
-    '.stamp-row{display:flex;justify-content:space-between;padding:3px 8px;font-size:6.5px;color:#666;border-top:0.5px solid #aaa;background:#f0ece0}',
-    '.cert-box{background:#dbeafe;border:0.5px solid #93c5fd;margin:6px 8px;padding:5px 8px;font-size:7px;color:#1e3a8a;line-height:1.6}',
-    '.cert-jp{font-size:8px;font-weight:bold;display:block;margin-bottom:2px}',
-    '.disc-box{background:#fef9c3;border:0.5px solid #fde047;margin:3px 8px 8px;padding:4px 8px;font-size:6.5px;color:#713f12;line-height:1.5}',
-    '@media print{@page{margin:6mm;size:A4}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}'
-  ].join('');
-
-  var bodyHtml = '';
   var dt = s.doctype;
-
-  // ===== BIRTH CERTIFICATE (unchanged layout) =====
-  if (dt === 'Birth Certificate') {
-    bodyHtml = buildBirthCert(f, jp, jv, v, today, todayJP);
-
-  // ===== MARRIAGE CERTIFICATE =====
-  } else if (dt === 'Marriage Certificate') {
-    bodyHtml =
-      '<div class="psa-header">' +
-        '<div class="psa-republic">Republic of the Philippines · フィリピン共和国</div>' +
-        '<div class="psa-office">PHILIPPINE STATISTICS AUTHORITY · フィリピン統計局</div>' +
-        '<div class="psa-civil">OFFICE OF THE CIVIL REGISTRAR GENERAL · 民事登録局</div>' +
-        '<div class="psa-doc-title">CERTIFICATE OF MARRIAGE</div>' +
-        '<div class="psa-jp-title">婚姻証明書　— 日本語翻訳</div>' +
-      '</div>' +
-      '<div class="meta-row meta-3">' +
-        '<span>登録番号 / Registry No.: <b>'+v('reg_number')+'</b></span>' +
-        '<span style="text-align:center">翻訳日 / Date: <b>'+today+'</b></span>' +
-        '<span style="text-align:right">'+todayJP+'</span>' +
-      '</div>' +
-      '<div class="sec-label">A. 夫の情報 / HUSBAND\'S INFORMATION</div>' +
-      '<div class="row-2">' +
-        '<div class="col-l">' +
-          '<div class="row-1"><div class="field-box sh"><div class="fnum">1</div><div class="flbl">氏名（名・ミドル・姓）/ Name</div><div class="fjp">'+jv('husband_name')+'</div><div class="fen">'+v('husband_name')+'</div></div></div>' +
-          '<div class="row-3">' +
-            '<div class="field-box"><div class="fnum">2</div><div class="flbl">生年月日 / Date of Birth</div><div class="fjp">'+jv('husband_dob')+'</div></div>' +
-            '<div class="field-box sh"><div class="fnum">3</div><div class="flbl">出生地 / Place of Birth</div><div class="fjp">'+jv('husband_pob')+'</div></div>' +
-            '<div class="field-box"><div class="fnum">4</div><div class="flbl">国籍 / Citizenship</div><div class="fjp">'+jv('husband_citizen')+'</div></div>' +
-          '</div>' +
-          '<div class="row-2">' +
-            '<div class="field-box sh"><div class="fnum">5</div><div class="flbl">宗教 / Religion</div><div class="fjp">'+jv('husband_religion')+'</div></div>' +
-            '<div class="field-box"><div class="fnum">6</div><div class="flbl">婚姻状況 / Civil Status</div><div class="fjp">'+jv('husband_civil')+'</div></div>' +
-          '</div>' +
-        '</div>' +
-        '<div>' +
-          '<div class="row-1"><div class="field-box sh"><div class="fnum">7</div><div class="flbl">常住地 / Residence</div><div class="fjp">'+jv('husband_pob')+'</div></div></div>' +
-          '<div class="row-1"><div class="field-box"><div class="fnum">8</div><div class="flbl">父の氏名 / Father\'s Name</div><div class="fjp">'+jv('husband_father')+'</div><div class="fen">'+v('husband_father')+'</div></div></div>' +
-          '<div class="row-1"><div class="field-box sh"><div class="fnum">9</div><div class="flbl">母の旧姓 / Mother\'s Maiden Name</div><div class="fjp">'+jv('husband_mother')+'</div><div class="fen">'+v('husband_mother')+'</div></div></div>' +
-        '</div>' +
-      '</div>' +
-      '<div class="sec-label">B. 妻の情報 / WIFE\'S INFORMATION</div>' +
-      '<div class="row-2">' +
-        '<div class="col-l">' +
-          '<div class="row-1"><div class="field-box sh"><div class="fnum">10</div><div class="flbl">氏名（名・ミドル・姓）/ Maiden Name</div><div class="fjp">'+jv('wife_name')+'</div><div class="fen">'+v('wife_name')+'</div></div></div>' +
-          '<div class="row-3">' +
-            '<div class="field-box"><div class="fnum">11</div><div class="flbl">生年月日 / Date of Birth</div><div class="fjp">'+jv('wife_dob')+'</div></div>' +
-            '<div class="field-box sh"><div class="fnum">12</div><div class="flbl">出生地 / Place of Birth</div><div class="fjp">'+jv('wife_pob')+'</div></div>' +
-            '<div class="field-box"><div class="fnum">13</div><div class="flbl">国籍 / Citizenship</div><div class="fjp">'+jv('wife_citizen')+'</div></div>' +
-          '</div>' +
-          '<div class="row-2">' +
-            '<div class="field-box sh"><div class="fnum">14</div><div class="flbl">宗教 / Religion</div><div class="fjp">'+jv('wife_religion')+'</div></div>' +
-            '<div class="field-box"><div class="fnum">15</div><div class="flbl">婚姻状況 / Civil Status</div><div class="fjp">'+jv('wife_civil')+'</div></div>' +
-          '</div>' +
-        '</div>' +
-        '<div>' +
-          '<div class="row-1"><div class="field-box sh"><div class="fnum">16</div><div class="flbl">常住地 / Residence</div><div class="fjp">'+jv('wife_pob')+'</div></div></div>' +
-          '<div class="row-1"><div class="field-box"><div class="fnum">17</div><div class="flbl">父の氏名 / Father\'s Name</div><div class="fjp">'+jv('wife_father')+'</div><div class="fen">'+v('wife_father')+'</div></div></div>' +
-          '<div class="row-1"><div class="field-box sh"><div class="fnum">18</div><div class="flbl">母の旧姓 / Mother\'s Maiden Name</div><div class="fjp">'+jv('wife_mother')+'</div><div class="fen">'+v('wife_mother')+'</div></div></div>' +
-        '</div>' +
-      '</div>' +
-      '<div class="sec-label">C. 婚姻情報 / MARRIAGE DETAILS</div>' +
-      '<div class="row-2">' +
-        '<div class="col-l">' +
-          '<div class="row-1"><div class="field-box sh"><div class="fnum">19</div><div class="flbl">婚姻日 / Date of Marriage</div><div class="fjp">'+jv('marriage_date')+'</div><div class="fen">'+v('marriage_date')+'</div></div></div>' +
-          '<div class="row-1"><div class="field-box"><div class="fnum">20</div><div class="flbl">婚姻地 / Place of Marriage</div><div class="fjp">'+jv('marriage_place')+'</div><div class="fen">'+v('marriage_place')+'</div></div></div>' +
-        '</div>' +
-        '<div>' +
-          '<div class="row-1"><div class="field-box sh"><div class="fnum">21</div><div class="flbl">挙式執行者 / Solemnizing Officer</div><div class="fjp">'+jv('officer')+'</div><div class="fen">'+v('officer')+'</div></div></div>' +
-          '<div class="row-1"><div class="field-box"><div class="fnum">22</div><div class="flbl">役職・所属 / Position / Designation</div><div class="fjp">'+jv('officer_position')+'</div><div class="fen">'+v('officer_position')+'</div></div></div>' +
-        '</div>' +
-      '</div>' +
-      '<div class="sec-label">D. 登録情報 / REGISTRATION INFORMATION</div>' +
-      '<div class="row-2">' +
-        '<div class="col-l"><div class="field-box sh"><div class="flbl">登録番号 / Registry Number</div><div class="fjp">'+v('reg_number')+'</div></div></div>' +
-        '<div><div class="field-box"><div class="flbl">翻訳目的 / Purpose of Translation</div><div class="fjp">'+jv('purpose')+'</div><div class="fen">'+v('purpose')+'</div></div></div>' +
-      '</div>' +
-      '<div class="stamp-row"><span>Documentary Stamp Tax Paid · 登録印紙税納付済</span><span>発行機関：フィリピン統計局（PSA）</span></div>';
-
-  // ===== DEATH CERTIFICATE =====
-  } else if (dt === 'Death Certificate') {
-    bodyHtml =
-      '<div class="psa-header">' +
-        '<div class="psa-republic">Republic of the Philippines · フィリピン共和国</div>' +
-        '<div class="psa-office">PHILIPPINE STATISTICS AUTHORITY · フィリピン統計局</div>' +
-        '<div class="psa-civil">OFFICE OF THE CIVIL REGISTRAR GENERAL · 民事登録局</div>' +
-        '<div class="psa-doc-title">CERTIFICATE OF DEATH</div>' +
-        '<div class="psa-jp-title">死亡証明書　— 日本語翻訳</div>' +
-      '</div>' +
-      '<div class="meta-row meta-3">' +
-        '<span>登録番号 / Registry No.: <b>'+v('reg_number')+'</b></span>' +
-        '<span style="text-align:center">翻訳日 / Date: <b>'+today+'</b></span>' +
-        '<span style="text-align:right">'+todayJP+'</span>' +
-      '</div>' +
-      '<div class="sec-label">A. 故人の情報 / DECEASED\'S INFORMATION</div>' +
-      '<div class="row-1"><div class="field-box sh"><div class="fnum">1</div><div class="flbl">氏名（名・ミドル・姓）/ Name of Deceased</div><div class="fjp">'+jv('deceased_name')+'</div><div class="fen">'+v('deceased_name')+'</div></div></div>' +
-      '<div class="row-4">' +
-        '<div class="field-box"><div class="fnum">2</div><div class="flbl">性別 / Sex</div><div class="fjp">'+jv('deceased_sex')+'</div></div>' +
-        '<div class="field-box sh"><div class="fnum">3</div><div class="flbl">生年月日 / Date of Birth</div><div class="fjp">'+jv('deceased_dob')+'</div></div>' +
-        '<div class="field-box"><div class="fnum">4</div><div class="flbl">婚姻状況 / Civil Status</div><div class="fjp">'+jv('civil_status')+'</div></div>' +
-        '<div class="field-box sh"><div class="fnum">5</div><div class="flbl">国籍 / Citizenship</div><div class="fjp">'+jv('deceased_citizen')+'</div></div>' +
-      '</div>' +
-      '<div class="row-2">' +
-        '<div class="col-l">' +
-          '<div class="field-box"><div class="fnum">6</div><div class="flbl">出生地 / Place of Birth</div><div class="fjp">'+jv('deceased_pob')+'</div><div class="fen">'+v('deceased_pob')+'</div></div>' +
-          '<div class="field-box sh"><div class="fnum">7</div><div class="flbl">宗教 / Religion</div><div class="fjp">'+jv('deceased_religion')+'</div></div>' +
-          '<div class="field-box"><div class="fnum">8</div><div class="flbl">職業 / Occupation</div><div class="fjp">'+jv('deceased_occ')+'</div></div>' +
-          '<div class="field-box sh"><div class="fnum">9</div><div class="flbl">常住地 / Usual Residence</div><div class="fjp">'+jv('deceased_residence')+'</div><div class="fen">'+v('deceased_residence')+'</div></div>' +
-        '</div>' +
-        '<div>' +
-          '<div class="field-box"><div class="fnum">10</div><div class="flbl">父の氏名 / Father\'s Name</div><div class="fjp">'+jv('deceased_father')+'</div><div class="fen">'+v('deceased_father')+'</div></div>' +
-          '<div class="field-box sh"><div class="fnum">11</div><div class="flbl">母の旧姓 / Mother\'s Maiden Name</div><div class="fjp">'+jv('deceased_mother')+'</div><div class="fen">'+v('deceased_mother')+'</div></div>' +
-        '</div>' +
-      '</div>' +
-      '<div class="sec-label">B. 死亡情報 / DEATH INFORMATION</div>' +
-      '<div class="row-2">' +
-        '<div class="col-l"><div class="field-box sh"><div class="fnum">12</div><div class="flbl">死亡日 / Date of Death</div><div class="fjp">'+jv('death_date')+'</div><div class="fen">'+v('death_date')+'</div></div></div>' +
-        '<div><div class="field-box"><div class="fnum">13</div><div class="flbl">死亡場所 / Place of Death</div><div class="fjp">'+jv('death_place')+'</div><div class="fen">'+v('death_place')+'</div></div></div>' +
-      '</div>' +
-      '<div class="sec-label">C. 死因 / CAUSES OF DEATH</div>' +
-      '<div class="row-1">' +
-        '<div class="field-box sh"><div class="flbl">19a. 直接死因 / Immediate Cause</div><div class="fjp">'+jv('cause_immediate')+'</div><div class="fen">'+v('cause_immediate')+'</div></div>' +
-        '<div class="field-box"><div class="flbl">19b. 先行死因 / Antecedent Cause</div><div class="fjp">'+jv('cause_antecedent')+'</div><div class="fen">'+v('cause_antecedent')+'</div></div>' +
-        '<div class="field-box sh"><div class="flbl">19c. 根本死因 / Underlying Cause</div><div class="fjp">'+jv('cause_underlying')+'</div><div class="fen">'+v('cause_underlying')+'</div></div>' +
-        '<div class="field-box"><div class="fnum">20</div><div class="flbl">担当医師 / Attending Physician</div><div class="fjp">'+jv('physician')+'</div><div class="fen">'+v('physician')+'</div></div>' +
-      '</div>' +
-      '<div class="sec-label">D. 登録情報 / REGISTRATION INFORMATION</div>' +
-      '<div class="row-2">' +
-        '<div class="col-l"><div class="field-box sh"><div class="flbl">登録番号 / Registry Number</div><div class="fjp">'+v('reg_number')+'</div></div></div>' +
-        '<div><div class="field-box"><div class="flbl">翻訳目的 / Purpose of Translation</div><div class="fjp">'+jv('purpose')+'</div><div class="fen">'+v('purpose')+'</div></div></div>' +
-      '</div>' +
-      '<div class="stamp-row"><span>Documentary Stamp Tax Paid · 登録印紙税納付済</span><span>発行機関：フィリピン統計局（PSA）</span></div>';
-
-  // ===== CENOMAR =====
-  } else if (dt === 'CENOMAR') {
-    bodyHtml =
-      '<div class="psa-header">' +
-        '<div style="font-size:6.5px;color:#666;text-align:left">CRS Form No. 4 (CENOMAR)</div>' +
-        '<div class="psa-republic">Republic of the Philippines · フィリピン共和国</div>' +
-        '<div class="psa-office">PHILIPPINE STATISTICS AUTHORITY · フィリピン統計局</div>' +
-        '<div class="psa-civil">Manila · マニラ</div>' +
-        '<div class="psa-civil">OFFICE OF THE CIVIL REGISTRAR GENERAL · 民事登録局</div>' +
-        '<div class="psa-jp-title" style="margin-top:4px">未婚証明書（CENOMAR）— 日本語翻訳</div>' +
-      '</div>' +
-      '<div class="letter-body">' +
-        '<div class="letter-date">発行日 / Date of Issuance: <b>'+jv('issuance_date')+'</b>&nbsp;&nbsp;('+v('issuance_date')+')</div>' +
-        '<div class="letter-concern">TO WHOM IT MAY CONCERN: / 関係各位：</div>' +
-        '<div class="letter-para">' +
-          'We certify that / 本機関は以下の者について証明します：<br><br>' +
-          '&nbsp;&nbsp;氏名 / Name: <span class="fill fill-lg">'+jv('applicant_name')+'</span>' +
-          '&nbsp;&nbsp;性別 / Sex: <span class="fill">'+jv('applicant_sex')+'</span><br><br>' +
-          '&nbsp;&nbsp;生年月日 / Date of Birth: <span class="fill">'+jv('applicant_dob')+'</span>&nbsp;&nbsp;' +
-          '出生地 / Place of Birth: <span class="fill fill-lg">'+jv('applicant_pob')+'</span><br><br>' +
-          '&nbsp;&nbsp;国籍 / Citizenship: <span class="fill">'+jv('applicant_citizen')+'</span><br><br>' +
-          '&nbsp;&nbsp;父の氏名 / Father\'s Name: <span class="fill fill-lg">'+jv('father_name')+'</span><br>' +
-          '&nbsp;&nbsp;母の旧姓 / Mother\'s Maiden Name: <span class="fill fill-lg">'+jv('mother_name')+'</span><br><br>' +
-          '<b>does not appear in our National Indices of Marriages.</b><br>' +
-          '<b style="color:#1a2744">婚姻に関する国家記録に記載がないことを証明します。</b>' +
-        '</div>' +
-        '<div class="letter-para">' +
-          'This certification is based on the records of <span class="fill">'+v('period_covered')+'</span> marriages enrolled in the database.<br>' +
-          '<span style="color:#666;font-size:7.5px">本証明は、データベース登録済みの対象期間（'+v('period_covered')+'）における婚姻記録に基づきます。</span>' +
-        '</div>' +
-        '<div class="letter-para">' +
-          'Issued upon the request of / 申請者：<span class="fill fill-lg">'+jv('applicant_name')+'</span>' +
-          '&nbsp;&nbsp;for / 目的：<span class="fill fill-lg">'+jv('purpose')+'</span>' +
-        '</div>' +
-        '<div class="sig-block">' +
-          '<div style="margin-bottom:28px">&nbsp;</div>' +
-          '<div class="sig-name">CLAIRE DENNIS S. MAPA, Ph.D.</div>' +
-          '<div>National Statistician and Civil Registrar General</div>' +
-          '<div style="color:#555">国家統計官兼民事登録局長官</div>' +
-          '<div>Philippine Statistics Authority / フィリピン統計局</div>' +
-        '</div>' +
-        '<div style="margin-top:10px">' +
-          '<div class="detail-row"><span class="detail-lbl">参照番号 / Reference No.:</span><span class="detail-val">'+v('ref_number')+'</span></div>' +
-        '</div>' +
-        '<div style="font-size:6.5px;color:#666;margin-top:8px;padding-top:5px;border-top:0.5px solid #aaa;font-style:italic">'+
-          'Note: This certification is not valid if it contains erasures or alterations. ／ 注意：修正または削除がある場合、本証明書は無効となります。'+
-        '</div>' +
-      '</div>' +
-      '<div class="stamp-row"><span>Documentary Stamp Tax Paid · 印紙税納付済</span><span>国籍 / Citizenship: '+jv('applicant_citizen')+'</span></div>';
-
-  // ===== ADVISORY ON MARRIAGES =====
-  } else if (dt === 'Advisory on Marriages') {
-    bodyHtml =
-      '<div class="psa-header">' +
-        '<div class="psa-republic">Republic of the Philippines · フィリピン共和国</div>' +
-        '<div class="psa-office">PHILIPPINE STATISTICS AUTHORITY · フィリピン統計局</div>' +
-        '<div class="psa-civil">Manila · マニラ</div>' +
-        '<div class="psa-civil">OFFICE OF THE CIVIL REGISTRAR GENERAL · 民事登録局</div>' +
-        '<div class="psa-jp-title" style="margin-top:4px">婚姻記録照会書　— 日本語翻訳</div>' +
-      '</div>' +
-      '<div class="letter-body">' +
-        '<div class="letter-date">発行日 / Date: <b>'+jv('issuance_date')+'</b>&nbsp;&nbsp;('+v('issuance_date')+')</div>' +
-        '<div class="letter-concern">TO WHOM IT MAY CONCERN: / 関係各位：</div>' +
-        '<div class="letter-para">' +
-          'Be advised that this search for the name / 以下の者の照会結果をお知らせします：<br><br>' +
-          '&nbsp;&nbsp;氏名 / Name: <span class="fill fill-lg">'+jv('subject_name')+'</span>' +
-          '&nbsp;&nbsp;性別 / Sex: <span class="fill">'+jv('subject_sex')+'</span><br><br>' +
-          '&nbsp;&nbsp;生年月日 / Date of Birth: <span class="fill">'+jv('subject_dob')+'</span>&nbsp;&nbsp;' +
-          '出生地 / Place of Birth: <span class="fill fill-lg">'+jv('subject_pob')+'</span><br><br>' +
-          'and / および <span class="fill fill-lg">'+jv('spouse_name')+'</span><br><br>' +
-          'yielded / 該当件数：<b style="color:#1a2744"><span class="fill">'+jv('num_marriages')+'</span> 件の婚姻記録が見つかりました。</b>' +
-        '</div>' +
-        '<div style="margin:6px 0 8px 16px">' +
-          '<div class="detail-row"><span class="detail-lbl">婚姻日 / Date of Marriage:</span><span class="detail-val">'+jv('marriage_date')+'&nbsp;('+v('marriage_date')+')</span></div>' +
-          '<div class="detail-row"><span class="detail-lbl">婚姻地 / Place of Marriage:</span><span class="detail-val">'+jv('marriage_place')+'</span></div>' +
-          '<div class="detail-row"><span class="detail-lbl">相手方氏名 / Name of Bride/Groom:</span><span class="detail-val">'+jv('spouse_name')+'</span></div>' +
-          '<div class="detail-row"><span class="detail-lbl">備考・注記 / Remarks/Annotation:</span><span class="detail-val">'+jv('marriage_status')+'</span></div>' +
-        '</div>' +
-        '<div class="letter-para">' +
-          'This certification is based on the records of <span class="fill">'+v('period_covered')+'</span> marriages enrolled in the database.<br>' +
-          '<span style="color:#666;font-size:7.5px">本証明は、対象期間（'+v('period_covered')+'）のデータベース登録済み婚姻記録に基づきます。</span>' +
-        '</div>' +
-        '<div class="letter-para">' +
-          'Issued upon the request of / 申請者：<span class="fill fill-lg">'+jv('subject_name')+'</span>' +
-          '&nbsp;&nbsp;for / 目的：<span class="fill fill-lg">'+jv('purpose')+'</span>' +
-        '</div>' +
-        '<div class="sig-block">' +
-          '<div style="margin-bottom:28px">&nbsp;</div>' +
-          '<div class="sig-name">CLAIRE DENNIS S. MAPA, Ph.D.</div>' +
-          '<div>National Statistician and Civil Registrar General</div>' +
-          '<div style="color:#555">国家統計官兼民事登録局長官</div>' +
-          '<div>Philippine Statistics Authority / フィリピン統計局</div>' +
-        '</div>' +
-        '<div style="font-size:6.5px;color:#666;margin-top:8px;padding-top:5px;border-top:0.5px solid #aaa;font-style:italic">'+
-          'Note: This certification is not valid if it contains erasures or alterations. Copy of marriage document/s may be available and are issued separately. ／ 注意：修正がある場合無効。婚姻証書の写しは別途発行されます。'+
-        '</div>' +
-      '</div>' +
-      '<div class="stamp-row"><span>Documentary Stamp Tax Paid · 印紙税納付済</span><span>Page 1 of 1</span></div>';
-
-  // ===== CERTIFICATE OF NO BIRTH RECORD =====
-  } else if (dt === 'Certificate of No Birth Record') {
-    bodyHtml =
-      '<div class="psa-header">' +
-        '<div class="psa-republic">Republic of the Philippines · フィリピン共和国</div>' +
-        '<div class="psa-office">NATIONAL STATISTICS OFFICE · 国家統計局</div>' +
-        '<div class="psa-civil">OFFICE OF THE CIVIL REGISTRAR GENERAL · 民事登録局</div>' +
-        '<div class="psa-jp-title" style="margin-top:4px">出生記録なし証明書　— 日本語翻訳</div>' +
-      '</div>' +
-      '<div class="letter-body">' +
-        '<div class="letter-date">発行日 / Date: <b>'+jv('issuance_date')+'</b>&nbsp;&nbsp;('+v('issuance_date')+')</div>' +
-        '<div class="letter-concern">TO WHOM IT MAY CONCERN: / 関係各位：</div>' +
-        '<div class="letter-para">' +
-          'We certify that we do not have any record of birth of / 以下の者に関する出生記録が存在しないことを証明します：<br><br>' +
-          '&nbsp;&nbsp;氏名 / Name: <span class="fill fill-lg">'+jv('subject_name')+'</span><br><br>' +
-          '&nbsp;&nbsp;生年月日 / Date of Birth: <span class="fill">'+jv('subject_dob')+'</span>&nbsp;&nbsp;' +
-          '出生地 / Place of Birth: <span class="fill fill-lg">'+jv('subject_pob')+'</span><br><br>' +
-          '&nbsp;&nbsp;父の氏名 / Father: <span class="fill fill-lg">'+jv('father_name')+'</span><br>' +
-          '&nbsp;&nbsp;母の旧姓 / Mother: <span class="fill fill-lg">'+jv('mother_name')+'</span><br>' +
-        '</div>' +
-        '<div class="letter-para">' +
-          'Further verification may be made from the Local Civil Registry Office. If available, this document may be requested for endorsement to the Office of the Civil Registrar General (OCRG). Otherwise, any interested party may apply for delayed registration.<br>' +
-          '<span style="color:#666;font-size:7.5px">当該自治体の民事登録局においてさらなる確認が可能です。記録がない場合は、遅延出生登録を申請することができます。</span>' +
-        '</div>' +
-        '<div class="letter-para">' +
-          'Issued upon the request of / 申請者：<span class="fill fill-lg">'+jv('subject_name')+'</span>' +
-          '&nbsp;&nbsp;for / 目的：<span class="fill fill-lg">'+jv('purpose')+'</span>' +
-        '</div>' +
-        '<div class="sig-block">' +
-          '<div style="margin-bottom:28px">&nbsp;</div>' +
-          '<div class="sig-name">CARMELITA N. ERICTA</div>' +
-          '<div>Administrator and Civil Registrar General</div>' +
-          '<div style="color:#555">民事登録局長官</div>' +
-          '<div>National Statistics Office / 国家統計局</div>' +
-        '</div>' +
-        '<div style="font-size:6.5px;color:#666;margin-top:8px;padding-top:5px;border-top:0.5px solid #aaa;font-style:italic">'+
-          'Note: This certification is not valid if it contains erasures or alterations. ／ 注意：修正または削除がある場合、本証明書は無効となります。'+
-        '</div>' +
-      '</div>' +
-      '<div class="stamp-row"><span>Documentary Stamp Tax Paid · 印紙税納付済</span><span>出生記録なし / NO BIRTH RECORD</span></div>';
-
-  } else {
-    bodyHtml = '<div style="padding:20px;color:#888">Unknown document type.</div>';
-  }
-
-  // Shared cert + disclaimer footer
   var jpTitles = {
     'Birth Certificate':'出生証明書','Marriage Certificate':'婚姻証明書',
     'Death Certificate':'死亡証明書','CENOMAR':'未婚証明書（CENOMAR）',
@@ -991,110 +655,295 @@ function doDownloadPDF() {
   };
   var jpTitle = jpTitles[dt] || dt;
 
-  var footerHtml =
-    '<div class="cert-box">' +
-      '<span class="cert-jp">【翻訳証明】</span>' +
-      '本翻訳はフィリピン統計局（PSA）発行の原文書（'+jpTitle+'）を正確に日本語に翻訳したものです。翻訳者はその正確性を保証します。<br>' +
-      '<em>CERTIFICATION: This is a faithful Japanese translation of the original '+dt+' issued by the Philippine Statistics Authority (PSA). The translator certifies the accuracy of this translation.</em>' +
-    '</div>' +
-    '<div class="disc-box">' +
-      'ACCEPTED USE: Suitable for Japanese visa applications and marriage registration at a Japanese municipal office (役所). NOT valid for court proceedings or notarized legal submissions.<br>' +
-      '【ご注意】本翻訳は日本のビザ申請・市区町村役所への婚姻届に適しています。裁判手続きや公証が必要な法的書類には使用できません。' +
-    '</div>';
+  // ── SHARED CSS ── same classes used in both sample preview & PDF output
+  var CSS = [
+    '*{box-sizing:border-box;margin:0;padding:0}',
+    'body{font-family:"Noto Sans JP","Times New Roman",serif;background:#faf8f0;color:#222;margin:0;padding:0}',
+    '.page{width:210mm;min-height:297mm;background:#faf8f0;padding:8mm 10mm 6mm;margin:0 auto}',
+    // PSA header
+    '.psa-hdr{text-align:center;padding:5px 8px 4px;border-bottom:1px solid #999;background:#faf8f0}',
+    '.psa-rep{font-size:6.5px;color:#555;letter-spacing:0.2px}',
+    '.psa-off{font-size:7.5px;font-weight:bold;color:#111;margin:1px 0}',
+    '.psa-civ{font-size:6.5px;color:#555;margin:1px 0}',
+    '.psa-doctit{font-size:11px;font-weight:bold;color:#111;margin:3px 0 1px;letter-spacing:0.4px}',
+    '.psa-jptit{font-size:10px;font-weight:bold;color:#1a2744;margin:2px 0 0}',
+    // Meta row
+    '.meta{display:flex;justify-content:space-between;padding:2px 7px;border-bottom:1px solid #aaa;font-size:6.5px;color:#444;background:#f0ece0}',
+    // Section header - navy with gold text
+    '.sh{background:#1a2744;color:#e8c97a;font-size:7px;font-weight:bold;padding:2px 7px;letter-spacing:0.4px}',
+    // Grid wrappers - always start with left+top border so fields only need right+bottom
+    '.g1{display:grid;grid-template-columns:1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb}',
+    '.g2{display:grid;grid-template-columns:1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb}',
+    '.g3{display:grid;grid-template-columns:1fr 1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb}',
+    '.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb}',
+    '.gcl{border-right:1.5px solid #999}',  // heavy divider between main columns
+    // Field box - each cell
+    '.fb{border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 4px 3px;min-height:24px;background:#faf8f0}',
+    '.fb.s{background:#f0ece0}',
+    '.fn{font-size:5.5px;color:#aaa;line-height:1.2}',
+    '.fl{font-size:5.5px;color:#888;line-height:1.2;margin-bottom:1px}',
+    '.fj{font-size:9px;font-weight:bold;color:#1a2744;line-height:1.35}',
+    '.fe{font-size:6px;color:#aaa;font-style:italic;line-height:1.2}',
+    // Letter format (CENOMAR, Advisory, No Birth)
+    '.lbody{padding:8px 14px;font-size:7.5px;color:#222;line-height:1.85;background:#faf8f0}',
+    '.ldate{text-align:right;margin-bottom:6px;font-size:7px}',
+    '.lconcern{font-size:7.5px;font-weight:bold;margin-bottom:6px}',
+    '.lpara{margin-bottom:6px;font-size:7.5px;line-height:1.85}',
+    '.fill{display:inline-block;border-bottom:1px solid #333;min-width:70px;font-weight:bold;color:#1a2744;font-size:8px;margin:0 1px;padding:0 2px}',
+    '.fill-lg{min-width:120px}',
+    '.drow{display:grid;grid-template-columns:115px 1fr;margin-bottom:3px;font-size:7px}',
+    '.dlbl{color:#777}',
+    '.dval{font-weight:bold;color:#1a2744;border-bottom:0.5px solid #ccc}',
+    '.sig{margin-top:10px;text-align:right;font-size:7px}',
+    '.sig-n{font-size:7.5px;font-weight:bold;text-decoration:underline}',
+    // Footer
+    '.stamp{display:flex;justify-content:space-between;padding:2px 7px;font-size:6px;color:#777;border-top:0.5px solid #aaa;background:#f0ece0}',
+    '.cbox{background:#dbeafe;border:0.5px solid #93c5fd;margin:5px 0 3px;padding:4px 7px;font-size:6.5px;color:#1e3a8a;line-height:1.55}',
+    '.cbox b{font-size:7px;display:block;margin-bottom:1px}',
+    '.dbox{background:#fef9c3;border:0.5px solid #fde047;margin:3px 0 0;padding:3px 7px;font-size:6px;color:#713f12;line-height:1.45}',
+    // nested grids (inside a gcl column) - remove left+top border to avoid double
+    '.ng2{display:grid;grid-template-columns:1fr 1fr}',
+    '.ng3{display:grid;grid-template-columns:1fr 1fr 1fr}',
+    // Print
+    '@media print{',
+    '@page{size:A4;margin:0}',
+    'body{background:#faf8f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}',
+    '.page{margin:0;padding:8mm 10mm 6mm;width:210mm;min-height:297mm}',
+    '}'
+  ].join('');
 
-  var docHtml = '<!DOCTYPE html><html lang="ja"><head>' +
-    '<meta charset="UTF-8">' +
-    '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">' +
-    '<title>' + dt + ' - Japanese Translation</title>' +
-    '<style>' + BASE_CSS + '</style>' +
-    '</head><body>' +
-    '<div class="doc-wrap">' +
-    bodyHtml +
-    footerHtml +
+  // ── PSA HEADER (shared) ──
+  function psaHdr(doctit, jptit, formNote) {
+    return '<div class="psa-hdr">' +
+      (formNote ? '<div style="font-size:6px;color:#666;text-align:left">'+formNote+'</div>' : '') +
+      '<div class="psa-rep">Republic of the Philippines · フィリピン共和国</div>' +
+      '<div class="psa-off">PHILIPPINE STATISTICS AUTHORITY · フィリピン統計局</div>' +
+      '<div class="psa-civ">OFFICE OF THE CIVIL REGISTRAR GENERAL · 民事登録局</div>' +
+      '<div class="psa-doctit">'+doctit+'</div>' +
+      '<div class="psa-jptit">'+jptit+'　— 日本語翻訳</div>' +
+    '</div>';
+  }
+
+  // ── FOOTER (shared) ──
+  function footer(jptit, doctype) {
+    return '<div class="stamp"><span>Documentary Stamp Tax Paid · 登録印紙税納付済</span><span>発行機関：フィリピン統計局（PSA）</span></div>' +
+    '<div class="cbox"><b>【翻訳証明】</b>' +
+    '本翻訳はフィリピン統計局（PSA）発行の原文書（'+jptit+'）を正確に日本語に翻訳したものです。翻訳者はその正確性を保証します。<br>' +
+    '<em>CERTIFICATION: This is a faithful Japanese translation of the original '+doctype+' issued by the Philippine Statistics Authority (PSA). The translator certifies the accuracy of this translation.</em>' +
     '</div>' +
-    '<scr'+'ipt>document.fonts.ready.then(function(){setTimeout(function(){window.print();},600);});</'+'script>' +
+    '<div class="dbox">ACCEPTED USE: Suitable for Japanese visa applications and marriage registration at a Japanese municipal office (役所). NOT valid for court proceedings or notarized legal submissions.<br>' +
+    '【ご注意】本翻訳は日本のビザ申請・市区町村役所への婚姻届に適しています。裁判手続きや公証が必要な法的書類には使用できません。</div>';
+  }
+
+  var body = '';
+
+  // ════ BIRTH CERTIFICATE ════
+  if (dt === 'Birth Certificate') {
+    body = psaHdr('CERTIFICATE OF LIVE BIRTH','出生証明書') +
+    '<div class="meta"><span>登録番号 / Registry No.: <b>'+gv('reg_number')+'</b></span><span>翻訳日 / Date: <b>'+today+'</b> · '+todayJP+'</span></div>' +
+    '<div class="sh">A.　子の情報 / CHILD INFORMATION</div>' +
+    '<div class="g1"><div class="fb s"><div class="fn">1</div><div class="fl">氏名（名・ミドルネーム・姓）/ Name (First, Middle, Last)</div><div class="fj">'+gjv('child_name')+'</div><div class="fe">'+gv('child_name')+'</div></div></div>' +
+    '<div class="g3"><div class="fb"><div class="fn">2</div><div class="fl">生年月日 / Date of Birth</div><div class="fj">'+gjv('child_dob')+'</div><div class="fe">'+gv('child_dob')+'</div></div><div class="fb s"><div class="fn">3</div><div class="fl">出生地 / Place of Birth</div><div class="fj">'+gjv('child_pob')+'</div><div class="fe">'+gv('child_pob')+'</div></div><div class="fb"><div class="fn">4</div><div class="fl">性別 / Sex</div><div class="fj">'+gjv('child_sex')+'</div></div></div>' +
+    '<div class="g1"><div class="fb s"><div class="fn">5</div><div class="fl">出生順位 / Birth Order</div><div class="fj">'+gjv('child_order')+'</div><div class="fe">'+gv('child_order')+'</div></div></div>' +
+    '<div class="sh">B.　母の情報 / MOTHER\'S INFORMATION</div>' +
+    '<div class="g2"><div class="gcl"><div class="fb s"><div class="fn">6</div><div class="fl">母の旧姓 / Mother\'s Maiden Name</div><div class="fj">'+gjv('mother_name')+'</div><div class="fe">'+gv('mother_name')+'</div></div><div class="fb"><div class="fn">7</div><div class="fl">国籍 / Citizenship</div><div class="fj">'+gjv('mother_citizen')+'</div></div></div><div><div class="fb s"><div class="fn">8</div><div class="fl">宗教 / Religion</div><div class="fj">'+gjv('mother_religion')+'</div></div><div class="fb"><div class="fl">職業 / Occupation</div><div class="fj">'+gjv('mother_occ')+'</div></div></div></div>' +
+    '<div class="sh">C.　父の情報 / FATHER\'S INFORMATION</div>' +
+    '<div class="g2"><div class="gcl"><div class="fb s"><div class="fn">9</div><div class="fl">父の氏名 / Father\'s Name</div><div class="fj">'+gjv('father_name')+'</div><div class="fe">'+gv('father_name')+'</div></div><div class="fb"><div class="fn">10</div><div class="fl">国籍 / Citizenship</div><div class="fj">'+gjv('father_citizen')+'</div></div></div><div><div class="fb s"><div class="fn">11</div><div class="fl">宗教 / Religion</div><div class="fj">'+gjv('father_religion')+'</div></div><div class="fb"><div class="fl">職業 / Occupation</div><div class="fj">'+gjv('father_occ')+'</div></div></div></div>' +
+    '<div class="sh">D.　登録情報 / REGISTRATION INFORMATION</div>' +
+    '<div class="g2"><div class="gcl"><div class="fb s"><div class="fl">登録番号 / Registry Number</div><div class="fj">'+gv('reg_number')+'</div></div><div class="fb"><div class="fl">登録日 / Date of Registration</div><div class="fj">'+gjv('reg_date')+'</div><div class="fe">'+gv('reg_date')+'</div></div></div><div><div class="fb s"><div class="fl">発行機関 / Issuing Authority</div><div class="fj">フィリピン統計局（PSA）</div></div><div class="fb"><div class="fl">翻訳目的 / Purpose of Translation</div><div class="fj">'+gjv('purpose')+'</div><div class="fe">'+gv('purpose')+'</div></div></div></div>' +
+    footer(jpTitle, dt);
+
+  // ════ MARRIAGE CERTIFICATE ════
+  } else if (dt === 'Marriage Certificate') {
+    body = psaHdr('CERTIFICATE OF MARRIAGE','婚姻証明書') +
+    '<div class="meta"><span>登録番号 / Registry No.: <b>'+gv('reg_number')+'</b></span><span>翻訳日 / Date: <b>'+today+'</b> · '+todayJP+'</span></div>' +
+    '<div class="sh">A.　夫の情報 / HUSBAND\'S INFORMATION</div>' +
+    '<div class="g2"><div class="gcl">'+
+      '<div class="fb s"><div class="fn">1</div><div class="fl">夫の氏名（名・ミドル・姓）/ Husband\'s Name</div><div class="fj">'+gjv('husband_name')+'</div><div class="fe">'+gv('husband_name')+'</div></div>'+
+      '<div class="ng3"><div class="fb"><div class="fn">2</div><div class="fl">生年月日</div><div class="fj">'+gjv('husband_dob')+'</div></div><div class="fb s"><div class="fn">3</div><div class="fl">出生地</div><div class="fj">'+gjv('husband_pob')+'</div><div class="fe">'+gv('husband_pob')+'</div></div><div class="fb"><div class="fn">4</div><div class="fl">国籍</div><div class="fj">'+gjv('husband_citizen')+'</div></div></div>'+
+      '<div class="ng2"><div class="fb s"><div class="fn">5</div><div class="fl">宗教 / Religion</div><div class="fj">'+gjv('husband_religion')+'</div></div><div class="fb"><div class="fn">6</div><div class="fl">婚姻状況 / Civil Status</div><div class="fj">'+gjv('husband_civil')+'</div></div></div>'+
+    '</div><div>'+
+      '<div class="fb s"><div class="fn">7</div><div class="fl">常住地 / Residence</div><div class="fj">'+gjv('husband_pob')+'</div></div>'+
+      '<div class="fb"><div class="fn">8</div><div class="fl">父の氏名 / Father\'s Name</div><div class="fj">'+gjv('husband_father')+'</div><div class="fe">'+gv('husband_father')+'</div></div>'+
+      '<div class="fb s"><div class="fn">9</div><div class="fl">母の旧姓 / Mother\'s Maiden Name</div><div class="fj">'+gjv('husband_mother')+'</div><div class="fe">'+gv('husband_mother')+'</div></div>'+
+    '</div></div>' +
+    '<div class="sh">B.　妻の情報 / WIFE\'S INFORMATION</div>' +
+    '<div class="g2"><div class="gcl">'+
+      '<div class="fb s"><div class="fn">10</div><div class="fl">妻の旧姓（名・ミドル・姓）/ Wife\'s Maiden Name</div><div class="fj">'+gjv('wife_name')+'</div><div class="fe">'+gv('wife_name')+'</div></div>'+
+      '<div class="ng3"><div class="fb"><div class="fn">11</div><div class="fl">生年月日</div><div class="fj">'+gjv('wife_dob')+'</div></div><div class="fb s"><div class="fn">12</div><div class="fl">出生地</div><div class="fj">'+gjv('wife_pob')+'</div><div class="fe">'+gv('wife_pob')+'</div></div><div class="fb"><div class="fn">13</div><div class="fl">国籍</div><div class="fj">'+gjv('wife_citizen')+'</div></div></div>'+
+      '<div class="ng2"><div class="fb s"><div class="fn">14</div><div class="fl">宗教 / Religion</div><div class="fj">'+gjv('wife_religion')+'</div></div><div class="fb"><div class="fn">15</div><div class="fl">婚姻状況 / Civil Status</div><div class="fj">'+gjv('wife_civil')+'</div></div></div>'+
+    '</div><div>'+
+      '<div class="fb s"><div class="fn">16</div><div class="fl">常住地 / Residence</div><div class="fj">'+gjv('wife_pob')+'</div></div>'+
+      '<div class="fb"><div class="fn">17</div><div class="fl">父の氏名 / Father\'s Name</div><div class="fj">'+gjv('wife_father')+'</div><div class="fe">'+gv('wife_father')+'</div></div>'+
+      '<div class="fb s"><div class="fn">18</div><div class="fl">母の旧姓 / Mother\'s Maiden Name</div><div class="fj">'+gjv('wife_mother')+'</div><div class="fe">'+gv('wife_mother')+'</div></div>'+
+    '</div></div>' +
+    '<div class="sh">C.　婚姻情報 / MARRIAGE DETAILS</div>' +
+    '<div class="g2"><div class="gcl"><div class="fb s"><div class="fn">19</div><div class="fl">婚姻日 / Date of Marriage</div><div class="fj">'+gjv('marriage_date')+'</div><div class="fe">'+gv('marriage_date')+'</div></div><div class="fb"><div class="fn">20</div><div class="fl">婚姻地 / Place of Marriage</div><div class="fj">'+gjv('marriage_place')+'</div><div class="fe">'+gv('marriage_place')+'</div></div></div><div><div class="fb s"><div class="fn">21</div><div class="fl">挙式執行者 / Solemnizing Officer</div><div class="fj">'+gjv('officer')+'</div><div class="fe">'+gv('officer')+'</div></div><div class="fb"><div class="fn">22</div><div class="fl">役職・所属 / Position / Designation</div><div class="fj">'+gjv('officer_position')+'</div><div class="fe">'+gv('officer_position')+'</div></div></div></div>' +
+    '<div class="sh">D.　登録情報 / REGISTRATION INFORMATION</div>' +
+    '<div class="g2"><div class="gcl"><div class="fb s"><div class="fl">登録番号 / Registry Number</div><div class="fj">'+gv('reg_number')+'</div></div></div><div><div class="fb"><div class="fl">翻訳目的 / Purpose of Translation</div><div class="fj">'+gjv('purpose')+'</div><div class="fe">'+gv('purpose')+'</div></div></div></div>' +
+    footer(jpTitle, dt);
+
+  // ════ DEATH CERTIFICATE ════
+  } else if (dt === 'Death Certificate') {
+    body = psaHdr('CERTIFICATE OF DEATH','死亡証明書') +
+    '<div class="meta"><span>登録番号 / Registry No.: <b>'+gv('reg_number')+'</b></span><span>翻訳日 / Date: <b>'+today+'</b> · '+todayJP+'</span></div>' +
+    '<div class="sh">A.　故人の情報 / DECEASED\'S INFORMATION</div>' +
+    '<div class="g1"><div class="fb s"><div class="fn">1</div><div class="fl">氏名（名・ミドル・姓）/ Name of Deceased</div><div class="fj">'+gjv('deceased_name')+'</div><div class="fe">'+gv('deceased_name')+'</div></div></div>' +
+    '<div class="g4"><div class="fb"><div class="fn">2</div><div class="fl">性別 / Sex</div><div class="fj">'+gjv('deceased_sex')+'</div></div><div class="fb s"><div class="fn">3</div><div class="fl">生年月日 / Date of Birth</div><div class="fj">'+gjv('deceased_dob')+'</div></div><div class="fb"><div class="fn">4</div><div class="fl">婚姻状況 / Civil Status</div><div class="fj">'+gjv('civil_status')+'</div></div><div class="fb s"><div class="fn">5</div><div class="fl">国籍 / Citizenship</div><div class="fj">'+gjv('deceased_citizen')+'</div></div></div>' +
+    '<div class="g2"><div class="gcl"><div class="fb"><div class="fn">6</div><div class="fl">出生地 / Place of Birth</div><div class="fj">'+gjv('deceased_pob')+'</div><div class="fe">'+gv('deceased_pob')+'</div></div><div class="fb s"><div class="fn">7</div><div class="fl">宗教 / Religion</div><div class="fj">'+gjv('deceased_religion')+'</div></div><div class="fb"><div class="fn">8</div><div class="fl">職業 / Occupation</div><div class="fj">'+gjv('deceased_occ')+'</div></div><div class="fb s"><div class="fn">9</div><div class="fl">常住地 / Usual Residence</div><div class="fj">'+gjv('deceased_residence')+'</div><div class="fe">'+gv('deceased_residence')+'</div></div></div><div><div class="fb"><div class="fn">10</div><div class="fl">父の氏名 / Father\'s Name</div><div class="fj">'+gjv('deceased_father')+'</div><div class="fe">'+gv('deceased_father')+'</div></div><div class="fb s"><div class="fn">11</div><div class="fl">母の旧姓 / Mother\'s Maiden Name</div><div class="fj">'+gjv('deceased_mother')+'</div><div class="fe">'+gv('deceased_mother')+'</div></div></div></div>' +
+    '<div class="sh">B.　死亡情報 / DEATH INFORMATION</div>' +
+    '<div class="g2"><div class="gcl"><div class="fb s"><div class="fn">12</div><div class="fl">死亡日 / Date of Death</div><div class="fj">'+gjv('death_date')+'</div><div class="fe">'+gv('death_date')+'</div></div></div><div><div class="fb"><div class="fn">13</div><div class="fl">死亡場所 / Place of Death</div><div class="fj">'+gjv('death_place')+'</div><div class="fe">'+gv('death_place')+'</div></div></div></div>' +
+    '<div class="sh">C.　死因 / CAUSES OF DEATH</div>' +
+    '<div class="g1"><div class="fb s"><div class="fl">19a. 直接死因 / Immediate Cause</div><div class="fj">'+gjv('cause_immediate')+'</div><div class="fe">'+gv('cause_immediate')+'</div></div><div class="fb"><div class="fl">19b. 先行死因 / Antecedent Cause</div><div class="fj">'+gjv('cause_antecedent')+'</div><div class="fe">'+gv('cause_antecedent')+'</div></div><div class="fb s"><div class="fl">19c. 根本死因 / Underlying Cause</div><div class="fj">'+gjv('cause_underlying')+'</div><div class="fe">'+gv('cause_underlying')+'</div></div><div class="fb"><div class="fn">20</div><div class="fl">担当医師 / Attending Physician</div><div class="fj">'+gjv('physician')+'</div><div class="fe">'+gv('physician')+'</div></div></div>' +
+    '<div class="sh">D.　登録情報 / REGISTRATION INFORMATION</div>' +
+    '<div class="g2"><div class="gcl"><div class="fb s"><div class="fl">登録番号 / Registry Number</div><div class="fj">'+gv('reg_number')+'</div></div></div><div><div class="fb"><div class="fl">翻訳目的 / Purpose of Translation</div><div class="fj">'+gjv('purpose')+'</div><div class="fe">'+gv('purpose')+'</div></div></div></div>' +
+    footer(jpTitle, dt);
+
+  // ════ CENOMAR ════
+  } else if (dt === 'CENOMAR') {
+    body = psaHdr('CERTIFICATE OF NO MARRIAGE RECORD','未婚証明書（CENOMAR）','CRS Form No. 4 (CENOMAR)') +
+    '<div class="lbody">'+
+      '<div class="ldate">発行日 / Date of Issuance: <b>'+gjv('issuance_date')+'</b>&nbsp;&nbsp;<span style="color:#888">('+gv('issuance_date')+')</span></div>'+
+      '<div class="lconcern">TO WHOM IT MAY CONCERN: / 関係各位：</div>'+
+      '<div class="lpara">'+
+        'We certify that / 本機関は以下の者について証明します：<br><br>'+
+        '&nbsp;&nbsp;氏名 / Name: <span class="fill fill-lg">'+gjv('applicant_name')+'</span>'+
+        '&nbsp;&nbsp;性別 / Sex: <span class="fill">'+gjv('applicant_sex')+'</span><br><br>'+
+        '&nbsp;&nbsp;生年月日 / Date of Birth: <span class="fill">'+gjv('applicant_dob')+'</span>'+
+        '&nbsp;&nbsp;出生地 / Place of Birth: <span class="fill fill-lg">'+gjv('applicant_pob')+'</span><br><br>'+
+        '&nbsp;&nbsp;国籍 / Citizenship: <span class="fill">'+gjv('applicant_citizen')+'</span><br><br>'+
+        '&nbsp;&nbsp;父の氏名 / Father\'s Name: <span class="fill fill-lg">'+gjv('father_name')+'</span><br>'+
+        '&nbsp;&nbsp;母の旧姓 / Mother\'s Maiden Name: <span class="fill fill-lg">'+gjv('mother_name')+'</span><br><br>'+
+        '<b>does not appear in our National Indices of Marriages.</b><br>'+
+        '<b style="color:#1a2744">婚姻に関する国家記録に記載がないことを証明します。</b>'+
+      '</div>'+
+      '<div class="lpara">This certification is based on the records of <span class="fill">'+gv('period_covered')+'</span> marriages enrolled in the database.<br>'+
+      '<span style="color:#777;font-size:7px">本証明は、データベース登録済みの対象期間（'+gv('period_covered')+'）における婚姻記録に基づきます。</span></div>'+
+      '<div class="lpara">Issued upon the request of / 申請者：<span class="fill fill-lg">'+gjv('applicant_name')+'</span>'+
+        '&nbsp;&nbsp;for / 目的：<span class="fill fill-lg">'+gjv('purpose')+'</span></div>'+
+      '<div class="sig"><div style="margin-bottom:22px">&nbsp;</div>'+
+        '<div class="sig-n">CLAIRE DENNIS S. MAPA, Ph.D.</div>'+
+        '<div>National Statistician and Civil Registrar General</div>'+
+        '<div style="color:#666">国家統計官兼民事登録局長官</div>'+
+        '<div>Philippine Statistics Authority / フィリピン統計局</div>'+
+      '</div>'+
+      '<div style="margin-top:8px"><div class="drow"><span class="dlbl">参照番号 / Reference No.:</span><span class="dval">'+gv('ref_number')+'</span></div></div>'+
+      '<div style="font-size:6px;color:#777;margin-top:6px;padding-top:4px;border-top:0.5px solid #ccc;font-style:italic">Note: This certification is not valid if it contains erasures or alterations. ／ 注意：修正または削除がある場合、本証明書は無効となります。</div>'+
+    '</div>'+
+    footer(jpTitle, dt);
+
+  // ════ ADVISORY ON MARRIAGES ════
+  } else if (dt === 'Advisory on Marriages') {
+    body = psaHdr('ADVISORY ON MARRIAGES','婚姻記録照会書') +
+    '<div class="lbody">'+
+      '<div class="ldate">発行日 / Date: <b>'+gjv('issuance_date')+'</b>&nbsp;&nbsp;<span style="color:#888">('+gv('issuance_date')+')</span></div>'+
+      '<div class="lconcern">TO WHOM IT MAY CONCERN: / 関係各位：</div>'+
+      '<div class="lpara">'+
+        'Be advised that this search for the name / 以下の者の照会結果をお知らせします：<br><br>'+
+        '&nbsp;&nbsp;氏名 / Name: <span class="fill fill-lg">'+gjv('subject_name')+'</span>'+
+        '&nbsp;&nbsp;性別 / Sex: <span class="fill">'+gjv('subject_sex')+'</span><br><br>'+
+        '&nbsp;&nbsp;生年月日 / Date of Birth: <span class="fill">'+gjv('subject_dob')+'</span>'+
+        '&nbsp;&nbsp;出生地 / Place of Birth: <span class="fill fill-lg">'+gjv('subject_pob')+'</span><br><br>'+
+        'and / および <span class="fill fill-lg">'+gjv('spouse_name')+'</span><br><br>'+
+        'yielded / 該当件数：<b style="color:#1a2744"><span class="fill">'+gjv('num_marriages')+'</span> 件の婚姻記録が見つかりました。</b>'+
+      '</div>'+
+      '<div style="margin:4px 0 6px 14px">'+
+        '<div class="drow"><span class="dlbl">婚姻日 / Date of Marriage:</span><span class="dval">'+gjv('marriage_date')+'&nbsp;<span style="color:#aaa;font-size:6px">('+gv('marriage_date')+')</span></span></div>'+
+        '<div class="drow"><span class="dlbl">婚姻地 / Place of Marriage:</span><span class="dval">'+gjv('marriage_place')+'</span></div>'+
+        '<div class="drow"><span class="dlbl">相手方氏名 / Name of Bride/Groom:</span><span class="dval">'+gjv('spouse_name')+'</span></div>'+
+        '<div class="drow"><span class="dlbl">備考・注記 / Remarks/Annotation:</span><span class="dval">'+gjv('marriage_status')+'</span></div>'+
+      '</div>'+
+      '<div class="lpara">This certification is based on the records of <span class="fill">'+gv('period_covered')+'</span> marriages enrolled in the database.<br>'+
+      '<span style="color:#777;font-size:7px">本証明は、対象期間（'+gv('period_covered')+'）のデータベース登録済み婚姻記録に基づきます。</span></div>'+
+      '<div class="lpara">Issued upon the request of / 申請者：<span class="fill fill-lg">'+gjv('subject_name')+'</span>'+
+        '&nbsp;&nbsp;for / 目的：<span class="fill fill-lg">'+gjv('purpose')+'</span></div>'+
+      '<div class="sig"><div style="margin-bottom:22px">&nbsp;</div>'+
+        '<div class="sig-n">CLAIRE DENNIS S. MAPA, Ph.D.</div>'+
+        '<div>National Statistician and Civil Registrar General</div>'+
+        '<div style="color:#666">国家統計官兼民事登録局長官</div>'+
+        '<div>Philippine Statistics Authority / フィリピン統計局</div>'+
+      '</div>'+
+      '<div style="font-size:6px;color:#777;margin-top:6px;padding-top:4px;border-top:0.5px solid #ccc;font-style:italic">Note: This certification is not valid if it contains erasures or alterations. Copy of marriage document/s may be available and are issued separately. ／ 修正がある場合無効。婚姻証書の写しは別途発行されます。</div>'+
+    '</div>'+
+    '<div class="stamp"><span>Documentary Stamp Tax Paid · 印紙税納付済</span><span>Page 1 of 1</span></div>'+
+    '<div class="cbox"><b>【翻訳証明】</b>本翻訳はフィリピン統計局（PSA）発行の婚姻記録照会書を正確に日本語に翻訳したものです。<br><em>CERTIFICATION: This is a faithful Japanese translation of the original Advisory on Marriages issued by the Philippine Statistics Authority (PSA).</em></div>'+
+    '<div class="dbox">ACCEPTED USE: Suitable for Japanese visa applications and legal proceedings. NOT valid for court proceedings requiring notarized legal submissions.<br>【ご注意】本翻訳は日本のビザ申請・法的手続きに適しています。</div>';
+
+  // ════ CERTIFICATE OF NO BIRTH RECORD ════
+  } else if (dt === 'Certificate of No Birth Record') {
+    body = '<div class="psa-hdr">'+
+      '<div class="psa-rep">Republic of the Philippines · フィリピン共和国</div>'+
+      '<div class="psa-off">NATIONAL STATISTICS OFFICE · 国家統計局</div>'+
+      '<div class="psa-civ">OFFICE OF THE CIVIL REGISTRAR GENERAL · 民事登録局</div>'+
+      '<div class="psa-doctit">NEGATIVE CERTIFICATION OF BIRTH</div>'+
+      '<div class="psa-jptit">出生記録なし証明書　— 日本語翻訳</div>'+
+    '</div>'+
+    '<div class="lbody">'+
+      '<div class="ldate">発行日 / Date: <b>'+gjv('issuance_date')+'</b>&nbsp;&nbsp;<span style="color:#888">('+gv('issuance_date')+')</span></div>'+
+      '<div class="lconcern">TO WHOM IT MAY CONCERN: / 関係各位：</div>'+
+      '<div class="lpara">'+
+        'We certify that we do not have any record of birth of / 以下の者に関する出生記録が存在しないことを証明します：<br><br>'+
+        '&nbsp;&nbsp;氏名 / Name: <span class="fill fill-lg">'+gjv('subject_name')+'</span><br><br>'+
+        '&nbsp;&nbsp;生年月日 / Date of Birth: <span class="fill">'+gjv('subject_dob')+'</span>'+
+        '&nbsp;&nbsp;出生地 / Place of Birth: <span class="fill fill-lg">'+gjv('subject_pob')+'</span><br><br>'+
+        '&nbsp;&nbsp;父の氏名 / Father: <span class="fill fill-lg">'+gjv('father_name')+'</span><br>'+
+        '&nbsp;&nbsp;母の旧姓 / Mother: <span class="fill fill-lg">'+gjv('mother_name')+'</span>'+
+      '</div>'+
+      '<div class="lpara">Further verification may be made from the Local Civil Registry Office. If available, this document may be requested for endorsement to the Office of the Civil Registrar General (OCRG). Otherwise, any interested party may apply for delayed registration.<br>'+
+      '<span style="color:#777;font-size:7px">当該自治体の民事登録局においてさらなる確認が可能です。記録がない場合は、遅延出生登録を申請することができます。</span></div>'+
+      '<div class="lpara">Issued upon the request of / 申請者：<span class="fill fill-lg">'+gjv('subject_name')+'</span>'+
+        '&nbsp;&nbsp;for / 目的：<span class="fill fill-lg">'+gjv('purpose')+'</span></div>'+
+      '<div class="sig"><div style="margin-bottom:22px">&nbsp;</div>'+
+        '<div class="sig-n">CARMELITA N. ERICTA</div>'+
+        '<div>Administrator and Civil Registrar General</div>'+
+        '<div style="color:#666">民事登録局長官</div>'+
+        '<div>National Statistics Office / 国家統計局</div>'+
+      '</div>'+
+      '<div style="font-size:6px;color:#777;margin-top:6px;padding-top:4px;border-top:0.5px solid #ccc;font-style:italic">Note: This certification is not valid if it contains erasures or alterations. ／ 注意：修正または削除がある場合、本証明書は無効となります。</div>'+
+    '</div>'+
+    '<div class="stamp"><span>Documentary Stamp Tax Paid · 印紙税納付済</span><span>出生記録なし / NO BIRTH RECORD</span></div>'+
+    '<div class="cbox"><b>【翻訳証明】</b>本翻訳はPSA発行の出生記録なし証明書を正確に日本語に翻訳したものです。<br><em>CERTIFICATION: This is a faithful Japanese translation of the original Negative Certification of Birth issued by the Philippine Statistics Authority (PSA).</em></div>'+
+    '<div class="dbox">ACCEPTED USE: Suitable for Japanese visa applications. NOT valid for court proceedings or notarized legal submissions.<br>【ご注意】本翻訳は日本のビザ申請に適しています。裁判手続きには使用できません。</div>';
+
+  } else {
+    body = '<div style="padding:20px;color:#888">Unknown document type.</div>';
+  }
+
+  var docHtml = '<!DOCTYPE html><html lang="ja"><head>'+
+    '<meta charset="UTF-8">'+
+    '<meta name="viewport" content="width=device-width,initial-scale=1">'+
+    '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">'+
+    '<title>'+dt+' - Japanese Translation</title>'+
+    '<style>'+CSS+'</style>'+
+    '</head><body>'+
+    '<div class="page">'+body+'</div>'+
+    '<scr'+'ipt>document.fonts.ready.then(function(){setTimeout(function(){window.print();},700);});</'+'script>'+
     '</body></html>';
 
   var blob = new Blob([docHtml], {type:'text/html'});
   var url = URL.createObjectURL(blob);
-  var win = window.open(url, '_blank');
-  if (!win) {
-    var a = document.createElement('a');
-    a.href = url; a.download = s.id + '-JP-' + dt.replace(/\s+/g,'-') + '.html'; a.click();
-  }
-  toast('PDF ready — use Print > Save as PDF in the new tab');
+  var win = window.open(url,'_blank');
+  if (!win) { var a=document.createElement('a'); a.href=url; a.download=s.id+'-JP-'+dt.replace(/\s+/g,'-')+'.html'; a.click(); }
+  toast('PDF ready — open new tab → Print → Save as PDF (A4, no margins)');
 }
-
-function buildBirthCert(f, jp, jv, v, today, todayJP) {
-  return '' +
-    '<div class="psa-header">' +
-      '<div class="psa-republic">Republic of the Philippines · フィリピン共和国</div>' +
-      '<div class="psa-office">PHILIPPINE STATISTICS AUTHORITY · フィリピン統計局</div>' +
-      '<div class="psa-civil">OFFICE OF THE CIVIL REGISTRAR GENERAL · 民事登録局</div>' +
-      '<div class="psa-doc-title">CERTIFICATE OF LIVE BIRTH</div>' +
-      '<div class="psa-jp-title">出生証明書　— 日本語翻訳</div>' +
-    '</div>' +
-    '<div class="meta-row meta-3">' +
-      '<span>登録番号 / Registry No.: <b>'+v('reg_number')+'</b></span>' +
-      '<span style="text-align:center">翻訳日 / Date: <b>'+today+'</b></span>' +
-      '<span style="text-align:right">'+todayJP+'</span>' +
-    '</div>' +
-    '<div class="sec-label">A. 子の情報 / CHILD INFORMATION</div>' +
-    '<div class="row-1"><div class="field-box sh"><div class="fnum">1</div><div class="flbl">氏名（名・ミドルネーム・姓）/ Name (First, Middle, Last)</div><div class="fjp">'+jv('child_name')+'</div><div class="fen">'+v('child_name')+'</div></div></div>' +
-    '<div class="row-3">' +
-      '<div class="field-box"><div class="fnum">2</div><div class="flbl">生年月日 / Date of Birth</div><div class="fjp">'+jv('child_dob')+'</div><div class="fen">'+v('child_dob')+'</div></div>' +
-      '<div class="field-box sh"><div class="fnum">3</div><div class="flbl">出生地 / Place of Birth</div><div class="fjp">'+jv('child_pob')+'</div><div class="fen">'+v('child_pob')+'</div></div>' +
-      '<div class="field-box"><div class="fnum">4</div><div class="flbl">性別 / Sex</div><div class="fjp">'+jv('child_sex')+'</div></div>' +
-    '</div>' +
-    '<div class="row-1"><div class="field-box sh"><div class="fnum">5</div><div class="flbl">出生順位 / Birth Order</div><div class="fjp">'+jv('child_order')+'</div><div class="fen">'+v('child_order')+'</div></div></div>' +
-    '<div class="sec-label">B. 母の情報 / MOTHER\'S INFORMATION</div>' +
-    '<div class="row-2">' +
-      '<div class="col-l">' +
-        '<div class="field-box sh"><div class="fnum">6</div><div class="flbl">母の旧姓 / Mother\'s Maiden Name</div><div class="fjp">'+jv('mother_name')+'</div><div class="fen">'+v('mother_name')+'</div></div>' +
-        '<div class="field-box"><div class="fnum">7</div><div class="flbl">国籍 / Citizenship</div><div class="fjp">'+jv('mother_citizen')+'</div></div>' +
-      '</div>' +
-      '<div>' +
-        '<div class="field-box sh"><div class="fnum">8</div><div class="flbl">宗教 / Religion</div><div class="fjp">'+jv('mother_religion')+'</div></div>' +
-        '<div class="field-box"><div class="flbl">職業 / Occupation</div><div class="fjp">'+jv('mother_occ')+'</div></div>' +
-      '</div>' +
-    '</div>' +
-    '<div class="sec-label">C. 父の情報 / FATHER\'S INFORMATION</div>' +
-    '<div class="row-2">' +
-      '<div class="col-l">' +
-        '<div class="field-box sh"><div class="fnum">9</div><div class="flbl">父の氏名 / Father\'s Name</div><div class="fjp">'+jv('father_name')+'</div><div class="fen">'+v('father_name')+'</div></div>' +
-        '<div class="field-box"><div class="fnum">10</div><div class="flbl">国籍 / Citizenship</div><div class="fjp">'+jv('father_citizen')+'</div></div>' +
-      '</div>' +
-      '<div>' +
-        '<div class="field-box sh"><div class="fnum">11</div><div class="flbl">宗教 / Religion</div><div class="fjp">'+jv('father_religion')+'</div></div>' +
-        '<div class="field-box"><div class="flbl">職業 / Occupation</div><div class="fjp">'+jv('father_occ')+'</div></div>' +
-      '</div>' +
-    '</div>' +
-    '<div class="sec-label">D. 登録情報 / REGISTRATION INFORMATION</div>' +
-    '<div class="row-2">' +
-      '<div class="col-l">' +
-        '<div class="field-box sh"><div class="flbl">登録番号 / Registry Number</div><div class="fjp">'+v('reg_number')+'</div></div>' +
-        '<div class="field-box"><div class="flbl">登録日 / Date of Registration</div><div class="fjp">'+jv('reg_date')+'</div><div class="fen">'+v('reg_date')+'</div></div>' +
-      '</div>' +
-      '<div>' +
-        '<div class="field-box sh"><div class="flbl">発行機関 / Issuing Authority</div><div class="fjp">フィリピン統計局（PSA）</div></div>' +
-        '<div class="field-box"><div class="flbl">翻訳目的 / Purpose of Translation</div><div class="fjp">'+jv('purpose')+'</div><div class="fen">'+v('purpose')+'</div></div>' +
-      '</div>' +
-    '</div>' +
-    '<div class="stamp-row"><span>Documentary Stamp Tax Paid · 登録印紙税納付済</span><span>発行機関：フィリピン統計局（PSA）</span></div>';
-}
-
 
 
 async function doEmail() {
   var s = subs.find(function(x) { return x.id === activeId; });
   if (!s) return;
+  if (!s.translation) {
+    toast('Please translate the document first before emailing the customer.');
+    return;
+  }
   try {
     emailjs.init(EMAILJS_KEY);
     await emailjs.send(EMAILJS_SVC, EMAILJS_TPL, {
       to_email: s.email,
       customer_name: s.name,
       doc_type: s.doctype,
-      ref_no: s.id
+      ref_no: s.id,
+      purpose: s.purpose || 'Japanese visa application',
+      translation_note: 'Your translated document PDF is ready. Please download it from the link provided or contact us to receive it directly.'
     });
     toast('Email sent to ' + s.email);
   } catch(e) {

@@ -234,7 +234,6 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
           <option>CENOMAR</option>
           <option>Advisory on Marriages</option>
           <option>Certificate of No Birth Record</option>
-          <option>Certificate of No Death Record</option>
         </select>
       </div>
     </div>
@@ -313,44 +312,217 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
       <span class="arrow" id="sample-arrow">&#9660;</span>
     </div>
     <div class="sample-body" id="sample-body">
-      <p class="sample-note">This is a sample of what your translated document will look like. Your actual translation will contain your real document details.</p>
-      <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;font-size:11px">
-        <div style="background:var(--light);padding:10px 14px;border-bottom:1px solid var(--border);text-align:center">
-          <div style="font-size:7px;color:var(--muted);margin-bottom:2px">REPUBLIKA NG PILIPINAS / REPUBLIC OF THE PHILIPPINES</div>
-          <div style="font-size:14px;font-weight:600;color:var(--navy);margin-bottom:1px">&#20986;&#29983;&#35388;&#26126;&#26360;</div>
-          <div style="font-size:8px;color:var(--muted)">CERTIFICATE OF LIVE BIRTH &mdash; Japanese Translation</div>
-        </div>
-        <div style="background:var(--light);padding:5px 14px;border-bottom:2px solid var(--gold);display:flex;justify-content:space-between">
-          <span style="font-size:8px;color:var(--muted)">&#30331;&#37682;&#30058;&#21495; / Registry No.: SAMPLE-0001</span>
-          <span style="font-size:8px;color:var(--muted)">&#32763;&#35379;&#26085; / Date: July 8, 2025</span>
-        </div>
-        <div style="background:var(--navy);padding:4px 10px"><span style="color:#fff;font-size:8px">A. CHILD INFORMATION / &#23376;&#12398;&#24773;&#22577;</span></div>
-        <div style="background:#f5f5dc;padding:6px 10px;border-bottom:1px solid #ddd">
-          <div style="font-size:7px;color:var(--muted)">1. Name / &#27663;&#21517;</div>
-          <div style="font-size:9px;color:var(--navy);font-weight:600">JUAN DELA CRUZ SANTOS</div>
-          <div style="font-size:9px;color:#333">&#12501;&#12450;&#12531;&#12539;&#12487;&#12521;&#12539;&#12463;&#12523;&#12473;&#12539;&#12469;&#12531;&#12488;&#12473;</div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;background:#f5f5dc;border-bottom:1px solid #ddd">
-          <div style="padding:6px 10px;border-right:1px solid #ddd">
-            <div style="font-size:7px;color:var(--muted)">2. Sex / &#24615;&#21035;</div>
-            <div style="font-size:9px;color:var(--navy);font-weight:600">Male</div>
-            <div style="font-size:9px;color:#333">&#30007;&#24615;</div>
-          </div>
-          <div style="padding:6px 10px;border-right:1px solid #ddd">
-            <div style="font-size:7px;color:var(--muted)">3. Date of Birth / &#29983;&#24180;&#26376;&#26085;</div>
-            <div style="font-size:9px;color:var(--navy);font-weight:600">April 22, 1993</div>
-            <div style="font-size:9px;color:#333">1993&#24180;4&#26376;22&#26085;</div>
-          </div>
-          <div style="padding:6px 10px">
-            <div style="font-size:7px;color:var(--muted)">4. Place of Birth / &#20986;&#29983;&#22320;</div>
-            <div style="font-size:9px;color:var(--navy);font-weight:600">Bato, Camarines Sur</div>
-            <div style="font-size:9px;color:#333">&#12459;&#12510;&#12522;&#12493;&#12473;&#12539;&#12473;&#12540;&#12523;&#24030;&#12289;&#12496;&#12488;</div>
-          </div>
-        </div>
-        <div style="background:#fffbeb;border-top:1px solid #fde68a;padding:8px 10px;text-align:center">
-          <span style="font-size:9px;color:#92400e;font-weight:600">SAMPLE ONLY &mdash; Your actual translation will contain your real document details</span>
-        </div>
+      <p class="sample-note">This is how your translated document will look. All 6 document types are shown below — your actual translation will contain your real document details.</p>
+
+      <!-- Tab buttons -->
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px">
+        <button class="stab active" onclick="showSample('birth',this)">Birth Cert</button>
+        <button class="stab" onclick="showSample('marriage',this)">Marriage</button>
+        <button class="stab" onclick="showSample('death',this)">Death</button>
+        <button class="stab" onclick="showSample('cenomar',this)">CENOMAR</button>
+        <button class="stab" onclick="showSample('advisory',this)">Advisory</button>
+        <button class="stab" onclick="showSample('nobirth',this)">No Birth</button>
       </div>
+
+      <!-- Shared sample CSS - identical class names to PDF output -->
+      <style>
+      .stab{padding:4px 10px;border-radius:20px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--cream);color:var(--muted);font-family:Inter,sans-serif}
+      .stab.active{background:var(--navy);color:var(--goldl);border-color:var(--navy)}
+      .sprev{display:none}.sprev.show{display:block}
+      /* PDF-matching classes */
+      .sdoc{background:#faf8f0;border:1px solid #c8c0a0;font-family:'Times New Roman',Georgia,serif;font-size:9px}
+      .psa-hdr{text-align:center;padding:5px 8px 4px;border-bottom:1px solid #999;background:#faf8f0}
+      .psa-rep{font-size:6.5px;color:#555;letter-spacing:0.2px}
+      .psa-off{font-size:7.5px;font-weight:bold;color:#111;margin:1px 0}
+      .psa-civ{font-size:6.5px;color:#555;margin:1px 0}
+      .psa-doctit{font-size:11px;font-weight:bold;color:#111;margin:3px 0 1px;letter-spacing:0.4px}
+      .psa-jptit{font-size:10px;font-weight:bold;color:#1a2744;margin:2px 0 0}
+      .meta{display:flex;justify-content:space-between;padding:2px 7px;border-bottom:1px solid #aaa;font-size:6.5px;color:#444;background:#f0ece0}
+      .sh{background:#1a2744;color:#e8c97a;font-size:7px;font-weight:bold;padding:2px 7px;letter-spacing:0.4px}
+      .g1{display:grid;grid-template-columns:1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb}
+      .g2{display:grid;grid-template-columns:1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb}
+      .g3{display:grid;grid-template-columns:1fr 1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb}
+      .g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb}
+      .gcl{border-right:1.5px solid #999}
+      .fb{border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 4px 3px;min-height:22px;background:#faf8f0}
+      .fb.s{background:#f0ece0}
+      .fn{font-size:5.5px;color:#aaa;line-height:1.2}
+      .fl{font-size:5.5px;color:#888;line-height:1.2;margin-bottom:1px}
+      .fj{font-size:9px;font-weight:bold;color:#1a2744;line-height:1.35}
+      .fe{font-size:6px;color:#aaa;font-style:italic;line-height:1.2}
+      .ng2{display:grid;grid-template-columns:1fr 1fr}
+      .ng3{display:grid;grid-template-columns:1fr 1fr 1fr}
+      .lbody{padding:8px 14px;font-size:7.5px;color:#222;line-height:1.85;background:#faf8f0}
+      .ldate{text-align:right;margin-bottom:6px;font-size:7px}
+      .lconcern{font-size:7.5px;font-weight:bold;margin-bottom:6px}
+      .lpara{margin-bottom:6px;font-size:7.5px;line-height:1.85}
+      .fill{display:inline-block;border-bottom:1px solid #333;min-width:70px;font-weight:bold;color:#1a2744;font-size:8px;margin:0 1px;padding:0 2px}
+      .fill-lg{min-width:120px}
+      .drow{display:grid;grid-template-columns:115px 1fr;margin-bottom:3px;font-size:7px}
+      .dlbl{color:#777}
+      .dval{font-weight:bold;color:#1a2744;border-bottom:0.5px solid #ccc}
+      .sig{margin-top:10px;text-align:right;font-size:7px}
+      .sig-n{font-size:7.5px;font-weight:bold;text-decoration:underline}
+      .stamp{display:flex;justify-content:space-between;padding:2px 7px;font-size:6px;color:#777;border-top:0.5px solid #aaa;background:#f0ece0}
+      .cbox{background:#dbeafe;border:0.5px solid #93c5fd;margin:5px 0 3px;padding:4px 7px;font-size:6.5px;color:#1e3a8a;line-height:1.55}
+      .cbox b{font-size:7px;display:block;margin-bottom:1px}
+      .dbox{background:#fef9c3;border:0.5px solid #fde047;margin:3px 0 0;padding:3px 7px;font-size:6px;color:#713f12;line-height:1.45}
+      .sample-only{background:#fffbeb;border-top:1px solid #fde68a;padding:6px 10px;text-align:center;font-size:9px;color:#92400e;font-weight:600;font-family:Inter,sans-serif}
+      </style>
+
+      <!-- BIRTH CERTIFICATE -->
+      <div class="sprev show" id="sprev-birth"><div class="sdoc">
+        <div class="psa-hdr"><div class="psa-rep">Republic of the Philippines · フィリピン共和国</div><div class="psa-off">PHILIPPINE STATISTICS AUTHORITY · フィリピン統計局</div><div class="psa-civ">OFFICE OF THE CIVIL REGISTRAR GENERAL · 民事登録局</div><div class="psa-doctit">CERTIFICATE OF LIVE BIRTH</div><div class="psa-jptit">出生証明書　— 日本語翻訳</div></div>
+        <div class="meta"><span>登録番号 / Registry No.: SAMPLE-001</span><span>翻訳日 / Date: Today · 今日</span></div>
+        <div class="sh">A.　子の情報 / CHILD INFORMATION</div>
+        <div class="g1"><div class="fb s"><div class="fn">1</div><div class="fl">氏名（名・ミドルネーム・姓）/ Name (First, Middle, Last)</div><div class="fj">フアン・デラ・クルス・サントス</div><div class="fe">JUAN DELA CRUZ SANTOS</div></div></div>
+        <div class="g3"><div class="fb"><div class="fn">2</div><div class="fl">生年月日 / Date of Birth</div><div class="fj">1993年4月22日</div></div><div class="fb s"><div class="fn">3</div><div class="fl">出生地 / Place of Birth</div><div class="fj">カマリネス・スール州、バト</div><div class="fe">Bato, Camarines Sur</div></div><div class="fb"><div class="fn">4</div><div class="fl">性別 / Sex</div><div class="fj">男性</div></div></div>
+        <div class="g1"><div class="fb s"><div class="fn">5</div><div class="fl">出生順位 / Birth Order</div><div class="fj">第1子</div><div class="fe">1st Child</div></div></div>
+        <div class="sh">B.　母の情報 / MOTHER'S INFORMATION</div>
+        <div class="g2"><div class="gcl"><div class="fb s"><div class="fn">6</div><div class="fl">母の旧姓 / Mother's Maiden Name</div><div class="fj">ネリー・S・サントス</div><div class="fe">NELLY S. SANTOS</div></div><div class="fb"><div class="fn">7</div><div class="fl">国籍 / Citizenship</div><div class="fj">フィリピン国籍</div></div></div><div><div class="fb s"><div class="fn">8</div><div class="fl">宗教 / Religion</div><div class="fj">ローマ・カトリック</div></div><div class="fb"><div class="fl">職業 / Occupation</div><div class="fj">主婦</div></div></div></div>
+        <div class="sh">C.　父の情報 / FATHER'S INFORMATION</div>
+        <div class="g2"><div class="gcl"><div class="fb s"><div class="fn">9</div><div class="fl">父の氏名 / Father's Name</div><div class="fj">ホセ・R・サントス</div><div class="fe">JOSE R. SANTOS</div></div><div class="fb"><div class="fn">10</div><div class="fl">国籍 / Citizenship</div><div class="fj">フィリピン国籍</div></div></div><div><div class="fb s"><div class="fn">11</div><div class="fl">宗教 / Religion</div><div class="fj">ローマ・カトリック</div></div><div class="fb"><div class="fl">職業 / Occupation</div><div class="fj">農業</div></div></div></div>
+        <div class="sh">D.　登録情報 / REGISTRATION INFORMATION</div>
+        <div class="g2"><div class="gcl"><div class="fb s"><div class="fl">登録番号 / Registry Number</div><div class="fj">93000628</div></div><div class="fb"><div class="fl">登録日 / Date of Registration</div><div class="fj">1993年5月4日</div></div></div><div><div class="fb s"><div class="fl">発行機関 / Issuing Authority</div><div class="fj">フィリピン統計局（PSA）</div></div><div class="fb"><div class="fl">翻訳目的 / Purpose</div><div class="fj">日本ビザ申請</div></div></div></div>
+        <div class="stamp"><span>Documentary Stamp Tax Paid · 登録印紙税納付済</span><span>発行機関：フィリピン統計局（PSA）</span></div>
+        <div class="cbox"><b>【翻訳証明】</b>本翻訳はPSA発行の出生証明書を正確に日本語に翻訳したものです。<br><em>CERTIFICATION: Faithful Japanese translation of the original Birth Certificate issued by PSA.</em></div>
+        <div class="dbox">ACCEPTED USE: Suitable for Japanese visa applications and marriage registration (役所). NOT valid for court proceedings.</div>
+        <div class="sample-only">SAMPLE ONLY — Your actual translation will contain your real document details</div>
+      </div></div>
+
+      <!-- MARRIAGE CERTIFICATE -->
+      <div class="sprev" id="sprev-marriage"><div class="sdoc">
+        <div class="psa-hdr"><div class="psa-rep">Republic of the Philippines · フィリピン共和国</div><div class="psa-off">PHILIPPINE STATISTICS AUTHORITY · フィリピン統計局</div><div class="psa-civ">OFFICE OF THE CIVIL REGISTRAR GENERAL · 民事登録局</div><div class="psa-doctit">CERTIFICATE OF MARRIAGE</div><div class="psa-jptit">婚姻証明書　— 日本語翻訳</div></div>
+        <div class="meta"><span>登録番号 / Registry No.: 2018-157</span><span>翻訳日 / Date: Today · 今日</span></div>
+        <div class="sh">A.　夫の情報 / HUSBAND'S INFORMATION</div>
+        <div class="g2"><div class="gcl">
+          <div class="fb s"><div class="fn">1</div><div class="fl">夫の氏名（名・ミドル・姓）/ Husband's Name</div><div class="fj">ペドロ・S・レイエス</div><div class="fe">PEDRO SANTOS REYES</div></div>
+          <div class="ng3"><div class="fb"><div class="fn">2</div><div class="fl">生年月日</div><div class="fj">1988年7月15日</div></div><div class="fb s"><div class="fn">3</div><div class="fl">出生地</div><div class="fj">パンガシナン州</div></div><div class="fb"><div class="fn">4</div><div class="fl">国籍</div><div class="fj">フィリピン国籍</div></div></div>
+          <div class="ng2"><div class="fb s"><div class="fn">5</div><div class="fl">宗教</div><div class="fj">ローマ・カトリック</div></div><div class="fb"><div class="fn">6</div><div class="fl">婚姻状況</div><div class="fj">未婚</div></div></div>
+        </div><div>
+          <div class="fb s"><div class="fn">7</div><div class="fl">常住地 / Residence</div><div class="fj">パンガシナン州、サン・パブロ</div></div>
+          <div class="fb"><div class="fn">8</div><div class="fl">父の氏名 / Father's Name</div><div class="fj">ロベルト・レイエス</div></div>
+          <div class="fb s"><div class="fn">9</div><div class="fl">母の旧姓 / Mother's Maiden Name</div><div class="fj">エレナ・クルス</div></div>
+        </div></div>
+        <div class="sh">B.　妻の情報 / WIFE'S INFORMATION</div>
+        <div class="g2"><div class="gcl">
+          <div class="fb s"><div class="fn">10</div><div class="fl">妻の旧姓（名・ミドル・姓）/ Wife's Maiden Name</div><div class="fj">マリア・R・デラ・クルス</div><div class="fe">MARIA REYES DELA CRUZ</div></div>
+          <div class="ng3"><div class="fb"><div class="fn">11</div><div class="fl">生年月日</div><div class="fj">1990年3月8日</div></div><div class="fb s"><div class="fn">12</div><div class="fl">出生地</div><div class="fj">パンガシナン州</div></div><div class="fb"><div class="fn">13</div><div class="fl">国籍</div><div class="fj">フィリピン国籍</div></div></div>
+          <div class="ng2"><div class="fb s"><div class="fn">14</div><div class="fl">宗教</div><div class="fj">ローマ・カトリック</div></div><div class="fb"><div class="fn">15</div><div class="fl">婚姻状況</div><div class="fj">未婚</div></div></div>
+        </div><div>
+          <div class="fb s"><div class="fn">16</div><div class="fl">常住地 / Residence</div><div class="fj">パンガシナン州、サン・ファビアン</div></div>
+          <div class="fb"><div class="fn">17</div><div class="fl">父の氏名 / Father's Name</div><div class="fj">ホセ・デラ・クルス</div></div>
+          <div class="fb s"><div class="fn">18</div><div class="fl">母の旧姓 / Mother's Maiden Name</div><div class="fj">アナ・ガルシア</div></div>
+        </div></div>
+        <div class="sh">C.　婚姻情報 / MARRIAGE DETAILS</div>
+        <div class="g2"><div class="gcl"><div class="fb s"><div class="fn">19</div><div class="fl">婚姻日 / Date of Marriage</div><div class="fj">2018年4月1日</div><div class="fe">April 1, 2018</div></div><div class="fb"><div class="fn">20</div><div class="fl">婚姻地 / Place of Marriage</div><div class="fj">パンガシナン州、サン・パブロ</div></div></div><div><div class="fb s"><div class="fn">21</div><div class="fl">挙式執行者 / Solemnizing Officer</div><div class="fj">タフィ・D・デラス</div></div><div class="fb"><div class="fn">22</div><div class="fl">役職・所属 / Position</div><div class="fj">ゴッド・インク牧師</div></div></div></div>
+        <div class="sh">D.　登録情報 / REGISTRATION INFORMATION</div>
+        <div class="g2"><div class="gcl"><div class="fb s"><div class="fl">登録番号 / Registry Number</div><div class="fj">2018-157</div></div></div><div><div class="fb"><div class="fl">翻訳目的 / Purpose</div><div class="fj">日本での婚姻届</div></div></div></div>
+        <div class="stamp"><span>Documentary Stamp Tax Paid · 登録印紙税納付済</span><span>発行機関：フィリピン統計局（PSA）</span></div>
+        <div class="cbox"><b>【翻訳証明】</b>本翻訳はPSA発行の婚姻証明書を正確に日本語に翻訳したものです。<br><em>CERTIFICATION: Faithful Japanese translation of the original Certificate of Marriage issued by PSA.</em></div>
+        <div class="dbox">ACCEPTED USE: Suitable for Japanese visa applications and marriage registration (役所). NOT valid for court proceedings.</div>
+        <div class="sample-only">SAMPLE ONLY — Your actual translation will contain your real document details</div>
+      </div></div>
+
+      <!-- DEATH CERTIFICATE -->
+      <div class="sprev" id="sprev-death"><div class="sdoc">
+        <div class="psa-hdr"><div class="psa-rep">Republic of the Philippines · フィリピン共和国</div><div class="psa-off">PHILIPPINE STATISTICS AUTHORITY · フィリピン統計局</div><div class="psa-civ">OFFICE OF THE CIVIL REGISTRAR GENERAL · 民事登録局</div><div class="psa-doctit">CERTIFICATE OF DEATH</div><div class="psa-jptit">死亡証明書　— 日本語翻訳</div></div>
+        <div class="meta"><span>登録番号 / Registry No.: 1999-76251</span><span>翻訳日 / Date: Today · 今日</span></div>
+        <div class="sh">A.　故人の情報 / DECEASED'S INFORMATION</div>
+        <div class="g1"><div class="fb s"><div class="fn">1</div><div class="fl">氏名（名・ミドル・姓）/ Name of Deceased</div><div class="fj">ジョージ・デ・グスマン・アバド</div><div class="fe">GEORGE DE GUZMAN ABAD</div></div></div>
+        <div class="g4"><div class="fb"><div class="fn">2</div><div class="fl">性別 / Sex</div><div class="fj">男性</div></div><div class="fb s"><div class="fn">3</div><div class="fl">生年月日</div><div class="fj">1939年4月23日</div></div><div class="fb"><div class="fn">4</div><div class="fl">婚姻状況</div><div class="fj">既婚</div></div><div class="fb s"><div class="fn">5</div><div class="fl">国籍</div><div class="fj">フィリピン国籍</div></div></div>
+        <div class="g2"><div class="gcl"><div class="fb"><div class="fn">6</div><div class="fl">出生地 / Place of Birth</div><div class="fj">アンヘレス市、パンパンガ州</div></div><div class="fb s"><div class="fn">7</div><div class="fl">宗教 / Religion</div><div class="fj">カトリック</div></div><div class="fb"><div class="fn">8</div><div class="fl">職業 / Occupation</div><div class="fj">退職者</div></div><div class="fb s"><div class="fn">9</div><div class="fl">常住地 / Residence</div><div class="fj">マサルカット、パンパンガ州</div></div></div><div><div class="fb"><div class="fn">10</div><div class="fl">父の氏名 / Father's Name</div><div class="fj">フェリペ・アバド</div></div><div class="fb s"><div class="fn">11</div><div class="fl">母の旧姓 / Mother's Name</div><div class="fj">テレサ・アバド</div></div></div></div>
+        <div class="sh">B.　死亡情報 / DEATH INFORMATION</div>
+        <div class="g2"><div class="gcl"><div class="fb s"><div class="fn">12</div><div class="fl">死亡日 / Date of Death</div><div class="fj">1999年8月30日</div></div></div><div><div class="fb"><div class="fn">13</div><div class="fl">死亡場所 / Place of Death</div><div class="fj">マサルカット、パンパンガ州</div></div></div></div>
+        <div class="sh">C.　死因 / CAUSES OF DEATH</div>
+        <div class="g1"><div class="fb s"><div class="fl">19a. 直接死因 / Immediate Cause</div><div class="fj">心肺停止</div><div class="fe">Cardiopulmonary Arrest</div></div><div class="fb"><div class="fl">19b. 先行死因 / Antecedent Cause</div><div class="fj">急性心筋梗塞</div></div><div class="fb s"><div class="fl">19c. 根本死因 / Underlying Cause</div><div class="fj">高血圧症</div></div><div class="fb"><div class="fn">20</div><div class="fl">担当医師 / Attending Physician</div><div class="fj">Dr. マリア・サントス</div></div></div>
+        <div class="sh">D.　登録情報 / REGISTRATION INFORMATION</div>
+        <div class="g2"><div class="gcl"><div class="fb s"><div class="fl">登録番号 / Registry Number</div><div class="fj">1999-76251</div></div></div><div><div class="fb"><div class="fl">翻訳目的 / Purpose</div><div class="fj">日本での相続手続き</div></div></div></div>
+        <div class="stamp"><span>Documentary Stamp Tax Paid · 登録印紙税納付済</span><span>発行機関：フィリピン統計局（PSA）</span></div>
+        <div class="cbox"><b>【翻訳証明】</b>本翻訳はPSA発行の死亡証明書を正確に日本語に翻訳したものです。<br><em>CERTIFICATION: Faithful Japanese translation of the original Certificate of Death issued by PSA.</em></div>
+        <div class="dbox">ACCEPTED USE: Suitable for Japanese visa applications and estate settlement. NOT valid for court proceedings.</div>
+        <div class="sample-only">SAMPLE ONLY — Your actual translation will contain your real document details</div>
+      </div></div>
+
+      <!-- CENOMAR -->
+      <div class="sprev" id="sprev-cenomar"><div class="sdoc">
+        <div class="psa-hdr"><div class="psa-rep" style="text-align:left;font-size:6px">CRS Form No. 4 (CENOMAR)</div><div class="psa-rep">Republic of the Philippines · フィリピン共和国</div><div class="psa-off">PHILIPPINE STATISTICS AUTHORITY · フィリピン統計局</div><div class="psa-civ">Manila · マニラ &nbsp;|&nbsp; OFFICE OF THE CIVIL REGISTRAR GENERAL · 民事登録局</div><div class="psa-doctit">CERTIFICATE OF NO MARRIAGE RECORD</div><div class="psa-jptit">未婚証明書（CENOMAR）— 日本語翻訳</div></div>
+        <div class="lbody">
+          <div class="ldate">発行日 / Date of Issuance: <b>2025年6月29日</b></div>
+          <div class="lconcern">TO WHOM IT MAY CONCERN: / 関係各位：</div>
+          <div class="lpara">We certify that / 本機関は以下の者について証明します：<br><br>
+            &nbsp;&nbsp;氏名 / Name: <span class="fill fill-lg">アンナ・M・レイエス・サントス</span> &nbsp;性別 / Sex: <span class="fill">女性</span><br><br>
+            &nbsp;&nbsp;生年月日 / Date of Birth: <span class="fill">1995年6月10日</span> &nbsp;出生地: <span class="fill">ケソン市</span><br><br>
+            &nbsp;&nbsp;国籍 / Citizenship: <span class="fill">フィリピン国籍</span><br><br>
+            &nbsp;&nbsp;父の氏名 / Father's Name: <span class="fill fill-lg">ロベルト・サントス・レイエス</span><br>
+            &nbsp;&nbsp;母の旧姓 / Mother's Maiden Name: <span class="fill fill-lg">エレナ・クルス・ガルシア</span><br><br>
+            <b>does not appear in our National Indices of Marriages.</b><br>
+            <b style="color:#1a2744">婚姻に関する国家記録に記載がないことを証明します。</b>
+          </div>
+          <div class="lpara">This certification is based on the records of <span class="fill">1945年〜2024年</span> marriages enrolled in the database.<br><span style="color:#777;font-size:7px">本証明は対象期間のデータベース登録済み婚姻記録に基づきます。</span></div>
+          <div class="lpara">Issued upon the request of: <span class="fill fill-lg">アンナ・M・レイエス・サントス</span> &nbsp;for: <span class="fill fill-lg">日本での婚姻申請</span></div>
+          <div class="sig"><div style="margin-bottom:18px">&nbsp;</div><div class="sig-n">CLAIRE DENNIS S. MAPA, Ph.D.</div><div>National Statistician and Civil Registrar General</div><div style="color:#666">国家統計官兼民事登録局長官 · Philippine Statistics Authority</div></div>
+          <div style="margin-top:8px"><div class="drow"><span class="dlbl">参照番号 / Reference No.:</span><span class="dval">CENOMAR-2025-QC-00234</span></div></div>
+          <div style="font-size:6px;color:#777;margin-top:5px;padding-top:4px;border-top:0.5px solid #ccc;font-style:italic">Note: This certification is not valid if it contains erasures or alterations. ／ 修正または削除がある場合、本証明書は無効となります。</div>
+        </div>
+        <div class="stamp"><span>Documentary Stamp Tax Paid · 印紙税納付済</span><span>国籍：フィリピン国籍</span></div>
+        <div class="cbox"><b>【翻訳証明】</b>本翻訳はPSA発行の未婚証明書（CENOMAR）を正確に日本語に翻訳したものです。<br><em>CERTIFICATION: Faithful Japanese translation of the original CENOMAR issued by PSA.</em></div>
+        <div class="dbox">ACCEPTED USE: Suitable for marriage registration at a Japanese municipal office (役所). NOT valid for court proceedings.</div>
+        <div class="sample-only">SAMPLE ONLY — Your actual translation will contain your real document details</div>
+      </div></div>
+
+      <!-- ADVISORY ON MARRIAGES -->
+      <div class="sprev" id="sprev-advisory"><div class="sdoc">
+        <div class="psa-hdr"><div class="psa-rep">Republic of the Philippines · フィリピン共和国</div><div class="psa-off">PHILIPPINE STATISTICS AUTHORITY · フィリピン統計局</div><div class="psa-civ">Manila · マニラ &nbsp;|&nbsp; OFFICE OF THE CIVIL REGISTRAR GENERAL · 民事登録局</div><div class="psa-doctit">ADVISORY ON MARRIAGES</div><div class="psa-jptit">婚姻記録照会書　— 日本語翻訳</div></div>
+        <div class="lbody">
+          <div class="ldate">発行日 / Date: <b>2020年11月11日</b></div>
+          <div class="lconcern">TO WHOM IT MAY CONCERN: / 関係各位：</div>
+          <div class="lpara">Be advised that this search for the name / 以下の者の照会結果をお知らせします：<br><br>
+            &nbsp;&nbsp;氏名 / Name: <span class="fill fill-lg">ミシェル・サントス・レイエス</span> &nbsp;性別 / Sex: <span class="fill">女性</span><br><br>
+            &nbsp;&nbsp;生年月日 / Date of Birth: <span class="fill">1988年2月10日</span> &nbsp;出生地: <span class="fill fill-lg">ブキドノン州、マカティ市</span><br><br>
+            and / および <span class="fill fill-lg">フアン・デラ・クルス</span><br><br>
+            yielded / 該当件数：<b style="color:#1a2744"><span class="fill">1件</span> の婚姻記録が見つかりました。</b>
+          </div>
+          <div style="margin:4px 0 6px 14px">
+            <div class="drow"><span class="dlbl">婚姻日 / Date of Marriage:</span><span class="dval">2017年4月12日</span></div>
+            <div class="drow"><span class="dlbl">婚姻地 / Place of Marriage:</span><span class="dval">マカティ市</span></div>
+            <div class="drow"><span class="dlbl">相手方氏名 / Bride/Groom:</span><span class="dval">フアン・デラ・クルス</span></div>
+            <div class="drow"><span class="dlbl">備考・注記 / Remarks:</span><span class="dval">外国離婚判決あり</span></div>
+          </div>
+          <div class="lpara">This certification is based on the records of <span class="fill">1945年〜2020年</span> marriages enrolled in the database.<br><span style="color:#777;font-size:7px">本証明は対象期間のデータベース登録済み婚姻記録に基づきます。</span></div>
+          <div class="lpara">Issued upon the request of: <span class="fill fill-lg">ミシェル・サントス・レイエス</span> &nbsp;for: <span class="fill fill-lg">法的手続き・日本ビザ申請</span></div>
+          <div class="sig"><div style="margin-bottom:18px">&nbsp;</div><div class="sig-n">CLAIRE DENNIS S. MAPA, Ph.D.</div><div>National Statistician and Civil Registrar General</div><div style="color:#666">国家統計官兼民事登録局長官 · Philippine Statistics Authority</div></div>
+          <div style="font-size:6px;color:#777;margin-top:5px;padding-top:4px;border-top:0.5px solid #ccc;font-style:italic">Note: This certification is not valid if it contains erasures or alterations. Copy of marriage document/s may be issued separately. ／ 修正がある場合無効。</div>
+        </div>
+        <div class="stamp"><span>Documentary Stamp Tax Paid · 印紙税納付済</span><span>Page 1 of 1</span></div>
+        <div class="cbox"><b>【翻訳証明】</b>本翻訳はPSA発行の婚姻記録照会書を正確に日本語に翻訳したものです。<br><em>CERTIFICATION: Faithful Japanese translation of the original Advisory on Marriages issued by PSA.</em></div>
+        <div class="dbox">ACCEPTED USE: Suitable for Japanese visa applications and legal proceedings. NOT valid for court proceedings.</div>
+        <div class="sample-only">SAMPLE ONLY — Your actual translation will contain your real document details</div>
+      </div></div>
+
+      <!-- NO BIRTH RECORD -->
+      <div class="sprev" id="sprev-nobirth"><div class="sdoc">
+        <div class="psa-hdr"><div class="psa-rep">Republic of the Philippines · フィリピン共和国</div><div class="psa-off">NATIONAL STATISTICS OFFICE · 国家統計局</div><div class="psa-civ">OFFICE OF THE CIVIL REGISTRAR GENERAL · 民事登録局</div><div class="psa-doctit">NEGATIVE CERTIFICATION OF BIRTH</div><div class="psa-jptit">出生記録なし証明書　— 日本語翻訳</div></div>
+        <div class="lbody">
+          <div class="ldate">発行日 / Date: <b>2025年6月29日</b></div>
+          <div class="lconcern">TO WHOM IT MAY CONCERN: / 関係各位：</div>
+          <div class="lpara">We certify that we do not have any record of birth of / 以下の者に関する出生記録が存在しないことを証明します：<br><br>
+            &nbsp;&nbsp;氏名 / Name: <span class="fill fill-lg">カルロ・M・ガルシア</span><br><br>
+            &nbsp;&nbsp;生年月日 / Date of Birth: <span class="fill">1985年12月31日</span> &nbsp;出生地: <span class="fill fill-lg">マニラ市、メトロ・マニラ</span><br><br>
+            &nbsp;&nbsp;父の氏名 / Father: <span class="fill fill-lg">ロベルト・ガルシア・メンドーサ</span><br>
+            &nbsp;&nbsp;母の旧姓 / Mother: <span class="fill fill-lg">エレナ・クルス・ガルシア</span>
+          </div>
+          <div class="lpara">Further verification may be made from the Local Civil Registry Office. Any interested party may apply for delayed registration.<br><span style="color:#777;font-size:7px">当該自治体の民事登録局においてさらなる確認が可能です。記録がない場合は、遅延出生登録を申請することができます。</span></div>
+          <div class="lpara">Issued upon the request of: <span class="fill fill-lg">カルロ・M・ガルシア</span> &nbsp;for: <span class="fill fill-lg">日本ビザ申請</span></div>
+          <div class="sig"><div style="margin-bottom:18px">&nbsp;</div><div class="sig-n">CARMELITA N. ERICTA</div><div>Administrator and Civil Registrar General</div><div style="color:#666">民事登録局長官 · National Statistics Office</div></div>
+          <div style="font-size:6px;color:#777;margin-top:5px;padding-top:4px;border-top:0.5px solid #ccc;font-style:italic">Note: This certification is not valid if it contains erasures or alterations. ／ 修正または削除がある場合、本証明書は無効となります。</div>
+        </div>
+        <div class="stamp"><span>Documentary Stamp Tax Paid · 印紙税納付済</span><span>出生記録なし / NO BIRTH RECORD</span></div>
+        <div class="cbox"><b>【翻訳証明】</b>本翻訳はPSA発行の出生記録なし証明書を正確に日本語に翻訳したものです。<br><em>CERTIFICATION: Faithful Japanese translation of the original Negative Certification of Birth issued by PSA.</em></div>
+        <div class="dbox">ACCEPTED USE: Suitable for Japanese visa applications. NOT valid for court proceedings or notarized legal submissions.</div>
+        <div class="sample-only">SAMPLE ONLY — Your actual translation will contain your real document details</div>
+      </div></div>
+
     </div>
   </div>
 
@@ -422,36 +594,46 @@ const DOC_FIELDS = {
   'Marriage Certificate': [
     {id:'husband_name', label:'Husband full name', ph:'e.g. Pedro Santos Reyes'},
     {id:'husband_dob', label:'Husband date of birth', ph:'', type:'date'},
-    {id:'husband_pob', label:'Husband place of birth', ph:'e.g. Cebu City'},
+    {id:'husband_pob', label:'Husband place of birth', ph:'e.g. San Pablo, Pangasinan'},
     {id:'husband_citizen', label:'Husband citizenship', ph:'e.g. Filipino'},
     {id:'husband_religion', label:'Husband religion', ph:'e.g. Roman Catholic'},
     {id:'husband_civil', label:'Husband civil status', ph:'', type:'select', opts:['Single','Widowed','Divorced']},
+    {id:'husband_father', label:"Husband's father name", ph:'e.g. Roberto Santos'},
+    {id:'husband_mother', label:"Husband's mother maiden name", ph:'e.g. Elena Cruz'},
     {id:'wife_name', label:'Wife full maiden name', ph:'e.g. Maria Reyes dela Cruz'},
     {id:'wife_dob', label:'Wife date of birth', ph:'', type:'date'},
-    {id:'wife_pob', label:'Wife place of birth', ph:'e.g. Manila'},
+    {id:'wife_pob', label:'Wife place of birth', ph:'e.g. San Fabian, Pangasinan'},
     {id:'wife_citizen', label:'Wife citizenship', ph:'e.g. Filipino'},
     {id:'wife_religion', label:'Wife religion', ph:'e.g. Roman Catholic'},
     {id:'wife_civil', label:'Wife civil status', ph:'', type:'select', opts:['Single','Widowed','Divorced']},
+    {id:'wife_father', label:"Wife's father name", ph:'e.g. Jose Reyes'},
+    {id:'wife_mother', label:"Wife's mother maiden name", ph:'e.g. Ana dela Cruz'},
     {id:'marriage_date', label:'Date of marriage', ph:'', type:'date'},
-    {id:'marriage_place', label:'Place of marriage', ph:'e.g. Manila Cathedral, Manila'},
+    {id:'marriage_place', label:'Place of marriage', ph:'e.g. San Pablo, Pangasinan'},
     {id:'officer', label:'Solemnizing officer', ph:'e.g. Rev. Father Jose Santos'},
-    {id:'reg_number', label:'Registry number', ph:'e.g. 2015-MCR-008812'},
+    {id:'officer_position', label:'Officer position/designation', ph:'e.g. Pastor of God Inc., Pangasinan'},
+    {id:'reg_number', label:'Registry number', ph:'e.g. 2018-157'},
     {id:'purpose', label:'Purpose of translation', ph:'e.g. Marriage registration in Japan'}
   ],
   'Death Certificate': [
-    {id:'deceased_name', label:'Deceased full name', ph:'e.g. Jose dela Cruz Santos'},
+    {id:'deceased_name', label:'Deceased full name', ph:'e.g. George de Guzman Abad'},
     {id:'deceased_sex', label:'Sex', ph:'', type:'select', opts:['Male','Female']},
     {id:'deceased_dob', label:'Date of birth', ph:'', type:'date'},
+    {id:'deceased_pob', label:'Place of birth', ph:'e.g. Angeles, Pampanga'},
     {id:'civil_status', label:'Civil status', ph:'', type:'select', opts:['Single','Married','Widowed','Separated']},
+    {id:'deceased_citizen', label:'Citizenship', ph:'e.g. Filipino'},
+    {id:'deceased_religion', label:'Religion', ph:'e.g. Catholic'},
     {id:'deceased_occ', label:'Occupation', ph:'e.g. Retired'},
-    {id:'deceased_residence', label:'Usual residence', ph:'e.g. Sampaloc, Manila'},
+    {id:'deceased_residence', label:'Usual residence', ph:'e.g. Masalcat, Pampanga'},
+    {id:'deceased_father', label:"Father's name", ph:'e.g. Felipe Abad'},
+    {id:'deceased_mother', label:"Mother's maiden name", ph:'e.g. Teresa Abad'},
     {id:'death_date', label:'Date of death', ph:'', type:'date'},
-    {id:'death_place', label:'Place of death', ph:'e.g. Philippine General Hospital, Manila'},
+    {id:'death_place', label:'Place of death', ph:'e.g. Masalcat, Pampanga'},
     {id:'cause_immediate', label:'Immediate cause of death', ph:'e.g. Cardiopulmonary Arrest'},
     {id:'cause_antecedent', label:'Antecedent cause', ph:'e.g. Acute Myocardial Infarction'},
     {id:'cause_underlying', label:'Underlying cause', ph:'e.g. Hypertension'},
     {id:'physician', label:'Attending physician', ph:'e.g. Dr. Maria Santos'},
-    {id:'reg_number', label:'Registry number', ph:'e.g. 2022-MCR-004491'},
+    {id:'reg_number', label:'Registry number', ph:'e.g. 1999-76251'},
     {id:'purpose', label:'Purpose of translation', ph:'e.g. Estate settlement in Japan'}
   ],
   'CENOMAR': [
@@ -460,40 +642,34 @@ const DOC_FIELDS = {
     {id:'applicant_pob', label:'Place of birth', ph:'e.g. Quezon City'},
     {id:'applicant_sex', label:'Sex', ph:'', type:'select', opts:['Male','Female']},
     {id:'applicant_citizen', label:'Citizenship', ph:'e.g. Filipino'},
+    {id:'father_name', label:"Father's name", ph:'e.g. Roberto Santos Reyes'},
+    {id:'mother_name', label:"Mother's maiden name", ph:'e.g. Elena Cruz Garcia'},
+    {id:'period_covered', label:'Period covered', ph:'e.g. 1945–2024'},
     {id:'issuance_date', label:'Date of issuance', ph:'', type:'date'},
     {id:'ref_number', label:'Reference number', ph:'e.g. CENOMAR-2025-QC-00234'},
     {id:'purpose', label:'Purpose of translation', ph:'e.g. Marriage application in Japan'}
   ],
   'Advisory on Marriages': [
-    {id:'subject_name', label:'Subject full name', ph:'e.g. Pedro Jose Reyes'},
+    {id:'subject_name', label:'Subject full name', ph:'e.g. Michelle Santos Reyes'},
     {id:'subject_dob', label:'Date of birth', ph:'', type:'date'},
-    {id:'subject_pob', label:'Place of birth', ph:'e.g. Davao City'},
+    {id:'subject_pob', label:'Place of birth', ph:'e.g. Makati City, Bukidnon'},
     {id:'subject_sex', label:'Sex', ph:'', type:'select', opts:['Male','Female']},
     {id:'num_marriages', label:'Number of marriages found', ph:'e.g. One (1)'},
-    {id:'spouse_name', label:'Spouse name (if any)', ph:'e.g. Lucia Fernandez Cruz'},
-    {id:'marriage_date', label:'Date of marriage (if any)', ph:'', type:'date'},
-    {id:'marriage_status', label:'Current status', ph:'e.g. Annulled, Valid, Widowed'},
+    {id:'spouse_name', label:'Name of bride/groom', ph:'e.g. Juan dela Cruz'},
+    {id:'marriage_date', label:'Date of marriage', ph:'', type:'date'},
+    {id:'marriage_place', label:'Place of marriage', ph:'e.g. Makati City'},
+    {id:'marriage_status', label:'Remarks/Annotation', ph:'e.g. With Foreign Divorce Decree'},
+    {id:'period_covered', label:'Period covered', ph:'e.g. 1945–2020'},
     {id:'issuance_date', label:'Date of issuance', ph:'', type:'date'},
-    {id:'purpose', label:'Purpose of translation', ph:'e.g. Japanese visa application'}
+    {id:'purpose', label:'Purpose of translation', ph:'e.g. Legal / Japanese visa application'}
   ],
   'Certificate of No Birth Record': [
     {id:'subject_name', label:'Full name', ph:'e.g. Carlo Mendoza Garcia'},
     {id:'subject_dob', label:'Date of birth', ph:'', type:'date'},
-    {id:'subject_pob', label:'Place of birth', ph:'e.g. Batangas City'},
-    {id:'subject_sex', label:'Sex', ph:'', type:'select', opts:['Male','Female']},
-    {id:'father_name', label:'Father name', ph:'e.g. Roberto Garcia Mendoza'},
-    {id:'mother_name', label:'Mother name', ph:'e.g. Elena Cruz Garcia'},
+    {id:'subject_pob', label:'Place of birth', ph:'e.g. Manila, Metro Manila'},
+    {id:'father_name', label:"Father's name", ph:'e.g. Roberto Garcia Mendoza'},
+    {id:'mother_name', label:"Mother's maiden name", ph:'e.g. Elena Cruz Garcia'},
     {id:'issuance_date', label:'Date of issuance', ph:'', type:'date'},
-    {id:'ref_number', label:'Reference number', ph:'e.g. NBR-2025-BT-00077'},
-    {id:'purpose', label:'Purpose of translation', ph:'e.g. Japanese visa application'}
-  ],
-  'Certificate of No Death Record': [
-    {id:'subject_name', label:'Full name', ph:'e.g. Rosa dela Cruz Villanueva'},
-    {id:'subject_dob', label:'Date of birth', ph:'', type:'date'},
-    {id:'subject_pob', label:'Place of birth', ph:'e.g. Iloilo City'},
-    {id:'subject_sex', label:'Sex', ph:'', type:'select', opts:['Male','Female']},
-    {id:'issuance_date', label:'Date of issuance', ph:'', type:'date'},
-    {id:'ref_number', label:'Reference number', ph:'e.g. NDR-2025-IL-00055'},
     {id:'purpose', label:'Purpose of translation', ph:'e.g. Japanese visa application'}
   ]
 };
@@ -609,13 +785,12 @@ async function onDocUpload(input) {
     var fieldIds = fields.map(function(f){ return f.id; }).join(', ');
 
     var tips = {
-      'Birth Certificate': 'Child name section 1 (First Middle Last columns). Sex: X mark next to Male or Female. Date of birth split into Day Month Year boxes - combine them. Place of birth: hospital or street, city, province. Birth order: 1st 2nd etc. Mother maiden name section 6 (First Middle Last). Mother citizenship, religion, occupation. Father name section 9. Father citizenship, religion, occupation. Parents marriage date section 12. Registry number top right. Registration date near bottom.',
-      'Marriage Certificate': 'Husband full name section 1. Husband date of birth, place of birth, citizenship, religion, civil status. Wife maiden name section 7. Wife date of birth, place of birth, citizenship, religion, civil status. Date of marriage. Place of marriage. Solemnizing officer name and title. Registry number top right.',
-      'Death Certificate': 'Deceased full name section 1. Sex, date of birth, age, civil status, citizenship, religion, occupation, usual residence. Date of death. Place of death. Immediate cause, antecedent cause, underlying cause of death. Attending physician. Registry number.',
-      'CENOMAR': 'Applicant full name at top. Date of birth, place of birth, sex, citizenship. Father and mother names. NO MARRIAGE RECORD certification text. Reference number and date of issuance at bottom.',
-      'Advisory on Marriages': 'Subject full name. Date of birth, place of birth, sex. Number of marriages found. Spouse name, date of marriage, place of marriage, current status of marriage. Date of issuance and reference number.',
-      'Certificate of No Birth Record': 'Subject full name. Date of birth, place of birth, sex. Father name, mother name. NO BIRTH RECORD certification. Reference number and date of issuance.',
-      'Certificate of No Death Record': 'Subject full name. Date of birth, place of birth, sex. NO DEATH RECORD certification. Reference number and date of issuance.'
+      'Birth Certificate': 'Child name section 1 (First Middle Last columns). Sex: X mark next to Male or Female. Date of birth split into Day Month Year boxes - combine them. Place of birth: hospital or street, city, province. Birth order: 1st 2nd etc. Mother maiden name section 6 (First Middle Last). Mother citizenship, religion, occupation. Father name section 9. Father citizenship, religion, occupation. Registry number top right. Registration date near bottom.',
+      'Marriage Certificate': 'Husband full name section 1. Husband date of birth, place of birth, citizenship, religion, civil status. Husband father name and mother maiden name. Wife maiden name. Wife date of birth, place of birth, citizenship, religion, civil status. Wife father name and mother maiden name. Date of marriage, place of marriage. Solemnizing officer name and position/designation. Registry number top right.',
+      'Death Certificate': 'Deceased full name section 1. Sex, date of birth, place of birth, civil status, citizenship, religion, occupation, usual residence. Father name and mother maiden name. Date of death, place of death. Immediate cause, antecedent cause, underlying cause of death. Attending physician. Registry number top right.',
+      'CENOMAR': 'Applicant full name at top. Date of birth, place of birth, sex, citizenship. Father name and mother maiden name. Period covered (e.g. 1945–2024) from the certification text. Reference number and date of issuance at bottom.',
+      'Advisory on Marriages': 'Subject full name. Date of birth, place of birth, sex. Number of marriages found. Name of bride/groom spouse. Date of marriage, place of marriage. Remarks or annotation (e.g. With Foreign Divorce Decree). Period covered from certification text. Date of issuance.',
+      'Certificate of No Birth Record': 'Subject full name. Date of birth, place of birth. Father name and mother maiden name. Date of issuance.'
     };
 
     var prompt = 'You are an expert at reading Philippine PSA (Philippine Statistics Authority) civil registry documents. ' +
@@ -688,6 +863,14 @@ function onProofUpload(input) {
   proofFileData = null;
   toBase64(file).then(function(b64) { proofFileData = b64; });
   setStep(5);
+}
+
+function showSample(key, btn) {
+  document.querySelectorAll('.sprev').forEach(function(el){ el.classList.remove('show'); });
+  document.querySelectorAll('.stab').forEach(function(el){ el.classList.remove('active'); });
+  var el = document.getElementById('sprev-' + key);
+  if (el) el.classList.add('show');
+  if (btn) btn.classList.add('active');
 }
 
 function toggleSample() {
