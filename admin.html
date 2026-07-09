@@ -475,37 +475,37 @@ async function doTranslate() {
       'A. 子の情報 / CHILD INFORMATION': ['child_name','child_dob','child_pob','child_sex','child_order'],
       'B. 母の情報 / MOTHER INFORMATION': ['mother_name','mother_citizen','mother_religion','mother_occ'],
       'C. 父の情報 / FATHER INFORMATION': ['father_name','father_citizen','father_religion','father_occ'],
-      'D. 登録情報 / REGISTRATION INFORMATION': ['reg_number','reg_date']
+      'D. 登録情報 / REGISTRATION INFORMATION': ['reg_number','reg_date','purpose']
     },
     'Marriage Certificate': {
       'A. 夫の情報 / HUSBAND INFORMATION': ['husband_name','husband_dob','husband_pob','husband_citizen','husband_religion','husband_civil'],
       'B. 妻の情報 / WIFE INFORMATION': ['wife_name','wife_dob','wife_pob','wife_citizen','wife_religion','wife_civil'],
       'C. 婚姻情報 / MARRIAGE INFORMATION': ['marriage_date','marriage_place','officer'],
-      'D. 登録情報 / REGISTRATION INFORMATION': ['reg_number']
+      'D. 登録情報 / REGISTRATION INFORMATION': ['reg_number','purpose']
     },
     'Death Certificate': {
       'A. 故人の情報 / DECEASED INFORMATION': ['deceased_name','deceased_sex','deceased_dob','civil_status','deceased_occ','deceased_residence'],
       'B. 死亡情報 / DEATH INFORMATION': ['death_date','death_place'],
       'C. 死因 / CAUSE OF DEATH': ['cause_immediate','cause_antecedent','cause_underlying','physician'],
-      'D. 登録情報 / REGISTRATION INFORMATION': ['reg_number']
+      'D. 登録情報 / REGISTRATION INFORMATION': ['reg_number','purpose']
     },
     'CENOMAR': {
-      'A. 申請者情報 / APPLICANT INFORMATION': ['applicant_name','applicant_dob','applicant_pob','applicant_sex','applicant_citizen'],
-      'B. 証明内容 / CERTIFICATION': ['issuance_date','ref_number']
+      'A. 申請者情報 / APPLICANT INFORMATION': ['applicant_name','applicant_dob','applicant_pob','applicant_sex','applicant_citizen','father_name','mother_name'],
+      'B. 証明内容 / CERTIFICATION': ['period_covered','issuance_date','ref_number','purpose']
     },
     'Advisory on Marriages': {
       'A. 照会対象者 / SUBJECT INFORMATION': ['subject_name','subject_dob','subject_pob','subject_sex'],
       'B. 婚姻記録 / MARRIAGE RECORDS': ['num_marriages','spouse_name','marriage_date','marriage_status'],
-      'C. 発行情報 / ISSUANCE': ['issuance_date']
+      'C. 発行情報 / ISSUANCE': ['issuance_date','purpose']
     },
     'Certificate of No Birth Record': {
       'A. 照会対象者 / SUBJECT INFORMATION': ['subject_name','subject_dob','subject_pob','subject_sex'],
       'B. 親の情報 / PARENT INFORMATION': ['father_name','mother_name'],
-      'C. 発行情報 / ISSUANCE': ['issuance_date','ref_number']
+      'C. 発行情報 / ISSUANCE': ['issuance_date','ref_number','purpose']
     },
     'Certificate of No Death Record': {
       'A. 照会対象者 / SUBJECT INFORMATION': ['subject_name','subject_dob','subject_pob','subject_sex'],
-      'B. 発行情報 / ISSUANCE': ['issuance_date','ref_number']
+      'B. 発行情報 / ISSUANCE': ['issuance_date','ref_number','purpose']
     }
   };
 
@@ -524,6 +524,7 @@ async function doTranslate() {
     'num_marriages':'婚姻件数','spouse_name':'配偶者名','marriage_status':'婚姻状況',
     'father_name':'父の氏名','mother_name':'母の旧姓',
     'reg_number':'登録番号','reg_date':'登録日','issuance_date':'発行日','ref_number':'参照番号',
+    'period_covered':'対象期間',
     'purpose':'目的'
   };
 
@@ -563,7 +564,7 @@ async function doTranslate() {
     '- Person names: convert to katakana (e.g. REYMAR -> レイマール, ARROYO -> アロヨ, NELLY -> ネリー)\n' +
     '- Place names: use standard Japanese katakana (e.g. Bato -> バト, Camarines Sur -> カマリネス・スール州)\n' +
     '- Occupations: translate to Japanese (Housewife->主婦, Farmer->農業, Carpenter->大工)\n' +
-    '- Use exactly this format for each field: [Japanese label]: [English value] / [Japanese translation]\n\n' +
+    '- Use ONLY the FIELD_ID|Japanese format shown above. Do NOT use any other format.\n\n' +
     'After all fields add:\n' +
     '【翻訳証明】本翻訳はフィリピン統計局（PSA）発行の原文書を正確に日本語に翻訳したものです。\n' +
     'CERTIFICATION: This is a faithful Japanese translation of the original document issued by the Philippine Statistics Authority (PSA).';
@@ -711,11 +712,14 @@ function doDownloadPDF() {
           {num:'3', en:'Place of Birth', jp:'出生地', id:'applicant_pob'},
           {num:'4', en:'Sex', jp:'性別', id:'applicant_sex'},
           {num:'5', en:'Citizenship', jp:'国籍', id:'applicant_citizen'},
+          {num:'6', en:"Father's Name", jp:'父の氏名', id:'father_name'},
+          {num:'7', en:"Mother's Maiden Name", jp:'母の旧姓', id:'mother_name'},
         ]},
         { label: 'B', en: 'CERTIFICATION DETAILS', jp: '証明内容', fields: [
-          {num:'6', en:'Result', jp:'結果', val:'NO MARRIAGE RECORD FOUND', jpval:'婚姻記録なし'},
-          {num:'7', en:'Date of Issuance', jp:'発行日', id:'issuance_date'},
-          {num:'8', en:'Reference Number', jp:'参照番号', id:'ref_number'},
+          {num:'8', en:'Result', jp:'結果', val:'NO MARRIAGE RECORD FOUND', jpval:'婚姻記録なし'},
+          {num:'9', en:'Period Covered', jp:'対象期間', id:'period_covered'},
+          {num:'10', en:'Date of Issuance', jp:'発行日', id:'issuance_date'},
+          {num:'11', en:'Reference Number', jp:'参照番号', id:'ref_number'},
           {num:'', en:'Issuing Authority', jp:'発行機関', val:'Philippine Statistics Authority (PSA)', jpval:'フィリピン統計局（PSA）'},
           {num:'', en:'Purpose of Translation', jp:'翻訳目的', id:'purpose'},
         ]},
@@ -895,6 +899,15 @@ function doDownloadPDF() {
       'NO MARRIAGE RECORD FOUND':'婚姻記録なし',
       'NO BIRTH RECORD FOUND':'出生記録なし',
       'NO DEATH RECORD FOUND':'死亡記録なし',
+      // Common purpose values
+      'Japanese visa application':'日本ビザ申請',
+      'Marriage registration in Japan':'日本での婚姻届',
+      'Marriage application in Japan':'日本での婚姻申請',
+      'Visa application':'ビザ申請',
+      'Estate settlement in Japan':'日本での相続手続き',
+      'Japanese spouse visa':'日本人配偶者ビザ申請',
+      'Court proceedings':'裁判手続き',
+      'Legal purposes':'法的目的',
     };
     if (common[enVal]) return common[enVal];
 
@@ -1141,7 +1154,9 @@ var DOC_FIELDS_ADMIN = {
   'CENOMAR': [
     {id:'applicant_name',label:'Full Name'},{id:'applicant_dob',label:'Date of Birth',type:'date'},
     {id:'applicant_pob',label:'Place of Birth'},{id:'applicant_sex',label:'Sex'},
-    {id:'applicant_citizen',label:'Citizenship'},{id:'issuance_date',label:'Date of Issuance',type:'date'},
+    {id:'applicant_citizen',label:'Citizenship'},{id:'father_name',label:"Father's Name"},
+    {id:'mother_name',label:"Mother's Maiden Name"},{id:'period_covered',label:'Period Covered'},
+    {id:'issuance_date',label:'Date of Issuance',type:'date'},
     {id:'ref_number',label:'Reference Number'},{id:'purpose',label:'Purpose'}
   ],
   'Advisory on Marriages': [
