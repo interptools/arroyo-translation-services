@@ -655,60 +655,60 @@ function doDownloadPDF() {
   };
   var jpTitle = jpTitles[dt] || dt;
 
-  // ── SHARED CSS ── same classes used in both sample preview & PDF output
+  // ── SHARED CSS ── scaled for A4 page fill
   var CSS = [
     '*{box-sizing:border-box;margin:0;padding:0}',
     'body{font-family:"Noto Sans JP","Times New Roman",serif;background:#faf8f0;color:#222;margin:0;padding:0}',
-    '.page{width:210mm;min-height:297mm;background:#faf8f0;padding:8mm 10mm 6mm;margin:0 auto}',
-    // PSA header
-    '.psa-hdr{text-align:center;padding:5px 8px 4px;border-bottom:1px solid #999;background:#faf8f0}',
-    '.psa-rep{font-size:6.5px;color:#555;letter-spacing:0.2px}',
-    '.psa-off{font-size:7.5px;font-weight:bold;color:#111;margin:1px 0}',
-    '.psa-civ{font-size:6.5px;color:#555;margin:1px 0}',
-    '.psa-doctit{font-size:11px;font-weight:bold;color:#111;margin:3px 0 1px;letter-spacing:0.4px}',
-    '.psa-jptit{font-size:10px;font-weight:bold;color:#1a2744;margin:2px 0 0}',
+    '.page{width:210mm;min-height:297mm;background:#faf8f0;padding:10mm 12mm 10mm;margin:0 auto}',
+    // PSA header — bigger, more prominent
+    '.psa-hdr{text-align:center;padding:8px 10px 7px;border-bottom:1.5px solid #999;background:#faf8f0;margin-bottom:0}',
+    '.psa-rep{font-size:8px;color:#555;letter-spacing:0.3px}',
+    '.psa-off{font-size:10px;font-weight:bold;color:#111;margin:2px 0}',
+    '.psa-civ{font-size:8px;color:#555;margin:1px 0}',
+    '.psa-doctit{font-size:15px;font-weight:bold;color:#111;margin:5px 0 2px;letter-spacing:0.5px}',
+    '.psa-jptit{font-size:13px;font-weight:bold;color:#1a2744;margin:3px 0 0}',
     // Meta row
-    '.meta{display:flex;justify-content:space-between;padding:2px 7px;border-bottom:1px solid #aaa;font-size:6.5px;color:#444;background:#f0ece0}',
-    // Section header - navy with gold text
-    '.sh{background:#1a2744;color:#e8c97a;font-size:7px;font-weight:bold;padding:2px 7px;letter-spacing:0.4px}',
-    // Grid wrappers - always start with left+top border so fields only need right+bottom
+    '.meta{display:flex;justify-content:space-between;padding:4px 10px;border-bottom:1px solid #aaa;font-size:8px;color:#444;background:#f0ece0}',
+    // Section header
+    '.sh{background:#1a2744;color:#e8c97a;font-size:9px;font-weight:bold;padding:4px 10px;letter-spacing:0.5px;margin-top:2px}',
+    // Grid wrappers
     '.g1{display:grid;grid-template-columns:1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb}',
     '.g2{display:grid;grid-template-columns:1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb}',
     '.g3{display:grid;grid-template-columns:1fr 1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb}',
     '.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb}',
-    '.gcl{border-right:1.5px solid #999}',  // heavy divider between main columns
-    // Field box - each cell
-    '.fb{border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 4px 3px;min-height:24px;background:#faf8f0}',
+    '.gcl{border-right:2px solid #888}',
+    // Field box — taller, bigger fonts
+    '.fb{border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:4px 8px 5px;min-height:36px;background:#faf8f0}',
     '.fb.s{background:#f0ece0}',
-    '.fn{font-size:5.5px;color:#aaa;line-height:1.2}',
-    '.fl{font-size:5.5px;color:#888;line-height:1.2;margin-bottom:1px}',
-    '.fj{font-size:9px;font-weight:bold;color:#1a2744;line-height:1.35}',
-    '.fe{font-size:6px;color:#aaa;font-style:italic;line-height:1.2}',
-    // Letter format (CENOMAR, Advisory, No Birth)
-    '.lbody{padding:8px 14px;font-size:7.5px;color:#222;line-height:1.85;background:#faf8f0}',
-    '.ldate{text-align:right;margin-bottom:6px;font-size:7px}',
-    '.lconcern{font-size:7.5px;font-weight:bold;margin-bottom:6px}',
-    '.lpara{margin-bottom:6px;font-size:7.5px;line-height:1.85}',
-    '.fill{display:inline-block;border-bottom:1px solid #333;min-width:70px;font-weight:bold;color:#1a2744;font-size:8px;margin:0 1px;padding:0 2px}',
-    '.fill-lg{min-width:120px}',
-    '.drow{display:grid;grid-template-columns:115px 1fr;margin-bottom:3px;font-size:7px}',
-    '.dlbl{color:#777}',
-    '.dval{font-weight:bold;color:#1a2744;border-bottom:0.5px solid #ccc}',
-    '.sig{margin-top:10px;text-align:right;font-size:7px}',
-    '.sig-n{font-size:7.5px;font-weight:bold;text-decoration:underline}',
-    // Footer
-    '.stamp{display:flex;justify-content:space-between;padding:2px 7px;font-size:6px;color:#777;border-top:0.5px solid #aaa;background:#f0ece0}',
-    '.cbox{background:#dbeafe;border:0.5px solid #93c5fd;margin:5px 0 3px;padding:4px 7px;font-size:6.5px;color:#1e3a8a;line-height:1.55}',
-    '.cbox b{font-size:7px;display:block;margin-bottom:1px}',
-    '.dbox{background:#fef9c3;border:0.5px solid #fde047;margin:3px 0 0;padding:3px 7px;font-size:6px;color:#713f12;line-height:1.45}',
-    // nested grids (inside a gcl column) - remove left+top border to avoid double
+    '.fn{font-size:7px;color:#aaa;line-height:1.2}',
+    '.fl{font-size:7px;color:#777;line-height:1.2;margin-bottom:2px}',
+    '.fj{font-size:12px;font-weight:bold;color:#1a2744;line-height:1.4}',
+    '.fe{font-size:8px;color:#aaa;font-style:italic;line-height:1.2;margin-top:1px}',
+    // Nested grids
     '.ng2{display:grid;grid-template-columns:1fr 1fr}',
     '.ng3{display:grid;grid-template-columns:1fr 1fr 1fr}',
+    // Letter format
+    '.lbody{padding:14px 18px;font-size:10px;color:#222;line-height:2;background:#faf8f0}',
+    '.ldate{text-align:right;margin-bottom:10px;font-size:9px}',
+    '.lconcern{font-size:10px;font-weight:bold;margin-bottom:10px}',
+    '.lpara{margin-bottom:10px;font-size:10px;line-height:2}',
+    '.fill{display:inline-block;border-bottom:1.5px solid #333;min-width:90px;font-weight:bold;color:#1a2744;font-size:11px;margin:0 2px;padding:0 3px}',
+    '.fill-lg{min-width:160px}',
+    '.drow{display:grid;grid-template-columns:150px 1fr;margin-bottom:5px;font-size:9.5px}',
+    '.dlbl{color:#666}',
+    '.dval{font-weight:bold;color:#1a2744;border-bottom:0.5px solid #ccc;padding-left:4px}',
+    '.sig{margin-top:16px;text-align:right;font-size:9px}',
+    '.sig-n{font-size:10px;font-weight:bold;text-decoration:underline}',
+    // Footer
+    '.stamp{display:flex;justify-content:space-between;padding:4px 10px;font-size:8px;color:#666;border-top:0.5px solid #aaa;background:#f0ece0;margin-top:4px}',
+    '.cbox{background:#dbeafe;border:0.5px solid #93c5fd;margin:8px 0 4px;padding:7px 10px;font-size:8.5px;color:#1e3a8a;line-height:1.6}',
+    '.cbox b{font-size:9px;display:block;margin-bottom:2px}',
+    '.dbox{background:#fef9c3;border:0.5px solid #fde047;margin:4px 0 0;padding:5px 10px;font-size:8px;color:#713f12;line-height:1.5}',
     // Print
     '@media print{',
     '@page{size:A4;margin:0}',
     'body{background:#faf8f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}',
-    '.page{margin:0;padding:8mm 10mm 6mm;width:210mm;min-height:297mm}',
+    '.page{margin:0;padding:10mm 12mm 10mm;width:210mm;min-height:297mm}',
     '}'
   ].join('');
 
@@ -746,11 +746,38 @@ function doDownloadPDF() {
     '<div class="g3"><div class="fb"><div class="fn">2</div><div class="fl">生年月日 / Date of Birth</div><div class="fj">'+gjv('child_dob')+'</div><div class="fe">'+gv('child_dob')+'</div></div><div class="fb s"><div class="fn">3</div><div class="fl">出生地 / Place of Birth</div><div class="fj">'+gjv('child_pob')+'</div><div class="fe">'+gv('child_pob')+'</div></div><div class="fb"><div class="fn">4</div><div class="fl">性別 / Sex</div><div class="fj">'+gjv('child_sex')+'</div></div></div>' +
     '<div class="g1"><div class="fb s"><div class="fn">5</div><div class="fl">出生順位 / Birth Order</div><div class="fj">'+gjv('child_order')+'</div><div class="fe">'+gv('child_order')+'</div></div></div>' +
     '<div class="sh">B.　母の情報 / MOTHER\'S INFORMATION</div>' +
-    '<div class="g2"><div class="gcl"><div class="fb s"><div class="fn">6</div><div class="fl">母の旧姓 / Mother\'s Maiden Name</div><div class="fj">'+gjv('mother_name')+'</div><div class="fe">'+gv('mother_name')+'</div></div><div class="fb"><div class="fn">7</div><div class="fl">国籍 / Citizenship</div><div class="fj">'+gjv('mother_citizen')+'</div></div></div><div><div class="fb s"><div class="fn">8</div><div class="fl">宗教 / Religion</div><div class="fj">'+gjv('mother_religion')+'</div></div><div class="fb"><div class="fl">職業 / Occupation</div><div class="fj">'+gjv('mother_occ')+'</div></div></div></div>' +
+    '<div class="g2">'+
+      '<div class="gcl">'+
+        '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">6</div><div class="fl">母の旧姓 / Mother\'s Maiden Name</div><div class="fj">'+gjv('mother_name')+'</div><div class="fe">'+gv('mother_name')+'</div></div></div>'+
+        '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fn">7</div><div class="fl">国籍 / Citizenship</div><div class="fj">'+gjv('mother_citizen')+'</div></div></div>'+
+      '</div>'+
+      '<div>'+
+        '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">8</div><div class="fl">宗教 / Religion</div><div class="fj">'+gjv('mother_religion')+'</div></div></div>'+
+        '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fl">職業 / Occupation</div><div class="fj">'+gjv('mother_occ')+'</div></div></div>'+
+      '</div>'+
+    '</div>' +
     '<div class="sh">C.　父の情報 / FATHER\'S INFORMATION</div>' +
-    '<div class="g2"><div class="gcl"><div class="fb s"><div class="fn">9</div><div class="fl">父の氏名 / Father\'s Name</div><div class="fj">'+gjv('father_name')+'</div><div class="fe">'+gv('father_name')+'</div></div><div class="fb"><div class="fn">10</div><div class="fl">国籍 / Citizenship</div><div class="fj">'+gjv('father_citizen')+'</div></div></div><div><div class="fb s"><div class="fn">11</div><div class="fl">宗教 / Religion</div><div class="fj">'+gjv('father_religion')+'</div></div><div class="fb"><div class="fl">職業 / Occupation</div><div class="fj">'+gjv('father_occ')+'</div></div></div></div>' +
+    '<div class="g2">'+
+      '<div class="gcl">'+
+        '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">9</div><div class="fl">父の氏名 / Father\'s Name</div><div class="fj">'+gjv('father_name')+'</div><div class="fe">'+gv('father_name')+'</div></div></div>'+
+        '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fn">10</div><div class="fl">国籍 / Citizenship</div><div class="fj">'+gjv('father_citizen')+'</div></div></div>'+
+      '</div>'+
+      '<div>'+
+        '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">11</div><div class="fl">宗教 / Religion</div><div class="fj">'+gjv('father_religion')+'</div></div></div>'+
+        '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fl">職業 / Occupation</div><div class="fj">'+gjv('father_occ')+'</div></div></div>'+
+      '</div>'+
+    '</div>' +
     '<div class="sh">D.　登録情報 / REGISTRATION INFORMATION</div>' +
-    '<div class="g2"><div class="gcl"><div class="fb s"><div class="fl">登録番号 / Registry Number</div><div class="fj">'+gv('reg_number')+'</div></div><div class="fb"><div class="fl">登録日 / Date of Registration</div><div class="fj">'+gjv('reg_date')+'</div><div class="fe">'+gv('reg_date')+'</div></div></div><div><div class="fb s"><div class="fl">発行機関 / Issuing Authority</div><div class="fj">フィリピン統計局（PSA）</div></div><div class="fb"><div class="fl">翻訳目的 / Purpose of Translation</div><div class="fj">'+gjv('purpose')+'</div><div class="fe">'+gv('purpose')+'</div></div></div></div>' +
+    '<div class="g2">'+
+      '<div class="gcl">'+
+        '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fl">登録番号 / Registry Number</div><div class="fj">'+gv('reg_number')+'</div></div></div>'+
+        '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fl">登録日 / Date of Registration</div><div class="fj">'+gjv('reg_date')+'</div><div class="fe">'+gv('reg_date')+'</div></div></div>'+
+      '</div>'+
+      '<div>'+
+        '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fl">発行機関 / Issuing Authority</div><div class="fj">フィリピン統計局（PSA）</div></div></div>'+
+        '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fl">翻訳目的 / Purpose of Translation</div><div class="fj">'+gjv('purpose')+'</div><div class="fe">'+gv('purpose')+'</div></div></div>'+
+      '</div>'+
+    '</div>' +
     footer(jpTitle, dt);
 
   // ════ MARRIAGE CERTIFICATE ════
@@ -759,28 +786,38 @@ function doDownloadPDF() {
     '<div class="meta"><span>登録番号 / Registry No.: <b>'+gv('reg_number')+'</b></span><span>翻訳日 / Date: <b>'+today+'</b> · '+todayJP+'</span></div>' +
     '<div class="sh">A.　夫の情報 / HUSBAND\'S INFORMATION</div>' +
     '<div class="g2"><div class="gcl">'+
-      '<div class="fb s"><div class="fn">1</div><div class="fl">夫の氏名（名・ミドル・姓）/ Husband\'s Name</div><div class="fj">'+gjv('husband_name')+'</div><div class="fe">'+gv('husband_name')+'</div></div>'+
-      '<div class="ng3"><div class="fb"><div class="fn">2</div><div class="fl">生年月日</div><div class="fj">'+gjv('husband_dob')+'</div></div><div class="fb s"><div class="fn">3</div><div class="fl">出生地</div><div class="fj">'+gjv('husband_pob')+'</div><div class="fe">'+gv('husband_pob')+'</div></div><div class="fb"><div class="fn">4</div><div class="fl">国籍</div><div class="fj">'+gjv('husband_citizen')+'</div></div></div>'+
-      '<div class="ng2"><div class="fb s"><div class="fn">5</div><div class="fl">宗教 / Religion</div><div class="fj">'+gjv('husband_religion')+'</div></div><div class="fb"><div class="fn">6</div><div class="fl">婚姻状況 / Civil Status</div><div class="fj">'+gjv('husband_civil')+'</div></div></div>'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">1</div><div class="fl">夫の氏名（名・ミドル・姓）/ Husband\'s Name</div><div class="fj">'+gjv('husband_name')+'</div><div class="fe">'+gv('husband_name')+'</div></div></div>'+
+      '<div class="g3" style="border-left:none;border-top:none"><div class="fb"><div class="fn">2</div><div class="fl">生年月日</div><div class="fj">'+gjv('husband_dob')+'</div></div><div class="fb s"><div class="fn">3</div><div class="fl">出生地</div><div class="fj">'+gjv('husband_pob')+'</div><div class="fe">'+gv('husband_pob')+'</div></div><div class="fb"><div class="fn">4</div><div class="fl">国籍</div><div class="fj">'+gjv('husband_citizen')+'</div></div></div>'+
+      '<div class="g2" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">5</div><div class="fl">宗教 / Religion</div><div class="fj">'+gjv('husband_religion')+'</div></div><div class="fb"><div class="fn">6</div><div class="fl">婚姻状況 / Civil Status</div><div class="fj">'+gjv('husband_civil')+'</div></div></div>'+
     '</div><div>'+
-      '<div class="fb s"><div class="fn">7</div><div class="fl">常住地 / Residence</div><div class="fj">'+gjv('husband_pob')+'</div></div>'+
-      '<div class="fb"><div class="fn">8</div><div class="fl">父の氏名 / Father\'s Name</div><div class="fj">'+gjv('husband_father')+'</div><div class="fe">'+gv('husband_father')+'</div></div>'+
-      '<div class="fb s"><div class="fn">9</div><div class="fl">母の旧姓 / Mother\'s Maiden Name</div><div class="fj">'+gjv('husband_mother')+'</div><div class="fe">'+gv('husband_mother')+'</div></div>'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">7</div><div class="fl">常住地 / Residence</div><div class="fj">'+gjv('husband_pob')+'</div></div></div>'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fn">8</div><div class="fl">父の氏名 / Father\'s Name</div><div class="fj">'+gjv('husband_father')+'</div><div class="fe">'+gv('husband_father')+'</div></div></div>'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">9</div><div class="fl">母の旧姓 / Mother\'s Maiden Name</div><div class="fj">'+gjv('husband_mother')+'</div><div class="fe">'+gv('husband_mother')+'</div></div></div>'+
     '</div></div>' +
     '<div class="sh">B.　妻の情報 / WIFE\'S INFORMATION</div>' +
     '<div class="g2"><div class="gcl">'+
-      '<div class="fb s"><div class="fn">10</div><div class="fl">妻の旧姓（名・ミドル・姓）/ Wife\'s Maiden Name</div><div class="fj">'+gjv('wife_name')+'</div><div class="fe">'+gv('wife_name')+'</div></div>'+
-      '<div class="ng3"><div class="fb"><div class="fn">11</div><div class="fl">生年月日</div><div class="fj">'+gjv('wife_dob')+'</div></div><div class="fb s"><div class="fn">12</div><div class="fl">出生地</div><div class="fj">'+gjv('wife_pob')+'</div><div class="fe">'+gv('wife_pob')+'</div></div><div class="fb"><div class="fn">13</div><div class="fl">国籍</div><div class="fj">'+gjv('wife_citizen')+'</div></div></div>'+
-      '<div class="ng2"><div class="fb s"><div class="fn">14</div><div class="fl">宗教 / Religion</div><div class="fj">'+gjv('wife_religion')+'</div></div><div class="fb"><div class="fn">15</div><div class="fl">婚姻状況 / Civil Status</div><div class="fj">'+gjv('wife_civil')+'</div></div></div>'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">10</div><div class="fl">妻の旧姓（名・ミドル・姓）/ Wife\'s Maiden Name</div><div class="fj">'+gjv('wife_name')+'</div><div class="fe">'+gv('wife_name')+'</div></div></div>'+
+      '<div class="g3" style="border-left:none;border-top:none"><div class="fb"><div class="fn">11</div><div class="fl">生年月日</div><div class="fj">'+gjv('wife_dob')+'</div></div><div class="fb s"><div class="fn">12</div><div class="fl">出生地</div><div class="fj">'+gjv('wife_pob')+'</div><div class="fe">'+gv('wife_pob')+'</div></div><div class="fb"><div class="fn">13</div><div class="fl">国籍</div><div class="fj">'+gjv('wife_citizen')+'</div></div></div>'+
+      '<div class="g2" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">14</div><div class="fl">宗教 / Religion</div><div class="fj">'+gjv('wife_religion')+'</div></div><div class="fb"><div class="fn">15</div><div class="fl">婚姻状況 / Civil Status</div><div class="fj">'+gjv('wife_civil')+'</div></div></div>'+
     '</div><div>'+
-      '<div class="fb s"><div class="fn">16</div><div class="fl">常住地 / Residence</div><div class="fj">'+gjv('wife_pob')+'</div></div>'+
-      '<div class="fb"><div class="fn">17</div><div class="fl">父の氏名 / Father\'s Name</div><div class="fj">'+gjv('wife_father')+'</div><div class="fe">'+gv('wife_father')+'</div></div>'+
-      '<div class="fb s"><div class="fn">18</div><div class="fl">母の旧姓 / Mother\'s Maiden Name</div><div class="fj">'+gjv('wife_mother')+'</div><div class="fe">'+gv('wife_mother')+'</div></div>'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">16</div><div class="fl">常住地 / Residence</div><div class="fj">'+gjv('wife_pob')+'</div></div></div>'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fn">17</div><div class="fl">父の氏名 / Father\'s Name</div><div class="fj">'+gjv('wife_father')+'</div><div class="fe">'+gv('wife_father')+'</div></div></div>'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">18</div><div class="fl">母の旧姓 / Mother\'s Maiden Name</div><div class="fj">'+gjv('wife_mother')+'</div><div class="fe">'+gv('wife_mother')+'</div></div></div>'+
     '</div></div>' +
     '<div class="sh">C.　婚姻情報 / MARRIAGE DETAILS</div>' +
-    '<div class="g2"><div class="gcl"><div class="fb s"><div class="fn">19</div><div class="fl">婚姻日 / Date of Marriage</div><div class="fj">'+gjv('marriage_date')+'</div><div class="fe">'+gv('marriage_date')+'</div></div><div class="fb"><div class="fn">20</div><div class="fl">婚姻地 / Place of Marriage</div><div class="fj">'+gjv('marriage_place')+'</div><div class="fe">'+gv('marriage_place')+'</div></div></div><div><div class="fb s"><div class="fn">21</div><div class="fl">挙式執行者 / Solemnizing Officer</div><div class="fj">'+gjv('officer')+'</div><div class="fe">'+gv('officer')+'</div></div><div class="fb"><div class="fn">22</div><div class="fl">役職・所属 / Position / Designation</div><div class="fj">'+gjv('officer_position')+'</div><div class="fe">'+gv('officer_position')+'</div></div></div></div>' +
+    '<div class="g2"><div class="gcl">'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">19</div><div class="fl">婚姻日 / Date of Marriage</div><div class="fj">'+gjv('marriage_date')+'</div><div class="fe">'+gv('marriage_date')+'</div></div></div>'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fn">20</div><div class="fl">婚姻地 / Place of Marriage</div><div class="fj">'+gjv('marriage_place')+'</div><div class="fe">'+gv('marriage_place')+'</div></div></div>'+
+    '</div><div>'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">21</div><div class="fl">挙式執行者 / Solemnizing Officer</div><div class="fj">'+gjv('officer')+'</div><div class="fe">'+gv('officer')+'</div></div></div>'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fn">22</div><div class="fl">役職・所属 / Position / Designation</div><div class="fj">'+gjv('officer_position')+'</div><div class="fe">'+gv('officer_position')+'</div></div></div>'+
+    '</div></div>' +
     '<div class="sh">D.　登録情報 / REGISTRATION INFORMATION</div>' +
-    '<div class="g2"><div class="gcl"><div class="fb s"><div class="fl">登録番号 / Registry Number</div><div class="fj">'+gv('reg_number')+'</div></div></div><div><div class="fb"><div class="fl">翻訳目的 / Purpose of Translation</div><div class="fj">'+gjv('purpose')+'</div><div class="fe">'+gv('purpose')+'</div></div></div></div>' +
+    '<div class="g2"><div class="gcl">'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fl">登録番号 / Registry Number</div><div class="fj">'+gv('reg_number')+'</div></div></div>'+
+    '</div><div>'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fl">翻訳目的 / Purpose of Translation</div><div class="fj">'+gjv('purpose')+'</div><div class="fe">'+gv('purpose')+'</div></div></div>'+
+    '</div></div>' +
     footer(jpTitle, dt);
 
   // ════ DEATH CERTIFICATE ════
@@ -789,14 +826,35 @@ function doDownloadPDF() {
     '<div class="meta"><span>登録番号 / Registry No.: <b>'+gv('reg_number')+'</b></span><span>翻訳日 / Date: <b>'+today+'</b> · '+todayJP+'</span></div>' +
     '<div class="sh">A.　故人の情報 / DECEASED\'S INFORMATION</div>' +
     '<div class="g1"><div class="fb s"><div class="fn">1</div><div class="fl">氏名（名・ミドル・姓）/ Name of Deceased</div><div class="fj">'+gjv('deceased_name')+'</div><div class="fe">'+gv('deceased_name')+'</div></div></div>' +
-    '<div class="g4"><div class="fb"><div class="fn">2</div><div class="fl">性別 / Sex</div><div class="fj">'+gjv('deceased_sex')+'</div></div><div class="fb s"><div class="fn">3</div><div class="fl">生年月日 / Date of Birth</div><div class="fj">'+gjv('deceased_dob')+'</div></div><div class="fb"><div class="fn">4</div><div class="fl">婚姻状況 / Civil Status</div><div class="fj">'+gjv('civil_status')+'</div></div><div class="fb s"><div class="fn">5</div><div class="fl">国籍 / Citizenship</div><div class="fj">'+gjv('deceased_citizen')+'</div></div></div>' +
-    '<div class="g2"><div class="gcl"><div class="fb"><div class="fn">6</div><div class="fl">出生地 / Place of Birth</div><div class="fj">'+gjv('deceased_pob')+'</div><div class="fe">'+gv('deceased_pob')+'</div></div><div class="fb s"><div class="fn">7</div><div class="fl">宗教 / Religion</div><div class="fj">'+gjv('deceased_religion')+'</div></div><div class="fb"><div class="fn">8</div><div class="fl">職業 / Occupation</div><div class="fj">'+gjv('deceased_occ')+'</div></div><div class="fb s"><div class="fn">9</div><div class="fl">常住地 / Usual Residence</div><div class="fj">'+gjv('deceased_residence')+'</div><div class="fe">'+gv('deceased_residence')+'</div></div></div><div><div class="fb"><div class="fn">10</div><div class="fl">父の氏名 / Father\'s Name</div><div class="fj">'+gjv('deceased_father')+'</div><div class="fe">'+gv('deceased_father')+'</div></div><div class="fb s"><div class="fn">11</div><div class="fl">母の旧姓 / Mother\'s Maiden Name</div><div class="fj">'+gjv('deceased_mother')+'</div><div class="fe">'+gv('deceased_mother')+'</div></div></div></div>' +
+    '<div class="g4"><div class="fb"><div class="fn">2</div><div class="fl">性別 / Sex</div><div class="fj">'+gjv('deceased_sex')+'</div></div><div class="fb s"><div class="fn">3</div><div class="fl">生年月日</div><div class="fj">'+gjv('deceased_dob')+'</div></div><div class="fb"><div class="fn">4</div><div class="fl">婚姻状況</div><div class="fj">'+gjv('civil_status')+'</div></div><div class="fb s"><div class="fn">5</div><div class="fl">国籍</div><div class="fj">'+gjv('deceased_citizen')+'</div></div></div>' +
+    '<div class="g2"><div class="gcl">'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fn">6</div><div class="fl">出生地 / Place of Birth</div><div class="fj">'+gjv('deceased_pob')+'</div><div class="fe">'+gv('deceased_pob')+'</div></div></div>'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">7</div><div class="fl">宗教 / Religion</div><div class="fj">'+gjv('deceased_religion')+'</div></div></div>'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fn">8</div><div class="fl">職業 / Occupation</div><div class="fj">'+gjv('deceased_occ')+'</div></div></div>'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">9</div><div class="fl">常住地 / Usual Residence</div><div class="fj">'+gjv('deceased_residence')+'</div><div class="fe">'+gv('deceased_residence')+'</div></div></div>'+
+    '</div><div>'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fn">10</div><div class="fl">父の氏名 / Father\'s Name</div><div class="fj">'+gjv('deceased_father')+'</div><div class="fe">'+gv('deceased_father')+'</div></div></div>'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">11</div><div class="fl">母の旧姓 / Mother\'s Maiden Name</div><div class="fj">'+gjv('deceased_mother')+'</div><div class="fe">'+gv('deceased_mother')+'</div></div></div>'+
+    '</div></div>' +
     '<div class="sh">B.　死亡情報 / DEATH INFORMATION</div>' +
-    '<div class="g2"><div class="gcl"><div class="fb s"><div class="fn">12</div><div class="fl">死亡日 / Date of Death</div><div class="fj">'+gjv('death_date')+'</div><div class="fe">'+gv('death_date')+'</div></div></div><div><div class="fb"><div class="fn">13</div><div class="fl">死亡場所 / Place of Death</div><div class="fj">'+gjv('death_place')+'</div><div class="fe">'+gv('death_place')+'</div></div></div></div>' +
+    '<div class="g2"><div class="gcl">'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">12</div><div class="fl">死亡日 / Date of Death</div><div class="fj">'+gjv('death_date')+'</div><div class="fe">'+gv('death_date')+'</div></div></div>'+
+    '</div><div>'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fn">13</div><div class="fl">死亡場所 / Place of Death</div><div class="fj">'+gjv('death_place')+'</div><div class="fe">'+gv('death_place')+'</div></div></div>'+
+    '</div></div>' +
     '<div class="sh">C.　死因 / CAUSES OF DEATH</div>' +
-    '<div class="g1"><div class="fb s"><div class="fl">19a. 直接死因 / Immediate Cause</div><div class="fj">'+gjv('cause_immediate')+'</div><div class="fe">'+gv('cause_immediate')+'</div></div><div class="fb"><div class="fl">19b. 先行死因 / Antecedent Cause</div><div class="fj">'+gjv('cause_antecedent')+'</div><div class="fe">'+gv('cause_antecedent')+'</div></div><div class="fb s"><div class="fl">19c. 根本死因 / Underlying Cause</div><div class="fj">'+gjv('cause_underlying')+'</div><div class="fe">'+gv('cause_underlying')+'</div></div><div class="fb"><div class="fn">20</div><div class="fl">担当医師 / Attending Physician</div><div class="fj">'+gjv('physician')+'</div><div class="fe">'+gv('physician')+'</div></div></div>' +
+    '<div class="g1">'+
+      '<div class="fb s"><div class="fl">19a. 直接死因 / Immediate Cause</div><div class="fj">'+gjv('cause_immediate')+'</div><div class="fe">'+gv('cause_immediate')+'</div></div>'+
+      '<div class="fb"><div class="fl">19b. 先行死因 / Antecedent Cause</div><div class="fj">'+gjv('cause_antecedent')+'</div><div class="fe">'+gv('cause_antecedent')+'</div></div>'+
+      '<div class="fb s"><div class="fl">19c. 根本死因 / Underlying Cause</div><div class="fj">'+gjv('cause_underlying')+'</div><div class="fe">'+gv('cause_underlying')+'</div></div>'+
+      '<div class="fb"><div class="fn">20</div><div class="fl">担当医師 / Attending Physician</div><div class="fj">'+gjv('physician')+'</div><div class="fe">'+gv('physician')+'</div></div>'+
+    '</div>' +
     '<div class="sh">D.　登録情報 / REGISTRATION INFORMATION</div>' +
-    '<div class="g2"><div class="gcl"><div class="fb s"><div class="fl">登録番号 / Registry Number</div><div class="fj">'+gv('reg_number')+'</div></div></div><div><div class="fb"><div class="fl">翻訳目的 / Purpose of Translation</div><div class="fj">'+gjv('purpose')+'</div><div class="fe">'+gv('purpose')+'</div></div></div></div>' +
+    '<div class="g2"><div class="gcl">'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fl">登録番号 / Registry Number</div><div class="fj">'+gv('reg_number')+'</div></div></div>'+
+    '</div><div>'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fl">翻訳目的 / Purpose of Translation</div><div class="fj">'+gjv('purpose')+'</div><div class="fe">'+gv('purpose')+'</div></div></div>'+
+    '</div></div>' +
     footer(jpTitle, dt);
 
   // ════ CENOMAR ════
@@ -867,7 +925,7 @@ function doDownloadPDF() {
     '</div>'+
     '<div class="stamp"><span>Documentary Stamp Tax Paid · 印紙税納付済</span><span>Page 1 of 1</span></div>'+
     '<div class="cbox"><b>【翻訳証明】</b>本翻訳はフィリピン統計局（PSA）発行の婚姻記録照会書を正確に日本語に翻訳したものです。<br><em>CERTIFICATION: This is a faithful Japanese translation of the original Advisory on Marriages issued by the Philippine Statistics Authority (PSA).</em></div>'+
-    '<div class="dbox">ACCEPTED USE: Suitable for Japanese visa applications and legal proceedings. NOT valid for court proceedings requiring notarized legal submissions.<br>【ご注意】本翻訳は日本のビザ申請・法的手続きに適しています。</div>';
+    '<div class="dbox">ACCEPTED USE: Suitable for Japanese visa applications and legal proceedings. NOT valid for court proceedings.<br>【ご注意】本翻訳は日本のビザ申請・法的手続きに適しています。</div>';
 
   // ════ CERTIFICATE OF NO BIRTH RECORD ════
   } else if (dt === 'Certificate of No Birth Record') {
