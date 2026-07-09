@@ -992,7 +992,15 @@ async function doSubmit() {
       status: 'pending',
       docFile: {name: docFile.name, data: docThumb},
       proofFile: {name: proofFile.name, data: proofThumb},
-      translation: ''
+      translation: '',
+      dataConsent: {
+        agreed: true,
+        agreedAt: new Date().toISOString(),
+        method: 'Checkbox on submission form — customer manually ticked the box',
+        consentText: 'I hereby give my consent to Arroyo Translation Services to collect, process, and use my personal information and document data provided in this form — including names, dates, and civil registry details — for the sole purpose of providing Japanese translation services. My data will not be shared with any third party and will be deleted after the translation is completed.',
+        consentVersion: '1.0',
+        serviceUrl: 'https://interptools.github.io/arroyo-translation-services/'
+      }
     };
 
     // Estimate size and strip images if too large
