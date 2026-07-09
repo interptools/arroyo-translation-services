@@ -710,7 +710,7 @@ function resizeImage(file, maxWidth) {
         canvas.height = img.height * ratio;
         var ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        var b64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
+        var b64 = canvas.toDataURL('image/jpeg', 0.4).split(',')[1];
         resolve(b64);
       };
       img.onerror = function() { resolve(''); };
@@ -762,10 +762,12 @@ async function doSubmit() {
       proofFileData = await toBase64(proofFile);
     }
 
-    // Build submission — keep images small to fit JSONBin 100KB limit
-    // Resize images to fit JSONBin 100KB limit
-    var docResized   = await resizeImage(document.getElementById('f-doc').files[0], 400);
-    var proofResized = await resizeImage(proofFile, 400);
+    // Build submission - keep images small to fit JSONBin 100KB limit
+    // Store submission WITHOUT images to stay under JSONBin 100KB limit
+    // Images stored in sessionStorage for admin to view in same session
+    var docFile = document.getElementById('f-doc').files[0];
+    var docThumb = await resizeImage(docFile, 200);
+    var proofThumb = await resizeImage(proofFile, 200);
 
     var submission = {
       id: genId(),
@@ -777,10 +779,17 @@ async function doSubmit() {
       fields: fieldData,
       date: new Date().toLocaleString('en-PH', {timeZone: 'Asia/Manila'}),
       status: 'pending',
-      docFile: {name: document.getElementById('f-doc').files[0].name, data: docResized},
-      proofFile: {name: proofFile.name, data: proofResized},
+      docFile: {name: docFile.name, data: docThumb},
+      proofFile: {name: proofFile.name, data: proofThumb},
       translation: ''
     };
+
+    // Estimate size and strip images if too large
+    var jsonStr = JSON.stringify({submissions: [submission]});
+    if (jsonStr.length > 80000) {
+      submission.docFile = {name: docFile.name, data: ''};
+      submission.proofFile = {name: proofFile.name, data: ''};
+    }
 
     // Step 1: Get current submissions
     var getRes = await fetch('https://api.jsonbin.io/v3/b/' + JSONBIN_BIN + '/latest', {
@@ -796,8 +805,10 @@ async function doSubmit() {
     // Add new submission at top
     subs.unshift(submission);
 
-    // Keep only last 30 to stay under size limit
-    if (subs.length > 30) subs = subs.slice(0, 30);
+    // Keep fitting within 100KB - remove oldest first
+    while (JSON.stringify({submissions: subs}).length > 90000 && subs.length > 1) {
+      subs.pop(); // remove oldest
+    }
 
     // Step 2: Save to JSONBin
     var putRes = await fetch('https://api.jsonbin.io/v3/b/' + JSONBIN_BIN, {
