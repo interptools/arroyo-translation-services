@@ -1156,8 +1156,60 @@ async function doEmail() {
   var refNo      = s.id || '-';
   var dateSubmit = s.date || '-';
 
-  // Strip HTML tags from translation, keep full text
-  var tranText = (s.translation || '').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+  // Parse translation lines (format: field_id|Japanese value per line)
+  // and build a clean readable block
+  var FIELD_LABELS = {
+    'child_name':'氏名 (Name)','child_dob':'生年月日 (Date of Birth)','child_pob':'出生地 (Place of Birth)',
+    'child_sex':'性別 (Sex)','child_order':'出生順位 (Birth Order)',
+    'mother_name':'母親の旧姓 (Mother Maiden Name)','mother_citizen':'母親の国籍 (Mother Citizenship)',
+    'mother_religion':'母親の宗教 (Mother Religion)','mother_occ':'母親の職業 (Mother Occupation)',
+    'father_name':'父親の氏名 (Father Name)','father_citizen':'父親の国籍 (Father Citizenship)',
+    'father_religion':'父親の宗教 (Father Religion)','father_occ':'父親の職業 (Father Occupation)',
+    'reg_number':'登録番号 (Registry Number)','reg_date':'登録日 (Date of Registration)',
+    'husband_name':'夫の氏名 (Husband Name)','husband_dob':'夫の生年月日 (Husband DOB)',
+    'husband_pob':'夫の出生地 (Husband Place of Birth)','husband_citizen':'夫の国籍 (Husband Citizenship)',
+    'husband_religion':'夫の宗教 (Husband Religion)','husband_civil':'夫の婚姻状況 (Husband Civil Status)',
+    'husband_father':'夫の父親氏名 (Husband Father)','husband_mother':'夫の母親旧姓 (Husband Mother)',
+    'wife_name':'妻の旧姓 (Wife Maiden Name)','wife_dob':'妻の生年月日 (Wife DOB)',
+    'wife_pob':'妻の出生地 (Wife Place of Birth)','wife_citizen':'妻の国籍 (Wife Citizenship)',
+    'wife_religion':'妻の宗教 (Wife Religion)','wife_civil':'妻の婚姻状況 (Wife Civil Status)',
+    'wife_father':'妻の父親氏名 (Wife Father)','wife_mother':'妻の母親旧姓 (Wife Mother)',
+    'marriage_date':'婚姻日 (Date of Marriage)','marriage_place':'婚姻地 (Place of Marriage)',
+    'officer':'挙式者 (Solemnizing Officer)','officer_position':'役職 (Position)',
+    'deceased_name':'故人の氏名 (Deceased Name)','deceased_sex':'性別 (Sex)',
+    'deceased_dob':'生年月日 (Date of Birth)','deceased_pob':'出生地 (Place of Birth)',
+    'civil_status':'婚姻状況 (Civil Status)','deceased_citizen':'国籍 (Citizenship)',
+    'deceased_religion':'宗教 (Religion)','deceased_occ':'職業 (Occupation)',
+    'deceased_residence':'居住地 (Residence)','deceased_father':'父親の氏名 (Father Name)',
+    'deceased_mother':'母親の旧姓 (Mother Maiden Name)','cause_of_death':'死因 (Cause of Death)',
+    'death_date':'死亡日 (Date of Death)','death_place':'死亡地 (Place of Death)',
+    'purpose':'目的 (Purpose)','ref_number':'参照番号 (Reference Number)',
+    'period_covered':'対象期間 (Period Covered)','remarks':'備考 (Remarks)'
+  };
+
+  var tranRows = [];
+  var tranText = '';
+  if (s.translation) {
+    s.translation.split('\n').forEach(function(line) {
+      line = line.trim(); if (!line) return;
+      var pipe = line.indexOf('|');
+      if (pipe > 0) {
+        var fid = line.slice(0, pipe).trim();
+        var jval = line.slice(pipe + 1).trim();
+        if (fid && jval) {
+          var label = FIELD_LABELS[fid] || fid;
+          tranRows.push({ label: label, value: jval });
+        }
+      } else {
+        // Lines without pipe (certification lines etc) — keep as-is
+        tranRows.push({ label: '', value: line });
+      }
+    });
+  }
+  // Plain text version
+  tranText = tranRows.map(function(r) {
+    return r.label ? r.label + ': ' + r.value : r.value;
+  }).join('\n');
 
   // ── PLAIN TEXT (translation_note) ──────────────────────────────
   var plainBody =
@@ -1192,6 +1244,17 @@ async function doEmail() {
     'Arroyo Translation Services';
 
   // ── HTML BODY (html_body) ───────────────────────────────────────
+  var tranRowsHtml =
+    '<table style="width:100%;border-collapse:collapse;font-size:13px;">' +
+    tranRows.map(function(r, i) {
+      if (!r.label) return '<tr><td colspan="2" style="padding:10px 0 4px;font-size:11px;color:#9ca3af;font-style:italic;">' + r.value + '</td></tr>';
+      return '<tr style="border-bottom:' + (i < tranRows.length - 1 ? '1px solid #fef9c3' : 'none') + ';">' +
+        '<td style="padding:7px 12px 7px 0;color:#92400e;font-size:11px;font-weight:700;vertical-align:top;white-space:nowrap;width:45%;">' + r.label + '</td>' +
+        '<td style="padding:7px 0;color:#1f2937;font-size:13px;line-height:1.6;">' + r.value + '</td>' +
+      '</tr>';
+    }).join('') +
+    '</table>';
+
   var htmlBody =
     '<div style="font-family:Arial,sans-serif;color:#1f2937;max-width:600px;margin:0 auto;">' +
 
@@ -1225,14 +1288,16 @@ async function doEmail() {
         '</table>' +
       '</div>' +
 
-      // Full translation
+      // Full translation — clean labeled rows
+      (tranRows.length > 0 ?
       '<div style="background:white;border:1.5px solid #c8a84b;border-radius:8px;padding:18px 22px;margin-bottom:20px;">' +
         '<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #fde68a;">' +
           '<span style="font-size:18px;">&#x1F1EF;&#x1F1F5;</span>' +
-          '<span style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#c8a84b;">Japanese Translation</span>' +
+          '<span style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#c8a84b;">Japanese Translation — ' + docLabel + '</span>' +
         '</div>' +
-        '<p style="font-size:13px;line-height:2.1;color:#1f2937;margin:0;white-space:pre-wrap;">' + tranText + '</p>' +
-      '</div>' +
+        tranRowsHtml +
+      '</div>'
+      : '') +
 
       // PDF notice
       '<div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:8px;padding:14px 18px;margin-bottom:20px;">' +
@@ -1295,22 +1360,22 @@ var DOC_FIELDS_ADMIN = {
   'Birth Certificate': [
     {id:'child_name',label:'Child Full Name'},{id:'child_dob',label:'Date of Birth',type:'date'},
     {id:'child_pob',label:'Place of Birth'},{id:'child_sex',label:'Sex'},
-    {id:'child_order',label:'Birth Order'},{id:'mother_name',label:"Mother's Maiden Name"},
+    {id:'child_order',label:'Birth Order'},{id:'mother_name',label:"Mother Maiden Name"},
     {id:'mother_citizen',label:'Mother Citizenship'},{id:'mother_religion',label:'Mother Religion'},
-    {id:'mother_occ',label:'Mother Occupation'},{id:'father_name',label:"Father's Name"},
+    {id:'mother_occ',label:'Mother Occupation'},{id:'father_name',label:"Father Name"},
     {id:'father_citizen',label:'Father Citizenship'},{id:'father_religion',label:'Father Religion'},
     {id:'father_occ',label:'Father Occupation'},{id:'reg_number',label:'Registry Number'},
     {id:'reg_date',label:'Date of Registration',type:'date'},{id:'purpose',label:'Purpose'}
   ],
   'Marriage Certificate': [
-    {id:'husband_name',label:"Husband's Name"},{id:'husband_dob',label:'Husband Date of Birth',type:'date'},
+    {id:'husband_name',label:"Husband Name"},{id:'husband_dob',label:'Husband Date of Birth',type:'date'},
     {id:'husband_pob',label:'Husband Place of Birth'},{id:'husband_citizen',label:'Husband Citizenship'},
     {id:'husband_religion',label:'Husband Religion'},{id:'husband_civil',label:'Husband Civil Status'},
-    {id:'husband_father',label:"Husband's Father Name"},{id:'husband_mother',label:"Husband's Mother Maiden Name"},
-    {id:'wife_name',label:"Wife's Maiden Name"},{id:'wife_dob',label:'Wife Date of Birth',type:'date'},
+    {id:'husband_father',label:"Husband Father Name"},{id:'husband_mother',label:"Husband Mother Maiden Name"},
+    {id:'wife_name',label:"Wife Maiden Name"},{id:'wife_dob',label:'Wife Date of Birth',type:'date'},
     {id:'wife_pob',label:'Wife Place of Birth'},{id:'wife_citizen',label:'Wife Citizenship'},
     {id:'wife_religion',label:'Wife Religion'},{id:'wife_civil',label:'Wife Civil Status'},
-    {id:'wife_father',label:"Wife's Father Name"},{id:'wife_mother',label:"Wife's Mother Maiden Name"},
+    {id:'wife_father',label:"Wife Father Name"},{id:'wife_mother',label:"Wife Mother Maiden Name"},
     {id:'marriage_date',label:'Date of Marriage',type:'date'},{id:'marriage_place',label:'Place of Marriage'},
     {id:'officer',label:'Solemnizing Officer'},{id:'officer_position',label:'Officer Position/Designation'},
     {id:'reg_number',label:'Registry Number'},{id:'purpose',label:'Purpose'}
@@ -1320,8 +1385,8 @@ var DOC_FIELDS_ADMIN = {
     {id:'deceased_dob',label:'Date of Birth',type:'date'},{id:'deceased_pob',label:'Place of Birth'},
     {id:'civil_status',label:'Civil Status'},{id:'deceased_citizen',label:'Citizenship'},
     {id:'deceased_religion',label:'Religion'},{id:'deceased_occ',label:'Occupation'},
-    {id:'deceased_residence',label:'Usual Residence'},{id:'deceased_father',label:"Father's Name"},
-    {id:'deceased_mother',label:"Mother's Maiden Name"},
+    {id:'deceased_residence',label:'Usual Residence'},{id:'deceased_father',label:"Father Name"},
+    {id:'deceased_mother',label:"Mother Maiden Name"},
     {id:'death_date',label:'Date of Death',type:'date'},{id:'death_place',label:'Place of Death'},
     {id:'cause_immediate',label:'Immediate Cause'},{id:'cause_antecedent',label:'Antecedent Cause'},
     {id:'cause_underlying',label:'Underlying Cause'},{id:'physician',label:'Attending Physician'},
@@ -1330,8 +1395,8 @@ var DOC_FIELDS_ADMIN = {
   'CENOMAR': [
     {id:'applicant_name',label:'Full Name'},{id:'applicant_dob',label:'Date of Birth',type:'date'},
     {id:'applicant_pob',label:'Place of Birth'},{id:'applicant_sex',label:'Sex'},
-    {id:'applicant_citizen',label:'Citizenship'},{id:'father_name',label:"Father's Name"},
-    {id:'mother_name',label:"Mother's Maiden Name"},{id:'period_covered',label:'Period Covered'},
+    {id:'applicant_citizen',label:'Citizenship'},{id:'father_name',label:"Father Name"},
+    {id:'mother_name',label:"Mother Maiden Name"},{id:'period_covered',label:'Period Covered'},
     {id:'issuance_date',label:'Date of Issuance',type:'date'},
     {id:'ref_number',label:'Reference Number'},{id:'purpose',label:'Purpose'}
   ],
@@ -1345,8 +1410,8 @@ var DOC_FIELDS_ADMIN = {
   ],
   'Certificate of No Birth Record': [
     {id:'subject_name',label:'Full Name'},{id:'subject_dob',label:'Date of Birth',type:'date'},
-    {id:'subject_pob',label:'Place of Birth'},{id:'father_name',label:"Father's Name"},
-    {id:'mother_name',label:"Mother's Maiden Name"},
+    {id:'subject_pob',label:'Place of Birth'},{id:'father_name',label:"Father Name"},
+    {id:'mother_name',label:"Mother Maiden Name"},
     {id:'issuance_date',label:'Date of Issuance',type:'date'},{id:'purpose',label:'Purpose'}
   ]
 };
