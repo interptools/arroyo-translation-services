@@ -1150,19 +1150,143 @@ async function doEmail() {
     toast('Please translate the document first before emailing the customer.');
     return;
   }
+
+  var docLabel   = s.doctype || '-';
+  var purpose    = s.purpose || 'Japanese visa application';
+  var refNo      = s.id || '-';
+  var dateSubmit = s.date || '-';
+
+  // Strip HTML tags from translation, keep full text
+  var tranText = (s.translation || '').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+
+  // ── PLAIN TEXT (translation_note) ──────────────────────────────
+  var plainBody =
+    'Dear ' + s.name + ',\n\n' +
+    'Good news! Your ' + docLabel + ' has been successfully translated into Japanese.\n' +
+    'The complete translation is included below in this email.\n' +
+    'A formatted PDF (ready for submission) will be sent to you shortly\n' +
+    'via reply to this email, Messenger, or Viber.\n\n' +
+    '─────────────────────────────\n' +
+    'ORDER DETAILS\n' +
+    '─────────────────────────────\n' +
+    'Reference No. : ' + refNo + '\n' +
+    'Document Type : ' + docLabel + '\n' +
+    'Purpose       : ' + purpose + '\n' +
+    'Date Submitted: ' + dateSubmit + '\n' +
+    'Status        : Translation Complete ✅\n\n' +
+    '─────────────────────────────\n' +
+    'JAPANESE TRANSLATION\n' +
+    '─────────────────────────────\n' +
+    tranText + '\n\n' +
+    '─────────────────────────────\n' +
+    'HOW TO USE YOUR TRANSLATION\n' +
+    '─────────────────────────────\n' +
+    '• Print the PDF in A4 size, no margins\n' +
+    '• Attach it together with your original PSA document\n' +
+    '• Submit both to the ' + purpose + ' office or embassy\n' +
+    '• Keep a digital copy for your records\n\n' +
+    'Questions? Contact us anytime:\n' +
+    '📱 09063964052  |  ✉ areymar36@gmail.com\n' +
+    'Facebook/Messenger: Arroyo Translation Services\n\n' +
+    'Thank you for choosing Arroyo Translation Services! 🙏\n' +
+    'Arroyo Translation Services';
+
+  // ── HTML BODY (html_body) ───────────────────────────────────────
+  var htmlBody =
+    '<div style="font-family:Arial,sans-serif;color:#1f2937;max-width:600px;margin:0 auto;">' +
+
+    // Header
+    '<div style="background:#1a2744;padding:24px 28px;">' +
+      '<h1 style="color:#e2c97e;margin:0;font-size:20px;letter-spacing:.5px;">Arroyo Translation Services</h1>' +
+      '<p style="color:rgba(255,255,255,.6);margin:4px 0 0;font-size:12px;">PSA Document Translation — English to Japanese</p>' +
+    '</div>' +
+
+    // Body
+    '<div style="background:#f7f8fc;padding:24px 28px;border-left:1px solid #e5e7eb;border-right:1px solid #e5e7eb;">' +
+
+      '<p style="font-size:15px;margin:0 0 8px;">Dear <strong>' + s.name + '</strong>,</p>' +
+      '<p style="font-size:13px;line-height:1.8;color:#374151;margin:0 0 20px;">' +
+        'Good news! Your <strong>' + docLabel + '</strong> has been successfully translated into Japanese. ' +
+        'The complete translation is included below. ' +
+        'A formatted PDF will be sent to you shortly via <strong>reply to this email, Messenger, or Viber</strong>.' +
+      '</p>' +
+
+      // Order summary
+      '<div style="background:white;border:1.5px solid #e5e7eb;border-radius:8px;padding:16px 20px;margin-bottom:20px;">' +
+        '<div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #f0f0f0;">📋 Order Details</div>' +
+        '<table style="width:100%;font-size:13px;border-collapse:collapse;">' +
+          '<tr><td style="padding:5px 0;color:#6b7280;width:140px;">Reference No.</td><td style="padding:5px 0;font-weight:700;color:#1a2744;">' + refNo + '</td></tr>' +
+          '<tr><td style="padding:5px 0;color:#6b7280;">Document Type</td><td style="padding:5px 0;font-weight:700;color:#1a2744;">' + docLabel + '</td></tr>' +
+          '<tr><td style="padding:5px 0;color:#6b7280;">Purpose</td><td style="padding:5px 0;font-weight:700;color:#1a2744;">' + purpose + '</td></tr>' +
+          '<tr><td style="padding:5px 0;color:#6b7280;">Date Submitted</td><td style="padding:5px 0;color:#374151;">' + dateSubmit + '</td></tr>' +
+          '<tr><td style="padding:5px 0;color:#6b7280;">Status</td><td style="padding:5px 0;">' +
+            '<span style="background:#d1fae5;color:#065f46;padding:3px 12px;border-radius:20px;font-size:11px;font-weight:700;">✅ Translation Complete</span>' +
+          '</td></tr>' +
+        '</table>' +
+      '</div>' +
+
+      // Full translation
+      '<div style="background:white;border:1.5px solid #c8a84b;border-radius:8px;padding:18px 22px;margin-bottom:20px;">' +
+        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #fde68a;">' +
+          '<span style="font-size:18px;">&#x1F1EF;&#x1F1F5;</span>' +
+          '<span style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#c8a84b;">Japanese Translation</span>' +
+        '</div>' +
+        '<p style="font-size:13px;line-height:2.1;color:#1f2937;margin:0;white-space:pre-wrap;">' + tranText + '</p>' +
+      '</div>' +
+
+      // PDF notice
+      '<div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:8px;padding:14px 18px;margin-bottom:20px;">' +
+        '<div style="font-size:11px;font-weight:700;color:#166534;margin-bottom:6px;">📎 Your PDF Document</div>' +
+        '<p style="font-size:12px;color:#166534;margin:0;line-height:1.75;">' +
+          'A formatted PDF version — ready for submission to <strong>' + purpose + '</strong> — ' +
+          'will be sent to you shortly via <strong>reply to this email</strong>, <strong>Messenger</strong>, or <strong>Viber</strong>. ' +
+          'If you do not receive it within 24 hours, please contact us.' +
+        '</p>' +
+      '</div>' +
+
+      // How to use
+      '<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:14px 18px;margin-bottom:20px;">' +
+        '<div style="font-size:11px;font-weight:700;color:#92400e;margin-bottom:8px;">How to Use Your Translation</div>' +
+        '<ul style="font-size:12px;color:#92400e;margin:0;padding-left:18px;line-height:2.1;">' +
+          '<li>Print the PDF in <strong>A4 size</strong>, no margins</li>' +
+          '<li>Attach it together with your original PSA document</li>' +
+          '<li>Submit both to the <strong>' + purpose + '</strong> office or embassy</li>' +
+          '<li>Keep a digital copy for your records</li>' +
+        '</ul>' +
+      '</div>' +
+
+      // Contact
+      '<div style="border-top:1px solid #e5e7eb;padding-top:16px;">' +
+        '<p style="font-size:12px;color:#6b7280;margin:0 0 6px;">Questions? Contact us anytime:</p>' +
+        '<p style="font-size:13px;font-weight:700;color:#1a2744;margin:0;">&#x1F4F1; 09063964052 &nbsp;|&nbsp; &#x2709; areymar36@gmail.com</p>' +
+        '<p style="font-size:11px;color:#9ca3af;margin:6px 0 0;">Facebook/Messenger: Arroyo Translation Services</p>' +
+        '<p style="font-size:12px;color:#6b7280;margin:8px 0 0;">Thank you for choosing Arroyo Translation Services! &#x1F64F;</p>' +
+      '</div>' +
+    '</div>' +
+
+    // Footer
+    '<div style="background:#1a2744;padding:14px 28px;text-align:center;">' +
+      '<p style="color:rgba(255,255,255,.4);font-size:11px;margin:0;">Arroyo Translation Services &nbsp;&#xB7;&nbsp; &#x20B1;300 flat rate &nbsp;&#xB7;&nbsp; English &#x2192; Japanese PSA Document Translation</p>' +
+    '</div>' +
+  '</div>';
+
   try {
     emailjs.init(EMAILJS_KEY);
     await emailjs.send(EMAILJS_SVC, EMAILJS_TPL, {
-      to_email: s.email,
-      customer_name: s.name,
-      doc_type: s.doctype,
-      ref_no: s.id,
-      purpose: s.purpose || 'Japanese visa application',
-      translation_note: 'Your translated document PDF is ready. Please download it from the link provided or contact us to receive it directly.'
+      to_email:        s.email,
+      to_name:         s.name,
+      customer_name:   s.name,
+      doc_type:        docLabel,
+      ref_no:          refNo,
+      purpose:         purpose,
+      subject:         'Your ' + docLabel + ' Translation is Ready — Arroyo Translation Services',
+      translation_note: plainBody,
+      html_body:       htmlBody
     });
     toast('Email sent to ' + s.email);
   } catch(e) {
     toast('Email failed: ' + e.message);
+    console.error('EmailJS error:', e);
   }
 }
 
