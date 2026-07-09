@@ -129,6 +129,67 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
   </div>
 </div>
 
+<!-- ANIMATED DEMO -->
+<div style="background:#1a2744;padding:0 0 32px">
+  <div style="max-width:480px;margin:0 auto;padding:0 20px">
+    <div style="text-align:center;padding:16px 0 12px">
+      <span style="font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gold)">How it works</span>
+    </div>
+    <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;overflow:hidden;position:relative">
+
+      <!-- Animated slides -->
+      <div id="demo-wrap" style="position:relative;height:180px;overflow:hidden">
+
+        <!-- Slide 1: Fill form -->
+        <div class="demo-slide" id="ds1" style="position:absolute;inset:0;padding:16px 20px;display:flex;align-items:center;gap:16px;opacity:1;transition:opacity .5s">
+          <div style="width:48px;height:48px;background:var(--gold);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px">📝</div>
+          <div>
+            <div style="font-size:14px;font-weight:600;color:#fff;margin-bottom:4px">1. Fill in your details</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.55);line-height:1.5">Enter your name, email, and select your document type. Upload a photo of your PSA document.</div>
+          </div>
+        </div>
+
+        <!-- Slide 2: AI scan -->
+        <div class="demo-slide" id="ds2" style="position:absolute;inset:0;padding:16px 20px;display:flex;align-items:center;gap:16px;opacity:0;transition:opacity .5s">
+          <div style="width:48px;height:48px;background:#3b82f6;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px">🤖</div>
+          <div>
+            <div style="font-size:14px;font-weight:600;color:#fff;margin-bottom:4px">2. AI reads your document</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.55);line-height:1.5">Our AI scans your PSA document and auto-fills the details. Review and correct if needed.</div>
+          </div>
+        </div>
+
+        <!-- Slide 3: GCash payment -->
+        <div class="demo-slide" id="ds3" style="position:absolute;inset:0;padding:16px 20px;display:flex;align-items:center;gap:16px;opacity:0;transition:opacity .5s">
+          <div style="width:48px;height:48px;background:#16a34a;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px">💳</div>
+          <div>
+            <div style="font-size:14px;font-weight:600;color:#fff;margin-bottom:4px">3. Pay ₱300 via GCash</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.55);line-height:1.5">Scan the GCash QR code, send exactly ₱300, and upload your payment screenshot.</div>
+          </div>
+        </div>
+
+        <!-- Slide 4: Receive PDF -->
+        <div class="demo-slide" id="ds4" style="position:absolute;inset:0;padding:16px 20px;display:flex;align-items:center;gap:16px;opacity:0;transition:opacity .5s">
+          <div style="width:48px;height:48px;background:#c9a84c;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px">📄</div>
+          <div>
+            <div style="font-size:14px;font-weight:600;color:#fff;margin-bottom:4px">4. Receive your translation</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.55);line-height:1.5">Get your official Japanese translation PDF by email — within today. Ready for visa or marriage registration.</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Progress dots -->
+      <div style="display:flex;justify-content:center;gap:6px;padding:0 0 14px">
+        <div class="demo-dot active" id="dd1" style="width:8px;height:8px;border-radius:50%;background:var(--gold);transition:background .3s;cursor:pointer" onclick="goSlide(1)"></div>
+        <div class="demo-dot" id="dd2" style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.2);transition:background .3s;cursor:pointer" onclick="goSlide(2)"></div>
+        <div class="demo-dot" id="dd3" style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.2);transition:background .3s;cursor:pointer" onclick="goSlide(3)"></div>
+        <div class="demo-dot" id="dd4" style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.2);transition:background .3s;cursor:pointer" onclick="goSlide(4)"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <div class="steps">
   <div class="step"><div class="step-num" id="snum1">1</div><div class="step-label">Your info</div></div>
   <div class="step"><div class="step-num" id="snum2">2</div><div class="step-label">Upload doc</div></div>
@@ -421,6 +482,32 @@ const DOC_FIELDS = {
     {id:'purpose', label:'Purpose of translation', ph:'e.g. Japanese visa application'}
   ]
 };
+
+// Demo animation
+var demoSlide = 1;
+var demoTimer = null;
+
+function goSlide(n) {
+  document.getElementById('ds' + demoSlide).style.opacity = '0';
+  document.getElementById('dd' + demoSlide).style.background = 'rgba(255,255,255,0.2)';
+  demoSlide = n;
+  document.getElementById('ds' + demoSlide).style.opacity = '1';
+  document.getElementById('dd' + demoSlide).style.background = 'var(--gold)';
+}
+
+function nextSlide() {
+  var next = demoSlide >= 4 ? 1 : demoSlide + 1;
+  goSlide(next);
+}
+
+demoTimer = setInterval(nextSlide, 3000);
+
+// Stop auto-play when user clicks a dot
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('demo-dot')) {
+    clearInterval(demoTimer);
+  }
+});
 
 function setStep(n) {
   for (var i = 1; i <= 5; i++) {
