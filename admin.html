@@ -1478,8 +1478,9 @@ function toggleEdit() {
 
   var fields = DOC_FIELDS_ADMIN[s.doctype] || [];
   var grid = document.getElementById('edit-fields-grid');
+  var fieldData = (s.fields && typeof s.fields === 'object') ? s.fields : {};
   grid.innerHTML = fields.map(function(f) {
-    var val = (s.fields && s.fields[f.id]) ? s.fields[f.id] : '';
+    var val = fieldData[f.id] || '';
     return '<div class="edit-field"><label>' + f.label + '</label>' +
       '<input type="' + (f.type || 'text') + '" id="ef-' + f.id + '" value="' + val.replace(/"/g,'&quot;') + '"></div>';
   }).join('');
@@ -1489,15 +1490,22 @@ function toggleEdit() {
 async function saveEdit() {
   var s = subs.find(function(x) { return x.id === activeId; });
   if (!s) return;
+  // Ensure s.fields exists before writing to it
+  if (!s.fields || typeof s.fields !== 'object') s.fields = {};
   var fields = DOC_FIELDS_ADMIN[s.doctype] || [];
   fields.forEach(function(f) {
     var el = document.getElementById('ef-' + f.id);
     if (el) s.fields[f.id] = el.value.trim();
   });
-  await saveSubs();
-  document.getElementById('edit-panel').style.display = 'none';
-  openModal(activeId);
-  toast('Details updated for ' + s.name);
+  try {
+    await saveSubs();
+    document.getElementById('edit-panel').style.display = 'none';
+    openModal(activeId);
+    toast('Details updated for ' + s.name);
+  } catch(e) {
+    toast('Save failed — please try again');
+    console.error('saveEdit error:', e);
+  }
 }
 
 function toggleTranslationEditor() {
