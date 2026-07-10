@@ -305,6 +305,10 @@ async function loadSubs() {
 }
 
 async function saveSubs() {
+  // Auto-trim: keep only the latest 25 submissions to stay within JSONBin 100KB limit
+  if (subs.length > 25) {
+    subs = subs.slice(-25);
+  }
   await fetch('https://api.jsonbin.io/v3/b/' + BIN, {
     method: 'PUT',
     headers: {'Content-Type':'application/json','X-Master-Key':KEY},
