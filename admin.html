@@ -816,56 +816,57 @@ function doDownloadPDF() {
   var CSS = [
     '*{box-sizing:border-box;margin:0;padding:0}',
     'body{font-family:"Noto Sans JP","Times New Roman",serif;background:#faf8f0;color:#222;margin:0;padding:0}',
-    '.page{width:210mm;min-height:297mm;background:#faf8f0;padding:10mm 12mm 10mm;margin:0 auto}',
-    // PSA header — bigger, more prominent
-    '.psa-hdr{text-align:center;padding:8px 10px 7px;border-bottom:1.5px solid #999;background:#faf8f0;margin-bottom:0}',
-    '.psa-rep{font-size:8px;color:#555;letter-spacing:0.3px}',
-    '.psa-off{font-size:10px;font-weight:bold;color:#111;margin:2px 0}',
-    '.psa-civ{font-size:8px;color:#555;margin:1px 0}',
-    '.psa-doctit{font-size:15px;font-weight:bold;color:#111;margin:5px 0 2px;letter-spacing:0.5px}',
-    '.psa-jptit{font-size:13px;font-weight:bold;color:#1a2744;margin:3px 0 0}',
+    '.page{width:210mm;min-height:297mm;max-height:297mm;background:#faf8f0;padding:6mm 10mm 6mm;margin:0 auto;overflow:hidden}',
+    // PSA header — compact
+    '.psa-hdr{text-align:center;padding:4px 8px 4px;border-bottom:1.5px solid #999;background:#faf8f0;margin-bottom:0}',
+    '.psa-rep{font-size:7px;color:#555;letter-spacing:0.3px}',
+    '.psa-off{font-size:9px;font-weight:bold;color:#111;margin:1px 0}',
+    '.psa-civ{font-size:7px;color:#555;margin:1px 0}',
+    '.psa-doctit{font-size:13px;font-weight:bold;color:#111;margin:3px 0 1px;letter-spacing:0.5px}',
+    '.psa-jptit{font-size:11px;font-weight:bold;color:#1a2744;margin:1px 0 0}',
     // Meta row
-    '.meta{display:flex;justify-content:space-between;padding:4px 10px;border-bottom:1px solid #aaa;font-size:8px;color:#444;background:#f0ece0}',
+    '.meta{display:flex;justify-content:space-between;padding:2px 8px;border-bottom:1px solid #aaa;font-size:7.5px;color:#444;background:#f0ece0}',
     // Section header
-    '.sh{background:#1a2744;color:#e8c97a;font-size:9px;font-weight:bold;padding:4px 10px;letter-spacing:0.5px;margin-top:2px}',
+    '.sh{background:#1a2744;color:#e8c97a;font-size:8px;font-weight:bold;padding:2px 8px;letter-spacing:0.5px;margin-top:1px}',
     // Grid wrappers
     '.g1{display:grid;grid-template-columns:1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb}',
     '.g2{display:grid;grid-template-columns:1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb}',
     '.g3{display:grid;grid-template-columns:1fr 1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb}',
     '.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb}',
     '.gcl{border-right:2px solid #888}',
-    // Field box — taller, bigger fonts
-    '.fb{border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:4px 8px 5px;min-height:36px;background:#faf8f0}',
+    // Field box — compact
+    '.fb{border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 6px 3px;min-height:26px;background:#faf8f0}',
     '.fb.s{background:#f0ece0}',
-    '.fn{font-size:7px;color:#aaa;line-height:1.2}',
-    '.fl{font-size:7px;color:#777;line-height:1.2;margin-bottom:2px}',
-    '.fj{font-size:12px;font-weight:bold;color:#1a2744;line-height:1.4}',
-    '.fe{font-size:8px;color:#aaa;font-style:italic;line-height:1.2;margin-top:1px}',
+    '.fn{font-size:6px;color:#aaa;line-height:1.2}',
+    '.fl{font-size:6px;color:#777;line-height:1.2;margin-bottom:1px}',
+    '.fj{font-size:10px;font-weight:bold;color:#1a2744;line-height:1.3}',
+    '.fe{font-size:7px;color:#aaa;font-style:italic;line-height:1.2;margin-top:1px}',
     // Nested grids
     '.ng2{display:grid;grid-template-columns:1fr 1fr}',
     '.ng3{display:grid;grid-template-columns:1fr 1fr 1fr}',
-    // Letter format
-    '.lbody{padding:14px 18px;font-size:10px;color:#222;line-height:2;background:#faf8f0}',
-    '.ldate{text-align:right;margin-bottom:10px;font-size:9px}',
-    '.lconcern{font-size:10px;font-weight:bold;margin-bottom:10px}',
-    '.lpara{margin-bottom:10px;font-size:10px;line-height:2}',
-    '.fill{display:inline-block;border-bottom:1.5px solid #333;min-width:90px;font-weight:bold;color:#1a2744;font-size:11px;margin:0 2px;padding:0 3px}',
-    '.fill-lg{min-width:160px}',
-    '.drow{display:grid;grid-template-columns:150px 1fr;margin-bottom:5px;font-size:9.5px}',
+    // Letter format — compact
+    '.lbody{padding:8px 12px;font-size:9px;color:#222;line-height:1.7;background:#faf8f0}',
+    '.ldate{text-align:right;margin-bottom:6px;font-size:8px}',
+    '.lconcern{font-size:9px;font-weight:bold;margin-bottom:6px}',
+    '.lpara{margin-bottom:6px;font-size:9px;line-height:1.7}',
+    '.fill{display:inline-block;border-bottom:1.5px solid #333;min-width:80px;font-weight:bold;color:#1a2744;font-size:9px;margin:0 2px;padding:0 2px}',
+    '.fill-lg{min-width:130px}',
+    '.drow{display:grid;grid-template-columns:140px 1fr;margin-bottom:3px;font-size:8.5px}',
     '.dlbl{color:#666}',
     '.dval{font-weight:bold;color:#1a2744;border-bottom:0.5px solid #ccc;padding-left:4px}',
-    '.sig{margin-top:16px;text-align:right;font-size:9px}',
-    '.sig-n{font-size:10px;font-weight:bold;text-decoration:underline}',
+    '.sig{margin-top:8px;text-align:right;font-size:8px}',
+    '.sig-n{font-size:9px;font-weight:bold;text-decoration:underline}',
     // Footer
-    '.stamp{display:flex;justify-content:space-between;padding:4px 10px;font-size:8px;color:#666;border-top:0.5px solid #aaa;background:#f0ece0;margin-top:4px}',
-    '.cbox{background:#dbeafe;border:0.5px solid #93c5fd;margin:8px 0 4px;padding:7px 10px;font-size:8.5px;color:#1e3a8a;line-height:1.6}',
-    '.cbox b{font-size:9px;display:block;margin-bottom:2px}',
-    '.dbox{background:#fef9c3;border:0.5px solid #fde047;margin:4px 0 0;padding:5px 10px;font-size:8px;color:#713f12;line-height:1.5}',
+    '.stamp{display:flex;justify-content:space-between;padding:2px 8px;font-size:7px;color:#666;border-top:0.5px solid #aaa;background:#f0ece0;margin-top:3px}',
+    '.cbox{background:#dbeafe;border:0.5px solid #93c5fd;margin:4px 0 2px;padding:4px 8px;font-size:7.5px;color:#1e3a8a;line-height:1.5}',
+    '.cbox b{font-size:8px;display:block;margin-bottom:1px}',
+    '.dbox{background:#fef9c3;border:0.5px solid #fde047;margin:2px 0 0;padding:3px 8px;font-size:7px;color:#713f12;line-height:1.4}',
+    '.cert-block{margin-top:4px!important}',
     // Print
     '@media print{',
     '@page{size:A4;margin:0}',
     'body{background:#faf8f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}',
-    '.page{margin:0;padding:10mm 12mm 10mm;width:210mm;min-height:297mm}',
+    '.page{margin:0;padding:6mm 10mm 6mm;width:210mm;min-height:297mm;max-height:297mm}',
     '}'
   ].join('');
 
@@ -883,7 +884,7 @@ function doDownloadPDF() {
 
   // ── FOOTER (shared) ──
   function certBlock() {
-    return `<div class="cert-block" style="margin-top:10px;border:1.5px solid #1a2744;border-radius:4px;overflow:hidden;page-break-inside:avoid">
+    return `<div class="cert-block" style="margin-top:4px;border:1.5px solid #1a2744;border-radius:4px;overflow:hidden;page-break-inside:avoid">
       <div style="background:#1a2744;padding:6px 12px;display:flex;align-items:center;justify-content:space-between">
         <div style="display:flex;align-items:center;gap:8px">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style="width:22px;height:22px;border-radius:4px;flex-shrink:0">
@@ -901,8 +902,8 @@ function doDownloadPDF() {
         </div>
         <div style="color:rgba(255,255,255,0.4);font-size:7px;text-align:right">Philippine PSA Documents<br>日本語翻訳サービス</div>
       </div>
-      <div style="background:#fefefe;padding:10px 14px">
-        <div style="font-size:8.5px;color:#1a2744;line-height:1.8;margin-bottom:10px">
+      <div style="background:#fefefe;padding:6px 10px">
+        <div style="font-size:7.5px;color:#1a2744;line-height:1.6;margin-bottom:6px">
           I, <strong>Reymar Arroyo</strong>, hereby certify that the above is a true, complete, and accurate Japanese translation of the original Philippine Statistics Authority (PSA) document, and that I am competent to translate from English/Filipino to Japanese.<br>
           <span style="color:#555;font-size:8px">私、<strong>レイマー・アロヨ</strong>は、上記の日本語翻訳がフィリピン統計局（PSA）発行の原文書を忠実かつ正確に翻訳したものであることを証明します。</span>
         </div>
@@ -919,13 +920,13 @@ function doDownloadPDF() {
           </div>
           <div>
             <div style="font-size:7px;color:#888;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px">Translator's Signature / 翻訳者署名</div>
-            <div style="height:44px;border-bottom:1px solid #1a2744;display:flex;align-items:flex-end;padding-bottom:4px">
+            <div style="height:34px;border-bottom:1px solid #1a2744;display:flex;align-items:flex-end;padding-bottom:3px">
               <span style="font-family:Dancing Script,Pinyon Script,Brush Script MT,Segoe Script,cursive;font-size:24px;color:#1a2744;letter-spacing:0.5px;line-height:1">Reymar Arroyo</span>
             </div>
             <div style="font-size:7px;color:#aaa;margin-top:2px">Authorized Translator</div>
           </div>
         </div>
-        <div style="margin-top:8px;padding-top:6px;border-top:0.5px solid #e5e0d8;display:flex;justify-content:space-between;align-items:center">
+        <div style="margin-top:4px;padding-top:4px;border-top:0.5px solid #e5e0d8;display:flex;justify-content:space-between;align-items:center">
           <div style="font-size:7px;color:#999">This certification is valid for Japanese immigration, visa, and municipal office submissions.</div>
           <div style="font-size:7px;color:#c9a84c;font-weight:600">ARROYO TRANSLATION SERVICES</div>
         </div>
