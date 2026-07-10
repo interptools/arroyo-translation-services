@@ -882,6 +882,57 @@ function doDownloadPDF() {
   }
 
   // ── FOOTER (shared) ──
+  function certBlock() {
+    return `<div class="cert-block" style="margin-top:10px;border:1.5px solid #1a2744;border-radius:4px;overflow:hidden;page-break-inside:avoid">
+      <div style="background:#1a2744;padding:6px 12px;display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:8px">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style="width:22px;height:22px;border-radius:4px;flex-shrink:0">
+            <rect width="100" height="100" fill="#1a2744"/>
+            <circle cx="50" cy="44" r="9" fill="#e8c97a"/>
+            <rect x="30" y="36" width="5" height="36" rx="1.5" fill="#c9a84c"/>
+            <rect x="65" y="36" width="5" height="36" rx="1.5" fill="#c9a84c"/>
+            <rect x="26" y="47" width="48" height="5" rx="1.5" fill="#c9a84c"/>
+            <rect x="24" y="32" width="52" height="7" rx="1.5" fill="#e8c97a"/>
+          </svg>
+          <div>
+            <div style="color:#e8c97a;font-size:9px;font-weight:bold;letter-spacing:0.5px">ARROYO TRANSLATION SERVICES</div>
+            <div style="color:rgba(255,255,255,0.55);font-size:7px;letter-spacing:1px;text-transform:uppercase">Official Translator Certification</div>
+          </div>
+        </div>
+        <div style="color:rgba(255,255,255,0.4);font-size:7px;text-align:right">Philippine PSA Documents<br>日本語翻訳サービス</div>
+      </div>
+      <div style="background:#fefefe;padding:10px 14px">
+        <div style="font-size:8.5px;color:#1a2744;line-height:1.8;margin-bottom:10px">
+          I, <strong>Reymar Arroyo</strong>, hereby certify that the above is a true, complete, and accurate Japanese translation of the original Philippine Statistics Authority (PSA) document, and that I am competent to translate from English/Filipino to Japanese.<br>
+          <span style="color:#555;font-size:8px">私、<strong>レイマー・アロヨ</strong>は、上記の日本語翻訳がフィリピン統計局（PSA）発行の原文書を忠実かつ正確に翻訳したものであることを証明します。</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;border-top:0.5px solid #e5e0d8;padding-top:8px">
+          <div>
+            <div style="font-size:7px;color:#888;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px">Translator's Name / 翻訳者氏名</div>
+            <div style="font-size:10px;font-weight:bold;color:#1a2744;border-bottom:1px solid #1a2744;padding-bottom:2px">Reymar Arroyo</div>
+            <div style="font-size:8px;color:#555;margin-top:2px">レイマー・アロヨ</div>
+          </div>
+          <div>
+            <div style="font-size:7px;color:#888;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px">Date of Translation / 翻訳日</div>
+            <div style="font-size:10px;font-weight:bold;color:#1a2744;border-bottom:1px solid #1a2744;padding-bottom:2px">`+today+`</div>
+            <div style="font-size:8px;color:#555;margin-top:2px">`+todayJP+`</div>
+          </div>
+          <div>
+            <div style="font-size:7px;color:#888;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px">Translator's Signature / 翻訳者署名</div>
+            <div style="height:44px;border-bottom:1px solid #1a2744;display:flex;align-items:flex-end;padding-bottom:4px">
+              <span style="font-family:Dancing Script,Pinyon Script,Brush Script MT,Segoe Script,cursive;font-size:24px;color:#1a2744;letter-spacing:0.5px;line-height:1">Reymar Arroyo</span>
+            </div>
+            <div style="font-size:7px;color:#aaa;margin-top:2px">Authorized Translator</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;padding-top:6px;border-top:0.5px solid #e5e0d8;display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:7px;color:#999">This certification is valid for Japanese immigration, visa, and municipal office submissions.</div>
+          <div style="font-size:7px;color:#c9a84c;font-weight:600">ARROYO TRANSLATION SERVICES</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
   function footer(jptit, doctype) {
     return '<div class="stamp"><span>Documentary Stamp Tax Paid · 登録印紙税納付済</span><span>発行機関：フィリピン統計局（PSA）</span></div>' +
     '<div class="cbox"><b>【翻訳証明】</b>' +
@@ -889,7 +940,8 @@ function doDownloadPDF() {
     '<em>CERTIFICATION: This is a faithful Japanese translation of the original '+doctype+' issued by the Philippine Statistics Authority (PSA). The translator certifies the accuracy of this translation.</em>' +
     '</div>' +
     '<div class="dbox">ACCEPTED USE: Suitable for Japanese visa applications and marriage registration at a Japanese municipal office (役所). NOT valid for court proceedings or notarized legal submissions.<br>' +
-    '【ご注意】本翻訳は日本のビザ申請・市区町村役所への婚姻届に適しています。裁判手続きや公証が必要な法的書類には使用できません。</div>';
+    '【ご注意】本翻訳は日本のビザ申請・市区町村役所への婚姻届に適しています。裁判手続きや公証が必要な法的書類には使用できません。</div>' +
+    certBlock();
   }
 
   var body = '';
@@ -1080,9 +1132,7 @@ function doDownloadPDF() {
       '</div>'+
       '<div style="font-size:6px;color:#777;margin-top:6px;padding-top:4px;border-top:0.5px solid #ccc;font-style:italic">Note: This certification is not valid if it contains erasures or alterations. Copy of marriage document/s may be available and are issued separately. ／ 修正がある場合無効。婚姻証書の写しは別途発行されます。</div>'+
     '</div>'+
-    '<div class="stamp"><span>Documentary Stamp Tax Paid · 印紙税納付済</span><span>Page 1 of 1</span></div>'+
-    '<div class="cbox"><b>【翻訳証明】</b>本翻訳はフィリピン統計局（PSA）発行の婚姻記録照会書を正確に日本語に翻訳したものです。<br><em>CERTIFICATION: This is a faithful Japanese translation of the original Advisory on Marriages issued by the Philippine Statistics Authority (PSA).</em></div>'+
-    '<div class="dbox">ACCEPTED USE: Suitable for Japanese visa applications and legal proceedings. NOT valid for court proceedings.<br>【ご注意】本翻訳は日本のビザ申請・法的手続きに適しています。</div>';
+    footer(jpTitle, dt);
 
   // ════ CERTIFICATE OF NO BIRTH RECORD ════
   } else if (dt === 'Certificate of No Birth Record') {
@@ -1116,9 +1166,7 @@ function doDownloadPDF() {
       '</div>'+
       '<div style="font-size:6px;color:#777;margin-top:6px;padding-top:4px;border-top:0.5px solid #ccc;font-style:italic">Note: This certification is not valid if it contains erasures or alterations. ／ 注意：修正または削除がある場合、本証明書は無効となります。</div>'+
     '</div>'+
-    '<div class="stamp"><span>Documentary Stamp Tax Paid · 印紙税納付済</span><span>出生記録なし / NO BIRTH RECORD</span></div>'+
-    '<div class="cbox"><b>【翻訳証明】</b>本翻訳はPSA発行の出生記録なし証明書を正確に日本語に翻訳したものです。<br><em>CERTIFICATION: This is a faithful Japanese translation of the original Negative Certification of Birth issued by the Philippine Statistics Authority (PSA).</em></div>'+
-    '<div class="dbox">ACCEPTED USE: Suitable for Japanese visa applications. NOT valid for court proceedings or notarized legal submissions.<br>【ご注意】本翻訳は日本のビザ申請に適しています。裁判手続きには使用できません。</div>';
+    footer(jpTitle, dt);
 
   } else {
     body = '<div style="padding:20px;color:#888">Unknown document type.</div>';
@@ -1127,7 +1175,7 @@ function doDownloadPDF() {
   var docHtml = '<!DOCTYPE html><html lang="ja"><head>'+
     '<meta charset="UTF-8">'+
     '<meta name="viewport" content="width=device-width,initial-scale=1">'+
-    '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">'+
+    '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Dancing+Script:wght@600&display=swap" rel="stylesheet">'+
     '<title>'+dt+' - Japanese Translation</title>'+
     '<style>'+CSS+'</style>'+
     '</head><body>'+
