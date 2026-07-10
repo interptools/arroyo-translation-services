@@ -449,6 +449,10 @@ function openModal(id) {
   document.getElementById('b-approve').disabled = s.status === 'approved' || s.status === 'translated';
   document.getElementById('b-reject').disabled = s.status === 'rejected';
 
+  // Reset edit panel whenever modal opens/refreshes
+  document.getElementById('edit-panel').style.display = 'none';
+  document.getElementById('edit-fields-grid').innerHTML = '';
+
   // Show modal
   document.getElementById('overlay').style.display = 'flex';
   document.body.style.overflow = 'hidden';
@@ -1493,18 +1497,32 @@ async function saveEdit() {
   // Ensure s.fields exists before writing to it
   if (!s.fields || typeof s.fields !== 'object') s.fields = {};
   var fields = DOC_FIELDS_ADMIN[s.doctype] || [];
+  // Read all input values back into s.fields
   fields.forEach(function(f) {
     var el = document.getElementById('ef-' + f.id);
     if (el) s.fields[f.id] = el.value.trim();
   });
+  // Disable button to prevent double-save
+  var btn = document.querySelector('.edit-save-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
   try {
     await saveSubs();
+    // Refresh the Document Fields display in the modal
+    var fieldsHtml = '';
+    Object.entries(s.fields).forEach(function(entry) {
+      var k = entry[0], v = entry[1];
+      if (v) fieldsHtml += '<div class="field-item"><label>' + k.replace(/_/g,' ') + '</label><span>' + v + '</span></div>';
+    });
+    document.getElementById('m-fields').innerHTML = fieldsHtml || '<div style="color:#6b7280;font-size:12px">No fields recorded</div>';
+    // Close edit panel
     document.getElementById('edit-panel').style.display = 'none';
-    openModal(activeId);
+    document.getElementById('edit-fields-grid').innerHTML = '';
     toast('Details updated for ' + s.name);
   } catch(e) {
     toast('Save failed — please try again');
     console.error('saveEdit error:', e);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Save Changes'; }
   }
 }
 
