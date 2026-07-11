@@ -367,6 +367,16 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
       .cbox{background:#dbeafe;border:0.5px solid #93c5fd;margin:8px 0 4px;padding:7px 10px;font-size:8.5px;color:#1e3a8a;line-height:1.6}
       .cbox b{font-size:9px;display:block;margin-bottom:2px}
       .dbox{background:#fef9c3;border:0.5px solid #fde047;margin:4px 0 0;padding:5px 10px;font-size:8px;color:#713f12;line-height:1.5}
+      .tblock{margin-top:6px;border:1.5px solid #1a2744;border-radius:4px;overflow:hidden}
+      .tblock-hdr{background:#1a2744;padding:5px 10px;display:flex;align-items:center;justify-content:space-between}
+      .tblock-body{background:#fefefe;padding:6px 10px}
+      .tblock-cert{font-size:8px;color:#1a2744;line-height:1.6;margin-bottom:6px}
+      .tblock-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;border-top:0.5px solid #e5e0d8;padding-top:7px}
+      .tblock-lbl{font-size:6.5px;color:#888;text-transform:uppercase;letter-spacing:0.7px;margin-bottom:3px}
+      .tblock-val{font-size:10px;font-weight:bold;color:#1a2744;border-bottom:1px solid #1a2744;padding-bottom:2px}
+      .tblock-sub{font-size:7.5px;color:#555;margin-top:2px}
+      .tblock-sig{font-family:'Dancing Script',cursive;font-size:22px;color:#1a2744;line-height:1}
+      .tblock-footer{margin-top:4px;padding-top:4px;border-top:0.5px solid #e5e0d8;display:flex;justify-content:space-between;align-items:center}
       .sample-only{background:#fffbeb;border-top:1px solid #fde68a;padding:8px 10px;text-align:center;font-size:11px;color:#92400e;font-weight:600;font-family:Inter,sans-serif}
       </style>
 
@@ -386,7 +396,24 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
         <div class="g2"><div class="gcl"><div class="fb s"><div class="fl">登録番号 / Registry Number</div><div class="fj">93000628</div></div><div class="fb"><div class="fl">登録日 / Date of Registration</div><div class="fj">1993年5月4日</div></div></div><div><div class="fb s"><div class="fl">発行機関 / Issuing Authority</div><div class="fj">フィリピン統計局（PSA）</div></div><div class="fb"><div class="fl">翻訳目的 / Purpose</div><div class="fj">日本ビザ申請</div></div></div></div>
         <div class="stamp"><span>Documentary Stamp Tax Paid · 登録印紙税納付済</span><span>発行機関：フィリピン統計局（PSA）</span></div>
         <div class="cbox"><b>【翻訳証明】</b>本翻訳はPSA発行の出生証明書を正確に日本語に翻訳したものです。<br><em>CERTIFICATION: Faithful Japanese translation of the original Birth Certificate issued by PSA.</em></div>
-        <div class="dbox">ACCEPTED USE: Suitable for Japanese visa applications and marriage registration (役所). NOT valid for court proceedings.</div>
+        <div class="dbox">ACCEPTED USE: Suitable for Japanese visa applications and marriage registration at a Japanese municipal office (役所). NOT valid for court proceedings or notarized legal submissions.<br>【ご注意】本翻訳は日本のビザ申請・市区町村役所への婚姻届に適しています。裁判手続きや公証が必要な法的書類には使用できません。</div>
+        <div class="tblock">
+          <div class="tblock-hdr">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div><div style="color:#e8c97a;font-size:8.5px;font-weight:bold;letter-spacing:0.5px">ARROYO TRANSLATION SERVICES</div><div style="color:rgba(255,255,255,0.55);font-size:6.5px;letter-spacing:1px;text-transform:uppercase">Translator's Declaration / 翻訳者証明</div></div>
+            </div>
+            <div style="color:rgba(255,255,255,0.4);font-size:6.5px;text-align:right">Philippine PSA Documents<br>日本語翻訳サービス</div>
+          </div>
+          <div class="tblock-body">
+            <div class="tblock-cert">I, <strong>Reymar Arroyo</strong>, hereby certify that the above is a true, complete, and accurate Japanese translation of the original Philippine Statistics Authority (PSA) document, and that I am competent to translate from English/Filipino to Japanese.<br><span style="color:#555;font-size:7.5px">私、<strong>レイマー・アロヨ</strong>は、上記の日本語翻訳がフィリピン統計局（PSA）発行の原文書を忠実かつ正確に翻訳したものであることを証明します。</span></div>
+            <div class="tblock-grid">
+              <div><div class="tblock-lbl">Translator's Name / 翻訳者氏名</div><div class="tblock-val">Reymar Arroyo</div><div class="tblock-sub">レイマー・アロヨ</div></div>
+              <div><div class="tblock-lbl">Date of Translation / 翻訳日</div><div class="tblock-val">Today's Date</div><div class="tblock-sub">翻訳実施日</div></div>
+              <div><div class="tblock-lbl">Translator's Signature / 翻訳者署名</div><div style="height:32px;border-bottom:1px solid #1a2744;display:flex;align-items:flex-end;padding-bottom:2px"><span class="tblock-sig">Reymar Arroyo</span></div><div style="font-size:6.5px;color:#aaa;margin-top:2px">Authorized Translator</div></div>
+            </div>
+            <div class="tblock-footer"><div style="font-size:6.5px;color:#999">This certification is valid for Japanese immigration, visa, and municipal office submissions.</div><div style="font-size:6.5px;color:#c9a84c;font-weight:600">ARROYO TRANSLATION SERVICES</div></div>
+          </div>
+        </div>
         <div class="sample-only">SAMPLE ONLY — Your actual translation will contain your real document details</div>
       </div></div>
 
@@ -420,7 +447,25 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
         <div class="g2"><div class="gcl"><div class="fb s"><div class="fl">登録番号 / Registry Number</div><div class="fj">2018-157</div></div></div><div><div class="fb"><div class="fl">翻訳目的 / Purpose</div><div class="fj">日本での婚姻届</div></div></div></div>
         <div class="stamp"><span>Documentary Stamp Tax Paid · 登録印紙税納付済</span><span>発行機関：フィリピン統計局（PSA）</span></div>
         <div class="cbox"><b>【翻訳証明】</b>本翻訳はPSA発行の婚姻証明書を正確に日本語に翻訳したものです。<br><em>CERTIFICATION: Faithful Japanese translation of the original Certificate of Marriage issued by PSA.</em></div>
-        <div class="dbox">ACCEPTED USE: Suitable for Japanese visa applications and marriage registration (役所). NOT valid for court proceedings.</div>
+        <div class="dbox">ACCEPTED USE: Suitable for Japanese visa applications and marriage registration at a Japanese municipal office (役所). NOT valid for court proceedings or notarized legal submissions.<br>【ご注意】本翻訳は日本のビザ申請・市区町村役所への婚姻届に適しています。裁判手続きや公証が必要な法的書類には使用できません。</div>
+
+        <div class="tblock">
+          <div class="tblock-hdr">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div><div style="color:#e8c97a;font-size:8.5px;font-weight:bold;letter-spacing:0.5px">ARROYO TRANSLATION SERVICES</div><div style="color:rgba(255,255,255,0.55);font-size:6.5px;letter-spacing:1px;text-transform:uppercase">Translator's Declaration / 翻訳者証明</div></div>
+            </div>
+            <div style="color:rgba(255,255,255,0.4);font-size:6.5px;text-align:right">Philippine PSA Documents<br>日本語翻訳サービス</div>
+          </div>
+          <div class="tblock-body">
+            <div class="tblock-cert">I, <strong>Reymar Arroyo</strong>, hereby certify that the above is a true, complete, and accurate Japanese translation of the original Philippine Statistics Authority (PSA) document, and that I am competent to translate from English/Filipino to Japanese.<br><span style="color:#555;font-size:7.5px">私、<strong>レイマー・アロヨ</strong>は、上記の日本語翻訳がフィリピン統計局（PSA）発行の原文書を忠実かつ正確に翻訳したものであることを証明します。</span></div>
+            <div class="tblock-grid">
+              <div><div class="tblock-lbl">Translator's Name / 翻訳者氏名</div><div class="tblock-val">Reymar Arroyo</div><div class="tblock-sub">レイマー・アロヨ</div></div>
+              <div><div class="tblock-lbl">Date of Translation / 翻訳日</div><div class="tblock-val">Today's Date</div><div class="tblock-sub">翻訳実施日</div></div>
+              <div><div class="tblock-lbl">Translator's Signature / 翻訳者署名</div><div style="height:32px;border-bottom:1px solid #1a2744;display:flex;align-items:flex-end;padding-bottom:2px"><span class="tblock-sig">Reymar Arroyo</span></div><div style="font-size:6.5px;color:#aaa;margin-top:2px">Authorized Translator</div></div>
+            </div>
+            <div class="tblock-footer"><div style="font-size:6.5px;color:#999">This certification is valid for Japanese immigration, visa, and municipal office submissions.</div><div style="font-size:6.5px;color:#c9a84c;font-weight:600">ARROYO TRANSLATION SERVICES</div></div>
+          </div>
+        </div>
         <div class="sample-only">SAMPLE ONLY — Your actual translation will contain your real document details</div>
       </div></div>
 
@@ -440,7 +485,25 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
         <div class="g2"><div class="gcl"><div class="fb s"><div class="fl">登録番号 / Registry Number</div><div class="fj">1999-76251</div></div></div><div><div class="fb"><div class="fl">翻訳目的 / Purpose</div><div class="fj">日本での相続手続き</div></div></div></div>
         <div class="stamp"><span>Documentary Stamp Tax Paid · 登録印紙税納付済</span><span>発行機関：フィリピン統計局（PSA）</span></div>
         <div class="cbox"><b>【翻訳証明】</b>本翻訳はPSA発行の死亡証明書を正確に日本語に翻訳したものです。<br><em>CERTIFICATION: Faithful Japanese translation of the original Certificate of Death issued by PSA.</em></div>
-        <div class="dbox">ACCEPTED USE: Suitable for Japanese visa applications and estate settlement. NOT valid for court proceedings.</div>
+        <div class="dbox">ACCEPTED USE: Suitable for Japanese visa applications and marriage registration at a Japanese municipal office (役所). NOT valid for court proceedings or notarized legal submissions.<br>【ご注意】本翻訳は日本のビザ申請・市区町村役所への婚姻届に適しています。裁判手続きや公証が必要な法的書類には使用できません。</div>
+
+        <div class="tblock">
+          <div class="tblock-hdr">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div><div style="color:#e8c97a;font-size:8.5px;font-weight:bold;letter-spacing:0.5px">ARROYO TRANSLATION SERVICES</div><div style="color:rgba(255,255,255,0.55);font-size:6.5px;letter-spacing:1px;text-transform:uppercase">Translator's Declaration / 翻訳者証明</div></div>
+            </div>
+            <div style="color:rgba(255,255,255,0.4);font-size:6.5px;text-align:right">Philippine PSA Documents<br>日本語翻訳サービス</div>
+          </div>
+          <div class="tblock-body">
+            <div class="tblock-cert">I, <strong>Reymar Arroyo</strong>, hereby certify that the above is a true, complete, and accurate Japanese translation of the original Philippine Statistics Authority (PSA) document, and that I am competent to translate from English/Filipino to Japanese.<br><span style="color:#555;font-size:7.5px">私、<strong>レイマー・アロヨ</strong>は、上記の日本語翻訳がフィリピン統計局（PSA）発行の原文書を忠実かつ正確に翻訳したものであることを証明します。</span></div>
+            <div class="tblock-grid">
+              <div><div class="tblock-lbl">Translator's Name / 翻訳者氏名</div><div class="tblock-val">Reymar Arroyo</div><div class="tblock-sub">レイマー・アロヨ</div></div>
+              <div><div class="tblock-lbl">Date of Translation / 翻訳日</div><div class="tblock-val">Today's Date</div><div class="tblock-sub">翻訳実施日</div></div>
+              <div><div class="tblock-lbl">Translator's Signature / 翻訳者署名</div><div style="height:32px;border-bottom:1px solid #1a2744;display:flex;align-items:flex-end;padding-bottom:2px"><span class="tblock-sig">Reymar Arroyo</span></div><div style="font-size:6.5px;color:#aaa;margin-top:2px">Authorized Translator</div></div>
+            </div>
+            <div class="tblock-footer"><div style="font-size:6.5px;color:#999">This certification is valid for Japanese immigration, visa, and municipal office submissions.</div><div style="font-size:6.5px;color:#c9a84c;font-weight:600">ARROYO TRANSLATION SERVICES</div></div>
+          </div>
+        </div>
         <div class="sample-only">SAMPLE ONLY — Your actual translation will contain your real document details</div>
       </div></div>
 
@@ -467,7 +530,25 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
         </div>
         <div class="stamp"><span>Documentary Stamp Tax Paid · 印紙税納付済</span><span>国籍：フィリピン国籍</span></div>
         <div class="cbox"><b>【翻訳証明】</b>本翻訳はPSA発行の未婚証明書（CENOMAR）を正確に日本語に翻訳したものです。<br><em>CERTIFICATION: Faithful Japanese translation of the original CENOMAR issued by PSA.</em></div>
-        <div class="dbox">ACCEPTED USE: Suitable for marriage registration at a Japanese municipal office (役所). NOT valid for court proceedings.</div>
+        <div class="dbox">ACCEPTED USE: Suitable for Japanese visa applications and marriage registration at a Japanese municipal office (役所). NOT valid for court proceedings or notarized legal submissions.<br>【ご注意】本翻訳は日本のビザ申請・市区町村役所への婚姻届に適しています。裁判手続きや公証が必要な法的書類には使用できません。</div>
+
+        <div class="tblock">
+          <div class="tblock-hdr">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div><div style="color:#e8c97a;font-size:8.5px;font-weight:bold;letter-spacing:0.5px">ARROYO TRANSLATION SERVICES</div><div style="color:rgba(255,255,255,0.55);font-size:6.5px;letter-spacing:1px;text-transform:uppercase">Translator's Declaration / 翻訳者証明</div></div>
+            </div>
+            <div style="color:rgba(255,255,255,0.4);font-size:6.5px;text-align:right">Philippine PSA Documents<br>日本語翻訳サービス</div>
+          </div>
+          <div class="tblock-body">
+            <div class="tblock-cert">I, <strong>Reymar Arroyo</strong>, hereby certify that the above is a true, complete, and accurate Japanese translation of the original Philippine Statistics Authority (PSA) document, and that I am competent to translate from English/Filipino to Japanese.<br><span style="color:#555;font-size:7.5px">私、<strong>レイマー・アロヨ</strong>は、上記の日本語翻訳がフィリピン統計局（PSA）発行の原文書を忠実かつ正確に翻訳したものであることを証明します。</span></div>
+            <div class="tblock-grid">
+              <div><div class="tblock-lbl">Translator's Name / 翻訳者氏名</div><div class="tblock-val">Reymar Arroyo</div><div class="tblock-sub">レイマー・アロヨ</div></div>
+              <div><div class="tblock-lbl">Date of Translation / 翻訳日</div><div class="tblock-val">Today's Date</div><div class="tblock-sub">翻訳実施日</div></div>
+              <div><div class="tblock-lbl">Translator's Signature / 翻訳者署名</div><div style="height:32px;border-bottom:1px solid #1a2744;display:flex;align-items:flex-end;padding-bottom:2px"><span class="tblock-sig">Reymar Arroyo</span></div><div style="font-size:6.5px;color:#aaa;margin-top:2px">Authorized Translator</div></div>
+            </div>
+            <div class="tblock-footer"><div style="font-size:6.5px;color:#999">This certification is valid for Japanese immigration, visa, and municipal office submissions.</div><div style="font-size:6.5px;color:#c9a84c;font-weight:600">ARROYO TRANSLATION SERVICES</div></div>
+          </div>
+        </div>
         <div class="sample-only">SAMPLE ONLY — Your actual translation will contain your real document details</div>
       </div></div>
 
@@ -496,7 +577,25 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
         </div>
         <div class="stamp"><span>Documentary Stamp Tax Paid · 印紙税納付済</span><span>Page 1 of 1</span></div>
         <div class="cbox"><b>【翻訳証明】</b>本翻訳はPSA発行の婚姻記録照会書を正確に日本語に翻訳したものです。<br><em>CERTIFICATION: Faithful Japanese translation of the original Advisory on Marriages issued by PSA.</em></div>
-        <div class="dbox">ACCEPTED USE: Suitable for Japanese visa applications and legal proceedings. NOT valid for court proceedings.</div>
+        <div class="dbox">ACCEPTED USE: Suitable for Japanese visa applications and marriage registration at a Japanese municipal office (役所). NOT valid for court proceedings or notarized legal submissions.<br>【ご注意】本翻訳は日本のビザ申請・市区町村役所への婚姻届に適しています。裁判手続きや公証が必要な法的書類には使用できません。</div>
+
+        <div class="tblock">
+          <div class="tblock-hdr">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div><div style="color:#e8c97a;font-size:8.5px;font-weight:bold;letter-spacing:0.5px">ARROYO TRANSLATION SERVICES</div><div style="color:rgba(255,255,255,0.55);font-size:6.5px;letter-spacing:1px;text-transform:uppercase">Translator's Declaration / 翻訳者証明</div></div>
+            </div>
+            <div style="color:rgba(255,255,255,0.4);font-size:6.5px;text-align:right">Philippine PSA Documents<br>日本語翻訳サービス</div>
+          </div>
+          <div class="tblock-body">
+            <div class="tblock-cert">I, <strong>Reymar Arroyo</strong>, hereby certify that the above is a true, complete, and accurate Japanese translation of the original Philippine Statistics Authority (PSA) document, and that I am competent to translate from English/Filipino to Japanese.<br><span style="color:#555;font-size:7.5px">私、<strong>レイマー・アロヨ</strong>は、上記の日本語翻訳がフィリピン統計局（PSA）発行の原文書を忠実かつ正確に翻訳したものであることを証明します。</span></div>
+            <div class="tblock-grid">
+              <div><div class="tblock-lbl">Translator's Name / 翻訳者氏名</div><div class="tblock-val">Reymar Arroyo</div><div class="tblock-sub">レイマー・アロヨ</div></div>
+              <div><div class="tblock-lbl">Date of Translation / 翻訳日</div><div class="tblock-val">Today's Date</div><div class="tblock-sub">翻訳実施日</div></div>
+              <div><div class="tblock-lbl">Translator's Signature / 翻訳者署名</div><div style="height:32px;border-bottom:1px solid #1a2744;display:flex;align-items:flex-end;padding-bottom:2px"><span class="tblock-sig">Reymar Arroyo</span></div><div style="font-size:6.5px;color:#aaa;margin-top:2px">Authorized Translator</div></div>
+            </div>
+            <div class="tblock-footer"><div style="font-size:6.5px;color:#999">This certification is valid for Japanese immigration, visa, and municipal office submissions.</div><div style="font-size:6.5px;color:#c9a84c;font-weight:600">ARROYO TRANSLATION SERVICES</div></div>
+          </div>
+        </div>
         <div class="sample-only">SAMPLE ONLY — Your actual translation will contain your real document details</div>
       </div></div>
 
@@ -519,7 +618,25 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
         </div>
         <div class="stamp"><span>Documentary Stamp Tax Paid · 印紙税納付済</span><span>出生記録なし / NO BIRTH RECORD</span></div>
         <div class="cbox"><b>【翻訳証明】</b>本翻訳はPSA発行の出生記録なし証明書を正確に日本語に翻訳したものです。<br><em>CERTIFICATION: Faithful Japanese translation of the original Negative Certification of Birth issued by PSA.</em></div>
-        <div class="dbox">ACCEPTED USE: Suitable for Japanese visa applications. NOT valid for court proceedings or notarized legal submissions.</div>
+        <div class="dbox">ACCEPTED USE: Suitable for Japanese visa applications and marriage registration at a Japanese municipal office (役所). NOT valid for court proceedings or notarized legal submissions.<br>【ご注意】本翻訳は日本のビザ申請・市区町村役所への婚姻届に適しています。裁判手続きや公証が必要な法的書類には使用できません。</div>
+
+        <div class="tblock">
+          <div class="tblock-hdr">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div><div style="color:#e8c97a;font-size:8.5px;font-weight:bold;letter-spacing:0.5px">ARROYO TRANSLATION SERVICES</div><div style="color:rgba(255,255,255,0.55);font-size:6.5px;letter-spacing:1px;text-transform:uppercase">Translator's Declaration / 翻訳者証明</div></div>
+            </div>
+            <div style="color:rgba(255,255,255,0.4);font-size:6.5px;text-align:right">Philippine PSA Documents<br>日本語翻訳サービス</div>
+          </div>
+          <div class="tblock-body">
+            <div class="tblock-cert">I, <strong>Reymar Arroyo</strong>, hereby certify that the above is a true, complete, and accurate Japanese translation of the original Philippine Statistics Authority (PSA) document, and that I am competent to translate from English/Filipino to Japanese.<br><span style="color:#555;font-size:7.5px">私、<strong>レイマー・アロヨ</strong>は、上記の日本語翻訳がフィリピン統計局（PSA）発行の原文書を忠実かつ正確に翻訳したものであることを証明します。</span></div>
+            <div class="tblock-grid">
+              <div><div class="tblock-lbl">Translator's Name / 翻訳者氏名</div><div class="tblock-val">Reymar Arroyo</div><div class="tblock-sub">レイマー・アロヨ</div></div>
+              <div><div class="tblock-lbl">Date of Translation / 翻訳日</div><div class="tblock-val">Today's Date</div><div class="tblock-sub">翻訳実施日</div></div>
+              <div><div class="tblock-lbl">Translator's Signature / 翻訳者署名</div><div style="height:32px;border-bottom:1px solid #1a2744;display:flex;align-items:flex-end;padding-bottom:2px"><span class="tblock-sig">Reymar Arroyo</span></div><div style="font-size:6.5px;color:#aaa;margin-top:2px">Authorized Translator</div></div>
+            </div>
+            <div class="tblock-footer"><div style="font-size:6.5px;color:#999">This certification is valid for Japanese immigration, visa, and municipal office submissions.</div><div style="font-size:6.5px;color:#c9a84c;font-weight:600">ARROYO TRANSLATION SERVICES</div></div>
+          </div>
+        </div>
         <div class="sample-only">SAMPLE ONLY — Your actual translation will contain your real document details</div>
       </div></div>
 
