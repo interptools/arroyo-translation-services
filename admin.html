@@ -991,16 +991,18 @@ function doDownloadPDF() {
     '<div class="sh">A.　子の情報 / CHILD INFORMATION</div>' +
     '<div class="g1"><div class="fb s"><div class="fn">1</div><div class="fl">氏名（名・ミドルネーム・姓）/ Name (First, Middle, Last)</div><div class="fj">'+gjv('child_name')+'</div><div class="fe">'+gv('child_name')+'</div></div></div>' +
     '<div class="g3"><div class="fb"><div class="fn">2</div><div class="fl">生年月日 / Date of Birth</div><div class="fj">'+gjv('child_dob')+'</div><div class="fe">'+gv('child_dob')+'</div></div><div class="fb s"><div class="fn">3</div><div class="fl">出生地 / Place of Birth</div><div class="fj">'+gjv('child_pob')+'</div><div class="fe">'+gv('child_pob')+'</div></div><div class="fb"><div class="fn">4</div><div class="fl">性別 / Sex</div><div class="fj">'+gjv('child_sex')+'</div></div></div>' +
-    '<div class="g1"><div class="fb s"><div class="fn">5</div><div class="fl">出生順位 / Birth Order</div><div class="fj">'+gjv('child_order')+'</div><div class="fe">'+gv('child_order')+'</div></div></div>' +
+    '<div class="g3"><div class="fb"><div class="fn">5</div><div class="fl">出生順位 / Birth Order</div><div class="fj">'+gjv('child_order')+'</div><div class="fe">'+gv('child_order')+'</div></div><div class="fb s"><div class="fl">出生区分 / Type of Birth</div><div class="fj">'+gjv('child_type_birth')+'</div><div class="fe">'+gv('child_type_birth')+'</div></div><div class="fb"><div class="fl">立会者 / Attendant</div><div class="fj">'+gjv('child_attended')+'</div><div class="fe">'+gv('child_attended')+'</div></div></div>' +
     '<div class="sh">B.　母の情報 / MOTHER\'S INFORMATION</div>' +
     '<div class="g2">'+
       '<div class="gcl">'+
         '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">6</div><div class="fl">母の旧姓 / Mother\'s Maiden Name</div><div class="fj">'+gjv('mother_name')+'</div><div class="fe">'+gv('mother_name')+'</div></div></div>'+
         '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fn">7</div><div class="fl">国籍 / Citizenship</div><div class="fj">'+gjv('mother_citizen')+'</div></div></div>'+
+        '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fl">認知時年齢 / Age at Birth</div><div class="fj">'+gv('mother_age')+'</div></div></div>'+
       '</div>'+
       '<div>'+
         '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">8</div><div class="fl">宗教 / Religion</div><div class="fj">'+gjv('mother_religion')+'</div></div></div>'+
         '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fl">職業 / Occupation</div><div class="fj">'+gjv('mother_occ')+'</div></div></div>'+
+        '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fl">住所 / Residence</div><div class="fj">'+gjv('mother_residence')+'</div><div class="fe">'+gv('mother_residence')+'</div></div></div>'+
       '</div>'+
     '</div>' +
     '<div class="sh">C.　父の情報 / FATHER\'S INFORMATION</div>' +
@@ -1008,10 +1010,12 @@ function doDownloadPDF() {
       '<div class="gcl">'+
         '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">9</div><div class="fl">父の氏名 / Father\'s Name</div><div class="fj">'+gjv('father_name')+'</div><div class="fe">'+gv('father_name')+'</div></div></div>'+
         '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fn">10</div><div class="fl">国籍 / Citizenship</div><div class="fj">'+gjv('father_citizen')+'</div></div></div>'+
+        '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fl">認知時年齢 / Age at Birth</div><div class="fj">'+gv('father_age')+'</div></div></div>'+
       '</div>'+
       '<div>'+
         '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">11</div><div class="fl">宗教 / Religion</div><div class="fj">'+gjv('father_religion')+'</div></div></div>'+
         '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fl">職業 / Occupation</div><div class="fj">'+gjv('father_occ')+'</div></div></div>'+
+        '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fl">住所 / Residence</div><div class="fj">'+gjv('father_residence')+'</div><div class="fe">'+gv('father_residence')+'</div></div></div>'+
       '</div>'+
     '</div>' +
     '<div class="sh">D.　登録情報 / REGISTRATION INFORMATION</div>' +
@@ -1078,9 +1082,10 @@ function doDownloadPDF() {
     '<div class="g4"><div class="fb"><div class="fn">2</div><div class="fl">性別 / Sex</div><div class="fj">'+gjv('deceased_sex')+'</div></div><div class="fb s"><div class="fn">3</div><div class="fl">生年月日</div><div class="fj">'+gjv('deceased_dob')+'</div></div><div class="fb"><div class="fn">4</div><div class="fl">死亡時年齢 / Age</div><div class="fj">'+gv('deceased_age')+(gv('deceased_age')?'歳':'—')+'</div></div><div class="fb s"><div class="fn">5</div><div class="fl">婚姻状況</div><div class="fj">'+gjv('civil_status')+'</div></div></div>' +
     '<div class="g2"><div class="gcl">'+
       '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fn">6</div><div class="fl">出生地 / Place of Birth</div><div class="fj">'+gjv('deceased_pob')+'</div><div class="fe">'+gv('deceased_pob')+'</div></div></div>'+
-      '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">7</div><div class="fl">宗教 / Religion</div><div class="fj">'+gjv('deceased_religion')+'</div></div></div>'+
-      '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fn">8</div><div class="fl">職業 / Occupation</div><div class="fj">'+gjv('deceased_occ')+'</div></div></div>'+
-      '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">9</div><div class="fl">常住地 / Usual Residence</div><div class="fj">'+gjv('deceased_residence')+'</div><div class="fe">'+gv('deceased_residence')+'</div></div></div>'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">7</div><div class="fl">国籍 / Citizenship</div><div class="fj">'+gjv('deceased_citizen')+'</div></div></div>'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fn">8</div><div class="fl">宗教 / Religion</div><div class="fj">'+gjv('deceased_religion')+'</div></div></div>'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">9</div><div class="fl">職業 / Occupation</div><div class="fj">'+gjv('deceased_occ')+'</div></div></div>'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fn">10</div><div class="fl">常住地 / Usual Residence</div><div class="fj">'+gjv('deceased_residence')+'</div><div class="fe">'+gv('deceased_residence')+'</div></div></div>'+
     '</div><div>'+
       '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fn">10</div><div class="fl">父の氏名 / Father\'s Name</div><div class="fj">'+gjv('deceased_father')+'</div><div class="fe">'+gv('deceased_father')+'</div></div></div>'+
       '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">11</div><div class="fl">母の旧姓 / Mother\'s Maiden Name</div><div class="fj">'+gjv('deceased_mother')+'</div><div class="fe">'+gv('deceased_mother')+'</div></div></div>'+
@@ -1129,6 +1134,7 @@ function doDownloadPDF() {
         '&nbsp;&nbsp;国籍 / Citizenship: <span class="fill">'+gjv('applicant_citizen')+'</span><br><br>'+
         '&nbsp;&nbsp;父の氏名 / Father\'s Name: <span class="fill fill-lg">'+gjv('father_name')+'</span><br>'+
         '&nbsp;&nbsp;母の旧姓 / Mother\'s Maiden Name: <span class="fill fill-lg">'+gjv('mother_name')+'</span><br><br>'+
+        '&nbsp;&nbsp;照会範囲 / Search Coverage: <span class="fill">'+gjv('search_type')+'</span><br><br>'+
         '<b>does not appear in our National Indices of Marriages.</b><br>'+
         '<b style="color:#1a2744">婚姻に関する国家記録に記載がないことを証明します。</b>'+
       '</div>'+
