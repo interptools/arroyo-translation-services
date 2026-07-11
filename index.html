@@ -234,6 +234,15 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
           <option>CENOMAR</option>
           <option>Advisory on Marriages</option>
           <option>Certificate of No Birth Record</option>
+          <option value="Others">Others (Non-PSA Document)</option>
+        </select>
+      </div>
+      <!-- Sub-dropdown for Others — shown only when Others is selected -->
+      <div class="field" id="others-subtype-wrap" style="display:none">
+        <label>Document sub-type <span class="req">*</span></label>
+        <select id="f-others-subtype" onchange="onOthersSubtypeChange(this.value)">
+          <option value="" disabled selected>Select sub-type</option>
+          <option value="Apostille">DFA Apostille Certificate</option>
         </select>
       </div>
     </div>
@@ -244,37 +253,52 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
     <div class="sec-title"><div class="sec-num">2</div>Upload your PSA document</div>
 
     <!-- Page 1 upload -->
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px" id="page1-label">
+    <div style="display:none;align-items:center;gap:8px;margin-bottom:8px" id="page1-label">
       <div style="background:var(--navy);color:var(--goldl);font-size:11px;font-weight:700;padding:2px 10px;border-radius:3px;letter-spacing:.8px;font-family:Inter,sans-serif" id="page1-badge">PAGE 1 OF 1 · 第1ページ</div>
       <div style="font-size:11px;color:var(--muted);font-weight:500">Main Document / 本文書</div>
     </div>
-    <div class="upload-area">
-      <input type="file" id="f-doc" accept="image/*" onchange="onDocUpload(this)">
+    <div class="upload-area" id="doc-upload-area" style="opacity:0.45;pointer-events:none;cursor:not-allowed" title="Please select a document type first">
+      <input type="file" id="f-doc" accept="image/*" onclick="setStep(2)" onchange="onDocUpload(this)">
       <div class="upload-icon">&#128196;</div>
       <div class="upload-hint"><strong>Click to upload</strong> or drag and drop</div>
-      <div class="upload-hint">JPG or PNG &middot; Max 10MB &middot; Upload clear photo of your PSA document</div>
+      <div class="upload-hint" id="doc-upload-hint">Select a document type above first</div>
       <div class="file-ok" id="doc-ok"></div>
     </div>
     <div class="scan-status" id="scan-status"></div>
 
     <!-- Page 2 upload — shown only for Birth Certificate with affidavits -->
     <div id="page2-upload-wrap" style="display:none;margin-top:16px">
-      <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;font-size:12px;color:#92400e;margin-bottom:10px">
+      <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;font-size:12px;color:#92400e;margin-bottom:12px">
         &#128221; <strong>Does your Birth Certificate have a 2nd page?</strong><br>
-        Some PSA Birth Certificates include a 2nd page with an <em>Affidavit of Acknowledgment/Admission of Paternity</em> and/or an <em>Affidavit for Delayed Registration of Birth</em> (like the sample below). If your document has a 2nd page, please upload it so we can translate it completely.
+        Some PSA Birth Certificates include a 2nd page with affidavit/s. If your document has a 2nd page, please select the affidavit type and upload it below.
       </div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <div style="background:#c9a84c;color:#1a2744;font-size:11px;font-weight:700;padding:2px 10px;border-radius:3px;letter-spacing:.8px;font-family:Inter,sans-serif">PAGE 2 OF 2 · 第2ページ</div>
-        <div style="font-size:11px;color:var(--muted);font-weight:500">Affidavits / 宣誓供述書</div>
+
+      <!-- Affidavit type selector -->
+      <div class="field" style="margin-bottom:12px">
+        <label style="font-size:12px;font-weight:500;color:var(--text)">What does your Page 2 contain? <span class="req">*</span></label>
+        <select id="p2_affidavit_type" onchange="onAffidavitTypeChange(this.value)" style="margin-top:5px">
+          <option value="" disabled selected>— Select affidavit type —</option>
+          <option value="both">Both affidavits — Paternity + Delayed Registration (child is illegitimate AND birth was registered late)</option>
+          <option value="paternity">Affidavit of Acknowledgment / Admission of Paternity only (illegitimate child, birth registered on time)</option>
+          <option value="delayed">Affidavit for Delayed Registration of Birth only (birth registered late, parents may be married or not)</option>
+        </select>
       </div>
-      <div class="upload-area" id="page2-upload-area">
-        <input type="file" id="f-doc2" accept="image/*" onchange="onDoc2Upload(this)">
-        <div class="upload-icon">&#128196;</div>
-        <div class="upload-hint"><strong>Click to upload Page 2</strong> (optional)</div>
-        <div class="upload-hint">JPG or PNG &middot; Max 10MB &middot; Upload only if your document has a 2nd page</div>
-        <div class="file-ok" id="doc2-ok"></div>
+
+      <!-- Upload area — shown after type is selected -->
+      <div id="page2-upload-inner" style="display:none">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <div style="background:#c9a84c;color:#1a2744;font-size:11px;font-weight:700;padding:2px 10px;border-radius:3px;letter-spacing:.8px;font-family:Inter,sans-serif">PAGE 2 OF 2 · 第2ページ</div>
+          <div style="font-size:11px;color:var(--muted);font-weight:500" id="p2-type-label">Affidavits / 宣誓供述書</div>
+        </div>
+        <div class="upload-area" id="page2-upload-area">
+          <input type="file" id="f-doc2" accept="image/*" onchange="onDoc2Upload(this)">
+          <div class="upload-icon">&#128196;</div>
+          <div class="upload-hint"><strong>Click to upload Page 2</strong></div>
+          <div class="upload-hint">JPG or PNG &middot; Max 10MB</div>
+          <div class="file-ok" id="doc2-ok"></div>
+        </div>
+        <div class="scan-status" id="scan-status2"></div>
       </div>
-      <div class="scan-status" id="scan-status2"></div>
     </div>
   </div>
 
@@ -289,7 +313,7 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
   <div class="card-section" id="details-section2" style="display:none">
     <div class="sec-title" style="flex-direction:column;align-items:flex-start;gap:4px">
       <div style="display:flex;align-items:center;gap:8px"><div class="sec-num" style="background:var(--gold);color:var(--navy)">3B</div>Page 2 — Affidavit details</div>
-      <div style="font-size:11px;font-weight:400;color:var(--muted);margin-top:2px">Fill in the details from your Birth Certificate Page 2 (Affidavits)</div>
+      <div style="font-size:11px;font-weight:400;color:var(--muted);margin-top:2px" id="sec3b-subtitle">Fill in the details from your Birth Certificate Page 2</div>
     </div>
 
     <!-- Affidavit of Acknowledgment/Admission of Paternity -->
@@ -1046,6 +1070,20 @@ const DOC_FIELDS = {
     {id:'ref_number', label:'Reference number', ph:'e.g. NBR-2025-MNL-00456'},
     {id:'issuance_date', label:'Date of issuance', ph:'', type:'date'},
     {id:'purpose', label:'Purpose of translation', ph:'e.g. Japanese visa application'}
+  ],
+  'Apostille': [
+    {id:'apo_sn', label:'Serial number (S.N.)', ph:'e.g. 26e-0063046'},
+    {id:'apo_country', label:'Country', ph:'e.g. Philippines'},
+    {id:'apo_signed_by', label:'Signed by (Item 2)', ph:'e.g. Claire Dennis S. Mapa'},
+    {id:'apo_capacity', label:'Capacity (Item 3)', ph:'e.g. National Statistician and Civil Registrar General'},
+    {id:'apo_seal', label:'Seal/stamp of (Item 4)', ph:'e.g. Philippine Statistics Authority'},
+    {id:'apo_place', label:'Place certified (Item 5)', ph:'e.g. Manila'},
+    {id:'apo_date', label:'Date certified (Item 6)', ph:'', type:'date'},
+    {id:'apo_by', label:'Certified by (Item 7)', ph:'e.g. LEONIDES F. FAJILAGO'},
+    {id:'apo_number', label:'Apostille number (Item 8)', ph:'e.g. 26e-0063046'},
+    {id:'apo_underlying_doc', label:'Underlying document type', ph:'e.g. Birth Certificate'},
+    {id:'apo_ref_number', label:'Reference number', ph:'e.g. 2670115267'},
+    {id:'purpose', label:'Purpose of translation', ph:'e.g. Marriage registration in Japan'}
   ]
 };
 
@@ -1089,27 +1127,117 @@ function onDoctypeChange(val) {
   var name = document.getElementById('f-name').value.trim();
   var email = document.getElementById('f-email').value.trim();
   var phone = document.getElementById('f-phone').value.trim();
+
+  // Show/hide Others sub-dropdown
+  var othersWrap = document.getElementById('others-subtype-wrap');
+  if (val === 'Others') {
+    othersWrap.style.display = 'block';
+    // Keep upload locked until sub-type is chosen
+    return;
+  } else {
+    othersWrap.style.display = 'none';
+    document.getElementById('f-others-subtype').value = '';
+  }
+
   if (name && email && phone && val) setStep(2);
+
+  // Enable upload area
+  var uploadArea = document.getElementById('doc-upload-area');
+  if (uploadArea) {
+    uploadArea.style.opacity = '1';
+    uploadArea.style.pointerEvents = 'auto';
+    uploadArea.style.cursor = 'pointer';
+    uploadArea.removeAttribute('title');
+  }
+  var hint = document.getElementById('doc-upload-hint');
+  if (hint) hint.textContent = 'JPG or PNG \u00b7 Max 10MB \u00b7 Upload clear photo of your document';
+
+  // Show Page 1 badge
+  var p1label = document.getElementById('page1-label');
+  var p1badge = document.getElementById('page1-badge');
+  if (p1label) p1label.style.display = 'flex';
 
   // Show Page 2 upload only for Birth Certificate
   var p2wrap = document.getElementById('page2-upload-wrap');
-  var p1label = document.getElementById('page1-label');
-  var p1badge = document.getElementById('page1-badge');
   if (val === 'Birth Certificate') {
     p2wrap.style.display = 'block';
-    p1label.style.display = 'flex';
     if (p1badge) p1badge.textContent = 'PAGE 1 OF 1 · 第1ページ';
   } else {
     p2wrap.style.display = 'none';
-    p1label.style.display = 'none';
-    // Reset page 2 if doctype changed
     doc2FileData = null;
     document.getElementById('doc2-ok').textContent = '';
     document.getElementById('doc2-ok').style.display = 'none';
     document.getElementById('details-section2').style.display = 'none';
     document.getElementById('scan-status2').style.display = 'none';
+    document.getElementById('p2_affidavit_type').value = '';
+    document.getElementById('page2-upload-inner').style.display = 'none';
     if (p1badge) p1badge.textContent = 'PAGE 1 OF 1 · 第1ページ';
+    updatePrice();
   }
+}
+
+function onOthersSubtypeChange(val) {
+  if (!val) return;
+  var name = document.getElementById('f-name').value.trim();
+  var email = document.getElementById('f-email').value.trim();
+  var phone = document.getElementById('f-phone').value.trim();
+  if (name && email && phone) setStep(2);
+
+  // Enable upload area
+  var uploadArea = document.getElementById('doc-upload-area');
+  if (uploadArea) {
+    uploadArea.style.opacity = '1';
+    uploadArea.style.pointerEvents = 'auto';
+    uploadArea.style.cursor = 'pointer';
+    uploadArea.removeAttribute('title');
+  }
+  var hint = document.getElementById('doc-upload-hint');
+  if (hint) hint.textContent = 'JPG or PNG \u00b7 Max 10MB \u00b7 Upload clear photo of your document';
+
+  // Show page 1 badge
+  var p1label = document.getElementById('page1-label');
+  var p1badge = document.getElementById('page1-badge');
+  if (p1label) p1label.style.display = 'flex';
+  if (p1badge) p1badge.textContent = 'PAGE 1 OF 1 · 第1ページ';
+
+  // Hide page 2 (not applicable)
+  document.getElementById('page2-upload-wrap').style.display = 'none';
+
+  // Reset upload so user re-uploads for the new subtype
+  document.getElementById('details-section').style.display = 'none';
+  document.getElementById('details-fields').innerHTML = '';
+  document.getElementById('scan-status').style.cssText = 'display:none';
+  document.getElementById('doc-ok').textContent = '';
+  document.getElementById('doc-ok').style.display = 'none';
+  docFileData = null;
+  document.getElementById('f-doc').value = '';
+
+  updatePrice();
+}
+
+function onAffidavitTypeChange(val) {
+  if (!val) return;
+  // Show upload area
+  document.getElementById('page2-upload-inner').style.display = 'block';
+  // Update sublabel
+  var labels = {
+    'both': 'Paternity Affidavit + Delayed Registration / 認知宣誓供述書 + 遅延登録宣誓供述書',
+    'paternity': 'Affidavit of Acknowledgment / Admission of Paternity / 認知宣誓供述書',
+    'delayed': 'Affidavit for Delayed Registration of Birth / 出生遅延登録宣誓供述書'
+  };
+  document.getElementById('p2-type-label').textContent = labels[val] || 'Affidavits / 宣誓供述書';
+  // Show/hide affidavit sections in 3B
+  var showPat = val === 'both' || val === 'paternity';
+  var showDel = val === 'both' || val === 'delayed';
+  document.getElementById('aff-paternity-wrap').style.display = showPat ? 'block' : 'none';
+  document.getElementById('aff-delayed-wrap').style.display = showDel ? 'block' : 'none';
+  // Update 3B subtitle
+  var subtitles = {
+    'both': 'Both affidavits — Paternity Acknowledgment + Delayed Registration',
+    'paternity': 'Affidavit of Acknowledgment / Admission of Paternity only',
+    'delayed': 'Affidavit for Delayed Registration of Birth only'
+  };
+  document.getElementById('sec3b-subtitle').textContent = subtitles[val] || '';
 }
 
 async function onDoc2Upload(input) {
@@ -1124,19 +1252,42 @@ async function onDoc2Upload(input) {
   var p1badge = document.getElementById('page1-badge');
   if (p1badge) p1badge.textContent = 'PAGE 1 OF 2 · 第1ページ（全2ページ）';
 
+  // Update price immediately on file selection
+  updatePrice();
+
   // Show the page 2 details section
   document.getElementById('details-section2').style.display = 'block';
+
+  // Determine affidavit type
+  var aType = document.getElementById('p2_affidavit_type').value || 'both';
 
   var status2 = document.getElementById('scan-status2');
   status2.style.cssText = 'display:flex;background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12px;align-items:center;gap:8px';
   status2.innerHTML = '<span style="display:inline-block;width:13px;height:13px;border:2px solid #2563eb;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0"></span> Reading Page 2...';
 
   try {
+    // Build prompt based on affidavit type
+    var patFields = 'p2_pat_father, p2_pat_mother, p2_pat_child, p2_pat_child_dob, p2_pat_city, p2_pat_date_sworn, p2_pat_notary, p2_pat_ctc, p2_pat_ctc_place, p2_pat_ctc_date';
+    var delFields = 'p2_del_affiant, p2_del_civil, p2_del_affiant_addr, p2_del_child, p2_del_child_dob, p2_del_child_pob, p2_del_attendant, p2_del_attendant_addr, p2_del_citizen, p2_del_father, p2_del_mother, p2_del_married, p2_del_marriage_date, p2_del_marriage_place, p2_del_reason, p2_del_exec_city, p2_del_exec_date, p2_del_notary, p2_del_date_sworn, p2_del_remarks';
+
+    var promptPat = 'Affidavit of Acknowledgment/Admission of Paternity — read: father name, mother name, child name, child date of birth, city where sworn, date sworn, notary public name, CTC/Valid ID number of father, CTC issued at (city), CTC issued on (date). ';
+    var promptDel = 'Affidavit for Delayed Registration of Birth — read: affiant name (the person who signed), affiant civil status (single/married/widowed/divorced), affiant address, child name, child date of birth, child place of birth, attendant at birth name, attendant address, citizenship, father name, mother name, whether parents are married (yes/no), marriage date if applicable, marriage place if applicable, reason for delayed registration, city where affidavit executed, date executed, notary public name, date sworn, any additional remarks or stamps. ';
+
+    var affDesc = '', fieldIds = '';
+    if (aType === 'both') {
+      affDesc = 'It contains TWO affidavits: (1) ' + promptPat + '(2) ' + promptDel;
+      fieldIds = patFields + ', ' + delFields;
+    } else if (aType === 'paternity') {
+      affDesc = 'It contains ONE affidavit: Affidavit of Acknowledgment/Admission of Paternity. ' + promptPat;
+      fieldIds = patFields;
+    } else {
+      affDesc = 'It contains ONE affidavit: Affidavit for Delayed Registration of Birth. ' + promptDel;
+      fieldIds = delFields;
+    }
+
     var prompt2 = 'You are an expert at reading Philippine PSA civil registry documents. ' +
-      'This is Page 2 of a PSA Birth Certificate. It contains two affidavits: ' +
-      '(1) Affidavit of Acknowledgment/Admission of Paternity — read: father name, mother name, child name, child date of birth, city where sworn, date sworn, notary public name, CTC/Valid ID number of father, CTC issued at (city), CTC issued on (date). ' +
-      '(2) Affidavit for Delayed Registration of Birth — read: affiant name (the person who signed), affiant civil status (single/married/widowed), affiant address, child name, child date of birth, child place of birth, attendant at birth name, attendant address, citizenship, father name, mother name, whether parents are married (yes/no), marriage date if applicable, marriage place if applicable, reason for delayed registration, city where affidavit executed, date executed, notary public name, date sworn, any additional remarks or stamps. ' +
-      'Extract ONLY these exact field IDs: p2_pat_father, p2_pat_mother, p2_pat_child, p2_pat_child_dob, p2_pat_city, p2_pat_date_sworn, p2_pat_notary, p2_pat_ctc, p2_pat_ctc_place, p2_pat_ctc_date, p2_del_affiant, p2_del_civil, p2_del_affiant_addr, p2_del_child, p2_del_child_dob, p2_del_child_pob, p2_del_attendant, p2_del_attendant_addr, p2_del_citizen, p2_del_father, p2_del_mother, p2_del_married, p2_del_marriage_date, p2_del_marriage_place, p2_del_reason, p2_del_exec_city, p2_del_exec_date, p2_del_notary, p2_del_date_sworn, p2_del_remarks. ' +
+      'This is Page 2 of a PSA Birth Certificate. ' + affDesc +
+      'Extract ONLY these exact field IDs: ' + fieldIds + '. ' +
       'IMPORTANT: Return ONLY a raw JSON object. No markdown. No backticks. No explanation. ' +
       'Full names as First Middle Last. Dates as YYYY-MM-DD. Use empty string if field not present or unreadable.';
 
@@ -1254,6 +1405,18 @@ async function onDocUpload(input) {
     return;
   }
 
+  // Resolve effective doctype — for Others, use the sub-type value
+  var effectiveDoctype = doctype;
+  if (doctype === 'Others') {
+    var subtype = document.getElementById('f-others-subtype').value;
+    if (!subtype) {
+      alert('Please select a document sub-type first.');
+      input.value = '';
+      return;
+    }
+    effectiveDoctype = subtype;
+  }
+
   docFileData = await toBase64(file);
   document.getElementById('doc-ok').textContent = 'Selected: ' + file.name;
   document.getElementById('doc-ok').style.display = 'block';
@@ -1261,14 +1424,14 @@ async function onDocUpload(input) {
   var detailsSection = document.getElementById('details-section');
   var detailsFields = document.getElementById('details-fields');
   detailsSection.style.display = 'block';
-  detailsFields.innerHTML = buildFields(doctype);
+  detailsFields.innerHTML = buildFields(effectiveDoctype);
 
   var status = document.getElementById('scan-status');
   status.style.cssText = 'display:flex;background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12px;align-items:center;gap:8px';
   status.innerHTML = '<span style="display:inline-block;width:13px;height:13px;border:2px solid #2563eb;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0"></span> Reading your document...';
 
   try {
-    var fields = DOC_FIELDS[doctype] || [];
+    var fields = DOC_FIELDS[effectiveDoctype] || [];
     var fieldIds = fields.map(function(f){ return f.id; }).join(', ');
 
     var tips = {
@@ -1277,16 +1440,17 @@ async function onDocUpload(input) {
       'Death Certificate': 'Deceased full name section 1. Sex, date of birth, place of birth, civil status, citizenship, religion, occupation, usual residence. Father name and mother maiden name. Date of death, place of death. Immediate cause, antecedent cause, underlying cause of death. Attending physician. Registry number top right.',
       'CENOMAR': 'Applicant full name at top. Date of birth, place of birth, sex, citizenship. Father name and mother maiden name. Period covered (e.g. 1945–2024) from the certification text. Reference number and date of issuance at bottom.',
       'Advisory on Marriages': 'Subject full name. Date of birth, place of birth, sex. Number of marriages found. Name of bride/groom spouse. Date of marriage, place of marriage. Remarks or annotation (e.g. With Foreign Divorce Decree). Period covered from certification text. Date of issuance.',
-      'Certificate of No Birth Record': 'Subject full name. Date of birth, place of birth. Father name and mother maiden name. Date of issuance.'
+      'Certificate of No Birth Record': 'Subject full name. Date of birth, place of birth. Father name and mother maiden name. Date of issuance.',
+      'Apostille': 'This is a DFA Apostille certificate from the Philippines. Read: Serial Number (S.N.) at top left. Item 1 Country. Item 2 signed by (full name). Item 3 capacity/title. Item 4 seal/stamp of (institution name). Item 5 place certified (city). Item 6 date (day month year — convert to YYYY-MM-DD). Item 7 certified by (full name in uppercase). Item 8 apostille number. Bottom right: underlying document type (e.g. Birth Certificate) and reference number.'
     };
 
-    var prompt = 'You are an expert at reading Philippine PSA (Philippine Statistics Authority) civil registry documents. ' +
-      'This image is a ' + doctype + '. Read ALL text very carefully including handwritten, faded, stamped, and cursive text. ' +
-      'Document reading tips: ' + (tips[doctype] || 'Read all visible fields carefully.') + ' ' +
+    var prompt = 'You are an expert at reading Philippine government documents. ' +
+      'This image is a ' + effectiveDoctype + '. Read ALL text very carefully including printed, stamped, and handwritten text. ' +
+      'Document reading tips: ' + (tips[effectiveDoctype] || 'Read all visible fields carefully.') + ' ' +
       'Extract ONLY these exact field IDs and their values: ' + fieldIds + '. ' +
       'IMPORTANT: Return ONLY a raw JSON object. No markdown. No backticks. No explanation. No extra text. ' +
-      'Example format: {"child_name":"REYMAR B ARROYO","child_dob":"1993-04-22","child_sex":"Male"} ' +
-      'Rules: Full names as First Middle Last. Dates as YYYY-MM-DD. Sex as exactly Male or Female. Use empty string if unreadable.';
+      'Example format: {"apo_sn":"26e-0063046","apo_country":"Philippines","apo_date":"2026-07-09"} ' +
+      'Rules: Full names as First Middle Last. Dates as YYYY-MM-DD. Use empty string if unreadable.';
 
     var res = await fetch('https://gemini-proxy.areymar36.workers.dev', {
       method: 'POST',
@@ -1392,7 +1556,7 @@ function resizeImage(file, maxWidth) {
         canvas.height = img.height * ratio;
         var ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        var b64 = canvas.toDataURL('image/jpeg', 0.4).split(',')[1];
+        var b64 = canvas.toDataURL('image/jpeg', 0.3).split(',')[1];
         resolve(b64);
       };
       img.onerror = function() { resolve(''); };
@@ -1409,6 +1573,17 @@ async function doSubmit() {
   var phone   = document.getElementById('f-phone').value.trim();
   var doctype = document.getElementById('f-doctype').value;
 
+  // Resolve effective doctype for Others
+  var effectiveDoctype = doctype;
+  if (doctype === 'Others') {
+    var subtype = document.getElementById('f-others-subtype').value;
+    if (!subtype) {
+      alert('Please select a document sub-type in section 1.');
+      return;
+    }
+    effectiveDoctype = subtype;
+  }
+
   if (!document.getElementById('consent-check').checked) {
     alert('Please agree to the Data Privacy Terms before submitting.');
     return;
@@ -1419,11 +1594,11 @@ async function doSubmit() {
     return;
   }
   if (!docFileData) {
-    alert('Please upload your PSA document in section 2.');
+    alert('Please upload your document in section 2.');
     return;
   }
 
-  var fields = DOC_FIELDS[doctype] || [];
+  var fields = DOC_FIELDS[effectiveDoctype] || [];
   var fieldData = {};
   var purpose = '';
   fields.forEach(function(f) {
@@ -1464,19 +1639,19 @@ async function doSubmit() {
 
     // Build submission - keep images small to fit JSONBin 100KB limit
     var docFile = document.getElementById('f-doc').files[0];
-    var docThumb = await resizeImage(docFile, 200);
-    var proofThumb = await resizeImage(proofFile, 200);
+    var docThumb = await resizeImage(docFile, 150);
+    var proofThumb = await resizeImage(proofFile, 150);
 
     // Page 2 thumbnail (if uploaded)
     var doc2File = document.getElementById('f-doc2').files[0];
-    var doc2Thumb = doc2File ? await resizeImage(doc2File, 200) : '';
+    var doc2Thumb = doc2File ? await resizeImage(doc2File, 150) : '';
 
     var submission = {
       id: genId(),
       name: name,
       email: email,
       phone: phone,
-      doctype: doctype,
+      doctype: effectiveDoctype,
       purpose: purpose,
       fields: fieldData,
       hasPage2: hasPage2 || !!doc2File,

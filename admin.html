@@ -242,6 +242,7 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
         <button class="abtn abtn-email" id="b-email" onclick="doEmail()">✉ Email Customer</button>
         <button class="abtn abtn-edit" id="b-edit" onclick="toggleEdit()">✏ Edit Details</button>
         <button class="abtn" id="b-edit-trans" onclick="toggleTranslationEditor()" style="background:#e0f2fe;color:#0369a1">✏ Edit Translation</button>
+        <button class="abtn" id="b-delete" onclick="doDelete()" style="background:#fee2e2;color:#dc2626;margin-left:auto">🗑 Delete</button>
       </div>
 
       <div class="t-out" id="t-out"></div>
@@ -315,9 +316,12 @@ async function loadSubs() {
 }
 
 async function saveSubs() {
-  // Auto-trim: keep only the latest 25 submissions to stay within JSONBin 100KB limit
-  if (subs.length > 25) {
-    subs = subs.slice(-25);
+  // Auto-trim: keep max 10 submissions, then trim oldest until under 90KB
+  if (subs.length > 10) {
+    subs = subs.slice(0, 10);
+  }
+  while (JSON.stringify({submissions: subs}).length > 90000 && subs.length > 1) {
+    subs.pop(); // remove oldest
   }
   await fetch('https://api.jsonbin.io/v3/b/' + BIN, {
     method: 'PUT',
@@ -371,7 +375,7 @@ function updateStats() {
   document.getElementById('s-total').textContent = subs.length;
   document.getElementById('s-pending').textContent = subs.filter(function(s){return s.status==='pending';}).length;
   document.getElementById('s-translated').textContent = subs.filter(function(s){return s.status==='translated';}).length;
-  document.getElementById('s-revenue').textContent = (subs.filter(function(s){return s.status!=='rejected';}).length * 300).toLocaleString();
+  document.getElementById('s-revenue').textContent = subs.filter(function(s){return s.status!=='rejected';}).reduce(function(total,s){ return total + (s.hasPage2 ? 600 : 300); }, 0).toLocaleString();
 }
 
 // -- MODAL -------------------------------------
@@ -543,6 +547,17 @@ async function doReject() {
   toast('Rejected: ' + s.name);
 }
 
+async function doDelete() {
+  var s = subs.find(function(x) { return x.id === activeId; });
+  if (!s) return;
+  if (!confirm('Permanently delete submission from ' + s.name + '? This cannot be undone.')) return;
+  subs = subs.filter(function(x) { return x.id !== activeId; });
+  await saveSubs();
+  closeModal();
+  render(); updateStats();
+  toast('Deleted: ' + s.name);
+}
+
 async function doTranslate() {
   var s = subs.find(function(x) { return x.id === activeId; });
   if (!s) return;
@@ -590,6 +605,10 @@ async function doTranslate() {
     'Certificate of No Birth Record': {
       'A. 対象者情報 / SUBJECT INFORMATION': ['subject_name','subject_dob','subject_pob','father_name','mother_name'],
       'B. 発行情報 / ISSUANCE': ['period_covered','issuance_date','ref_number','purpose']
+    },
+    'Apostille': {
+      'A. アポスティーユ情報 / APOSTILLE INFORMATION': ['apo_sn','apo_country','apo_signed_by','apo_capacity','apo_seal','apo_place','apo_date','apo_by','apo_number'],
+      'B. 原文書情報 / UNDERLYING DOCUMENT': ['apo_underlying_doc','apo_ref_number','purpose']
     }
   };
 
@@ -625,7 +644,12 @@ async function doTranslate() {
     'p2_del_father':'父の氏名（遅延登録）','p2_del_mother':'母の氏名（遅延登録）',
     'p2_del_married':'両親の婚姻有無','p2_del_marriage_date':'婚姻日','p2_del_marriage_place':'婚姻地',
     'p2_del_reason':'遅延登録の理由','p2_del_exec_city':'供述書作成都市','p2_del_exec_date':'供述書作成日',
-    'p2_del_notary':'公証人（遅延登録）','p2_del_date_sworn':'宣誓日（遅延登録）','p2_del_remarks':'備考（第2ページ）'
+    'p2_del_notary':'公証人（遅延登録）','p2_del_date_sworn':'宣誓日（遅延登録）','p2_del_remarks':'備考（第2ページ）',
+    // Apostille labels
+    'apo_sn':'一련番号（S.N.）','apo_country':'国','apo_signed_by':'署名者（第2項）',
+    'apo_capacity':'署名者の資格・役職（第3項）','apo_seal':'印章・スタンプ（第4項）',
+    'apo_place':'認証地（第5項）','apo_date':'認証日（第6項）','apo_by':'認証者（第7項）',
+    'apo_number':'アポスティーユ番号（第8項）','apo_underlying_doc':'原文書の種類','apo_ref_number':'参照番号'
   };
 
   var skipTranslation = {'reg_number':true,'ref_number':true,'reg_date':false};
@@ -658,7 +682,7 @@ async function doTranslate() {
     }
   }
 
-  var prompt = 'You are a professional Japanese translator for Philippine PSA civil registry documents.\n\n' +
+  var prompt = 'You are a professional Japanese translator for Philippine government documents.\n\n' +
     'DOCUMENT TYPE: ' + s.doctype + '\n' +
     'CUSTOMER: ' + s.name + '\n' +
     'PURPOSE: ' + (s.purpose || 'Japanese visa application') + '\n\n' +
@@ -700,8 +724,8 @@ async function doTranslate() {
     '- Every field listed above MUST have a translation line — never skip any field\n' +
     '- Never leave the Japanese value blank\n' +
     '- Do NOT translate field IDs — keep them exactly as shown (e.g. child_name, mother_occ)\n\n' +
-    '【翻訳証明】本翻訳はフィリピン統計局（PSA）発行の原文書を正確に日本語に翻訳したものです。\n' +
-    'CERTIFICATION: This is a faithful Japanese translation of the original document issued by the Philippine Statistics Authority (PSA).';
+    '【翻訳証明】本翻訳はフィリピン政府機関（PSA／DFA）発行の原文書を正確に日本語に翻訳したものです。\n' +
+    'CERTIFICATION: This is a faithful Japanese translation of the original document issued by the Philippine government (PSA/DFA).';
 
   try {
     // Use text-only prompt (image causes 3030 errors with vision model)
@@ -1678,6 +1702,20 @@ var DOC_FIELDS_ADMIN = {
     {id:'subject_pob',label:'Place of Birth'},{id:'father_name',label:"Father Name"},
     {id:'mother_name',label:"Mother Maiden Name"},
     {id:'issuance_date',label:'Date of Issuance',type:'date'},{id:'purpose',label:'Purpose'}
+  ],
+  'Apostille': [
+    {id:'apo_sn',label:'Serial Number (S.N.)'},
+    {id:'apo_country',label:'Country'},
+    {id:'apo_signed_by',label:'Signed By (Item 2)'},
+    {id:'apo_capacity',label:'Capacity (Item 3)'},
+    {id:'apo_seal',label:'Seal/Stamp Of (Item 4)'},
+    {id:'apo_place',label:'Place Certified (Item 5)'},
+    {id:'apo_date',label:'Date Certified (Item 6)',type:'date'},
+    {id:'apo_by',label:'Certified By (Item 7)'},
+    {id:'apo_number',label:'Apostille Number (Item 8)'},
+    {id:'apo_underlying_doc',label:'Underlying Document Type'},
+    {id:'apo_ref_number',label:'Reference Number'},
+    {id:'purpose',label:'Purpose'}
   ]
 };
 
