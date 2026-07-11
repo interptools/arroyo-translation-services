@@ -239,6 +239,7 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
         <button class="abtn abtn-reject" id="b-reject" onclick="doReject()">✕ Reject</button>
         <button class="abtn abtn-translate" id="b-translate" onclick="doTranslate()">⚡ Translate (AI)</button>
         <button class="abtn abtn-pdf" id="b-pdf" onclick="doDownloadPDF()">↓ Download PDF</button>
+        <button class="abtn" id="b-affidavit" onclick="doGenerateAffidavit()" style="background:#fef3c7;color:#92400e">📜 Generate Affidavit</button>
         <button class="abtn abtn-email" id="b-email" onclick="doEmail()">✉ Email Customer</button>
         <button class="abtn abtn-edit" id="b-edit" onclick="toggleEdit()">✏ Edit Details</button>
         <button class="abtn" id="b-edit-trans" onclick="toggleTranslationEditor()" style="background:#e0f2fe;color:#0369a1">✏ Edit Translation</button>
@@ -1094,6 +1095,15 @@ function doDownloadPDF() {
     '本翻訳はフィリピン統計局（PSA）発行の原文書（'+jptit+'）を正確に日本語に翻訳したものです。翻訳者はその正確性を保証します。<br>' +
     '<em>CERTIFICATION: This is a faithful Japanese translation of the original '+doctype+' issued by the Philippine Statistics Authority (PSA). The translator certifies the accuracy of this translation.</em>' +
     '</div>' +
+    '<div style="background:#fff3cd;border:2px solid #f59e0b;border-radius:4px;padding:5px 8px;margin:3px 0;page-break-inside:avoid">' +
+      '<div style="font-size:8px;font-weight:bold;color:#92400e;letter-spacing:0.3px;margin-bottom:2px">⚠️ IMPORTANT — NOTARIZATION REQUIRED · 公証が必要です</div>' +
+      '<div style="font-size:6.5px;color:#78350f;line-height:1.5">' +
+        'This translation must be <strong>notarized by a Philippine Notary Public</strong> before submission to Japanese immigration, embassy, or municipal offices. ' +
+        'Please bring this document and your original PSA document to any notary public and request a <strong>Sworn Translator\'s Certification (Affidavit)</strong>.<br>' +
+        '<span style="color:#92400e">本翻訳書を日本の入国管理局・大使館・役所に提出する前に、<strong>フィリピン公証人（ノータリー・パブリック）による公証</strong>が必要です。' +
+        '本翻訳書と原本のPSA書類をお持ちの上、公証人事務所にて<strong>翻訳者宣誓供述書（アフィダビット）</strong>の作成をご依頼ください。</span>' +
+      '</div>' +
+    '</div>' +
     certBlock(pageOf);
   }
 
@@ -1518,6 +1528,162 @@ function doDownloadPDF() {
 }
 
 
+function doGenerateAffidavit() {
+  var s = subs.find(function(x) { return x.id === activeId; });
+  if (!s) return;
+
+  var today = new Date().toLocaleDateString('en-PH', {year:'numeric', month:'long', day:'numeric'});
+  var todayJP = (function(){ var d=new Date(); return d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日'; })();
+  var f = s.fields || {};
+
+  var jpTitles = {
+    'Birth Certificate':'出生証明書','Marriage Certificate':'婚姻証明書',
+    'Death Certificate':'死亡証明書','CENOMAR':'未婚証明書（CENOMAR）',
+    'Advisory on Marriages':'婚姻記録照会書','Certificate of No Birth Record':'出生記録なし証明書',
+    'Apostille':'アポスティーユ証明書'
+  };
+  var jpTitle = jpTitles[s.doctype] || s.doctype;
+  var regNum  = f.reg_number || f.apo_sn || '—';
+
+  var affHtml = '<!DOCTYPE html><html lang="en"><head>' +
+    '<meta charset="UTF-8">' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">' +
+    '<title>Sworn Affidavit of Translation — '+s.name+'</title>' +
+    '<style>' +
+    '*{box-sizing:border-box;margin:0;padding:0}' +
+    'body{font-family:Georgia,"Times New Roman",serif;background:#fff;color:#111;font-size:11pt;line-height:1.8}' +
+    '.page{width:210mm;min-height:297mm;padding:18mm 20mm 16mm;margin:0 auto;background:#fff}' +
+    '.header{text-align:center;margin-bottom:18pt;border-bottom:2px solid #1a2744;padding-bottom:10pt}' +
+    '.header-top{font-size:8pt;color:#555;letter-spacing:0.5px;margin-bottom:3pt}' +
+    '.header-title{font-size:15pt;font-weight:bold;color:#1a2744;letter-spacing:1px;text-transform:uppercase;margin-bottom:2pt}' +
+    '.header-sub{font-size:9pt;color:#1a2744;font-style:italic}' +
+    '.ref-box{background:#f8f6f0;border:1px solid #d4c89a;border-radius:4px;padding:8pt 12pt;margin-bottom:14pt;font-size:9.5pt}' +
+    '.ref-box table{width:100%;border-collapse:collapse}' +
+    '.ref-box td{padding:2pt 0;vertical-align:top}' +
+    '.ref-box td:first-child{color:#555;width:160pt;font-size:9pt}' +
+    '.ref-box td:last-child{font-weight:bold;color:#1a2744}' +
+    '.body-text{font-size:10.5pt;line-height:1.9;text-align:justify;margin-bottom:10pt}' +
+    '.body-text b{color:#1a2744}' +
+    '.indent{margin-left:28pt}' +
+    '.jp-text{font-family:"Noto Sans JP",sans-serif;font-size:9pt;color:#333;margin-top:3pt;line-height:1.7;border-left:2px solid #c9a84c;padding-left:8pt}' +
+    '.section-title{font-size:10pt;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#1a2744;margin:12pt 0 4pt;border-bottom:0.5px solid #bbb;padding-bottom:2pt}' +
+    '.sig-section{margin-top:20pt}' +
+    '.sig-grid{display:grid;grid-template-columns:1fr 1fr;gap:20pt;margin-top:12pt}' +
+    '.sig-block{text-align:center}' +
+    '.sig-line{border-top:1px solid #333;margin-top:36pt;padding-top:4pt;font-size:9.5pt}' +
+    '.sig-name{font-weight:bold;font-size:10pt;color:#1a2744}' +
+    '.sig-sub{font-size:8.5pt;color:#555}' +
+    '.notary-box{margin-top:20pt;border:1.5px solid #1a2744;border-radius:4px;padding:12pt 16pt}' +
+    '.notary-title{font-size:9pt;font-weight:bold;color:#1a2744;text-transform:uppercase;letter-spacing:1px;margin-bottom:10pt;text-align:center;border-bottom:0.5px solid #bbb;padding-bottom:6pt}' +
+    '.notary-grid{display:grid;grid-template-columns:1fr 1fr;gap:12pt}' +
+    '.notary-field label{font-size:8pt;color:#666;display:block;margin-bottom:2pt;text-transform:uppercase;letter-spacing:0.5px}' +
+    '.notary-field .nline{border-bottom:1px solid #333;min-height:20pt;margin-top:2pt}' +
+    '.notary-wide{grid-column:1/-1}' +
+    '.stamp-box{border:1.5px dashed #999;border-radius:4px;min-height:60pt;margin-top:10pt;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:9pt;font-style:italic}' +
+    '.warning{background:#fff3cd;border:1.5px solid #f59e0b;border-radius:3px;padding:6pt 10pt;font-size:8.5pt;color:#78350f;margin-bottom:12pt}' +
+    '.footer-note{margin-top:14pt;padding-top:8pt;border-top:0.5px solid #ccc;font-size:7.5pt;color:#888;text-align:center;line-height:1.5}' +
+    '@media print{@page{size:A4;margin:0}body{background:#fff}.page{padding:15mm 18mm 14mm}}' +
+    '</style></head><body>' +
+    '<div class="page">' +
+
+    // Header
+    '<div class="header">' +
+      '<div class="header-top">Republic of the Philippines · フィリピン共和国</div>' +
+      '<div class="header-title">Sworn Affidavit of Translation</div>' +
+      '<div class="header-sub">翻訳者宣誓供述書 (Translator\'s Sworn Certification)</div>' +
+    '</div>' +
+
+    // Warning
+    '<div class="warning">⚠️ This affidavit must be signed before a Notary Public. Do not sign until in the presence of the notary. / 本書は公証人の面前で署名してください。</div>' +
+
+    // Reference details
+    '<div class="ref-box">' +
+      '<table>' +
+        '<tr><td>Reference No. / 参照番号:</td><td>'+s.id+'</td></tr>' +
+        '<tr><td>Customer / 依頼者:</td><td>'+s.name+'</td></tr>' +
+        '<tr><td>Document Type / 書類の種類:</td><td>'+s.doctype+' ('+jpTitle+')</td></tr>' +
+        '<tr><td>Registry / Document No.:</td><td>'+regNum+'</td></tr>' +
+        '<tr><td>Date of Translation / 翻訳日:</td><td>'+today+' ('+todayJP+')</td></tr>' +
+        '<tr><td>Purpose / 提出目的:</td><td>'+(s.purpose||'Japanese immigration / visa application')+'</td></tr>' +
+      '</table>' +
+    '</div>' +
+
+    // Body
+    '<div class="body-text">I, <b>REYMAR B. ARROYO</b>, of legal age, Filipino, and a resident of <b>Bayanihan Flats, Pajac, Lapu-Lapu City 6015, Cebu, Philippines</b>, after having been duly sworn in accordance with law, hereby depose and state that:</div>' +
+
+    '<div class="body-text indent">1. I am a professional Japanese-English interpreter and translator, duly qualified and holding a <b>Japanese Language Proficiency Test (JLPT) N2 certification</b>, and am competent to perform translations between the English, Filipino, and Japanese languages.</div>' +
+
+    '<div class="body-text indent">2. I have translated the document described above — a <b>'+s.doctype+'</b> issued by the <b>Philippine Statistics Authority (PSA)</b> in the name of <b>'+s.name+'</b> (Registry/Document No.: <b>'+regNum+'</b>) — from English/Filipino into <b>Japanese</b>.</div>' +
+
+    '<div class="body-text indent">3. The said translation is a <b>true, complete, and accurate</b> rendering of the original document into the Japanese language, and I have not omitted, added, or changed any information contained in the original.</div>' +
+
+    '<div class="body-text indent">4. I am executing this affidavit to attest to the accuracy and faithfulness of the said translation for submission to <b>'+(s.purpose||'Japanese immigration authorities, embassy, and/or municipal offices in Japan')+'</b>.</div>' +
+
+    '<div class="jp-text">' +
+      '私、<b>レイマー・B・アロヨ</b>は、日本語能力試験（JLPT）N2の資格を有する翻訳者として、上記の書類（'+jpTitle+'）を英語・フィリピン語から日本語に正確かつ忠実に翻訳したことを宣誓いたします。本翻訳は原文書の内容を省略・追加・改変することなく翻訳したものです。' +
+    '</div>' +
+
+    // Signature section
+    '<div class="sig-section">' +
+      '<div class="section-title">Affiant\'s Signature / 署名</div>' +
+      '<div class="sig-grid">' +
+        '<div class="sig-block">' +
+          '<div class="sig-line">' +
+            '<div class="sig-name">REYMAR B. ARROYO</div>' +
+            '<div class="sig-sub">Affiant / 宣誓者</div>' +
+            '<div class="sig-sub">Japanese-English Translator · JLPT N2</div>' +
+            '<div class="sig-sub">+63 906 396 4052 · areymar36@gmail.com</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="sig-block">' +
+          '<div class="sig-line">' +
+            '<div class="sig-name">CTC / Valid ID No.: _______________</div>' +
+            '<div class="sig-sub">Issued at: _______________</div>' +
+            '<div class="sig-sub">Date issued: _______________</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+
+    // Notary jurat
+    '<div class="notary-box">' +
+      '<div class="notary-title">Notarial Acknowledgment (Jurat) · 公証人認証欄</div>' +
+      '<div class="body-text" style="font-size:9.5pt;margin-bottom:10pt">' +
+        'SUBSCRIBED AND SWORN to before me this <span style="border-bottom:1px solid #333;display:inline-block;min-width:40pt">&nbsp;</span> day of <span style="border-bottom:1px solid #333;display:inline-block;min-width:60pt">&nbsp;</span>, '+new Date().getFullYear()+', at <span style="border-bottom:1px solid #333;display:inline-block;min-width:80pt">&nbsp;</span>, Philippines, affiant exhibiting to me his/her competent evidence of identity.' +
+      '</div>' +
+      '<div class="notary-grid">' +
+        '<div class="notary-field"><label>Notary Public Name</label><div class="nline"></div></div>' +
+        '<div class="notary-field"><label>PTR No.</label><div class="nline"></div></div>' +
+        '<div class="notary-field"><label>IBP No.</label><div class="nline"></div></div>' +
+        '<div class="notary-field"><label>Roll No.</label><div class="nline"></div></div>' +
+        '<div class="notary-field notary-wide"><label>Commission expires / Notarial Commission No.</label><div class="nline"></div></div>' +
+        '<div class="notary-field notary-wide"><label>Office Address</label><div class="nline"></div></div>' +
+      '</div>' +
+      '<div class="sig-grid" style="margin-top:14pt">' +
+        '<div class="sig-block"><div class="sig-line"><div class="sig-name">Signature over Printed Name</div><div class="sig-sub">Notary Public</div></div></div>' +
+        '<div class="sig-block"><div class="stamp-box">Notarial Seal / Official Stamp</div></div>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="footer-note">' +
+      'Doc. No. _____ ; Page No. _____ ; Book No. _____ ; Series of '+new Date().getFullYear()+'.<br>' +
+      'Arroyo Translation Services · Pajac, Lapu-Lapu City 6015 · +63 906 396 4052 · areymar36@gmail.com<br>' +
+      'Generated: '+today+' · Ref: '+s.id +
+    '</div>' +
+
+    '</div>' + // end .page
+    '<scr'+'ipt>document.fonts.ready.then(function(){setTimeout(function(){window.print();},700);});</'+'script>' +
+    '</body></html>';
+
+  var blob = new Blob([affHtml], {type:'text/html'});
+  var url  = URL.createObjectURL(blob);
+  var win  = window.open(url, '_blank');
+  if (!win) { var a=document.createElement('a'); a.href=url; a.download=s.id+'-Affidavit-'+s.name.replace(/\s+/g,'-')+'.html'; a.click(); }
+  toast('Affidavit ready — Print → Save as PDF (A4)');
+}
+
+
 async function doEmail() {
   var s = subs.find(function(x) { return x.id === activeId; });
   if (!s) return;
@@ -1613,9 +1779,22 @@ async function doEmail() {
     '─────────────────────────────\n' +
     tranText + '\n\n' +
     '─────────────────────────────\n' +
+    '⚠️  IMPORTANT: NOTARIZATION REQUIRED\n' +
+    '─────────────────────────────\n' +
+    'Before submitting to Japanese immigration, embassy, or any\n' +
+    'municipal office in Japan, your translation must be NOTARIZED\n' +
+    'by a Philippine Notary Public.\n\n' +
+    'Steps:\n' +
+    '1. Bring this translation PDF + your original PSA document\n' +
+    '   to any Notary Public office\n' +
+    '2. Request a "Sworn Translator\'s Certification" (Affidavit)\n' +
+    '3. The notary will seal and sign the affidavit (approx. ₱300–₱600)\n' +
+    '4. Submit the notarized translation together with the original\n\n' +
+    '─────────────────────────────\n' +
     'HOW TO USE YOUR TRANSLATION\n' +
     '─────────────────────────────\n' +
     '• Print the PDF in A4 size, no margins\n' +
+    '• Get it notarized FIRST (see above)\n' +
     '• Attach it together with your original PSA document\n' +
     '• Submit both to the ' + purpose + ' office or embassy\n' +
     '• Keep a digital copy for your records\n\n' +
@@ -1691,15 +1870,35 @@ async function doEmail() {
         '</p>' +
       '</div>' +
 
+      // Notarization warning
+      '<div style="background:#fffbeb;border:2px solid #f59e0b;border-radius:8px;padding:16px 20px;margin-bottom:20px;">' +
+        '<div style="font-size:13px;font-weight:700;color:#92400e;margin-bottom:10px;">⚠️ Important: Notarization Required Before Submission</div>' +
+        '<p style="font-size:12px;color:#78350f;margin:0 0 10px;line-height:1.75;">' +
+          'Before submitting to <strong>Japanese immigration, embassy, or any municipal office in Japan</strong>, ' +
+          'your translation must be <strong>notarized by a Philippine Notary Public</strong>.' +
+        '</p>' +
+        '<div style="font-size:11px;font-weight:700;color:#92400e;margin-bottom:6px;">Steps to get your document notarized:</div>' +
+        '<ol style="font-size:12px;color:#78350f;margin:0;padding-left:20px;line-height:2.1;">' +
+          '<li>Bring your <strong>translation PDF</strong> and your <strong>original PSA document</strong> to any Notary Public office</li>' +
+          '<li>Request a <strong>Sworn Translator\'s Certification</strong> (Affidavit of Translation)</li>' +
+          '<li>The notary will seal and sign the affidavit <span style="color:#92400e;font-style:italic">(approx. ₱300–₱600)</span></li>' +
+          '<li>Submit the <strong>notarized translation</strong> together with your original document</li>' +
+        '</ol>' +
+        '<p style="font-size:11px;color:#92400e;margin:10px 0 0;padding-top:8px;border-top:1px solid #fde68a;font-style:italic;">' +
+          '公証が必要です。日本の入国管理局・大使館・役所への提出前に、フィリピン公証人による公証（翻訳者宣誓供述書）を必ず取得してください。' +
+        '</p>' +
+      '</div>' +
+
       // How to use
-      '<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:14px 18px;margin-bottom:20px;">' +
-        '<div style="font-size:11px;font-weight:700;color:#92400e;margin-bottom:8px;">How to Use Your Translation</div>' +
-        '<ul style="font-size:12px;color:#92400e;margin:0;padding-left:18px;line-height:2.1;">' +
+      '<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:14px 18px;margin-bottom:20px;">' +
+        '<div style="font-size:11px;font-weight:700;color:#166534;margin-bottom:8px;">📋 How to Use Your Translation</div>' +
+        '<ol style="font-size:12px;color:#166534;margin:0;padding-left:18px;line-height:2.1;">' +
           '<li>Print the PDF in <strong>A4 size</strong>, no margins</li>' +
+          '<li><strong>Get it notarized</strong> at any Notary Public office (see above)</li>' +
           '<li>Attach it together with your original PSA document</li>' +
           '<li>Submit both to the <strong>' + purpose + '</strong> office or embassy</li>' +
           '<li>Keep a digital copy for your records</li>' +
-        '</ul>' +
+        '</ol>' +
       '</div>' +
 
       // Contact
