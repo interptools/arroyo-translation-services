@@ -512,10 +512,12 @@ async function doTranslate() {
   // Build section-based field list matching PSA document structure
   var docSections = {
     'Birth Certificate': {
-      'A. 子の情報 / CHILD INFORMATION': ['child_name','child_dob','child_pob','child_sex','child_order','child_type_birth','child_attended'],
+      'A. 子の情報 / CHILD INFORMATION': ['child_name','child_dob','child_pob','child_sex','child_order','child_type_birth','child_attended','child_weight','legitimacy'],
       'B. 母の情報 / MOTHER INFORMATION': ['mother_name','mother_citizen','mother_religion','mother_occ','mother_age','mother_residence'],
       'C. 父の情報 / FATHER INFORMATION': ['father_name','father_citizen','father_religion','father_occ','father_age','father_residence'],
-      'D. 登録情報 / REGISTRATION INFORMATION': ['reg_number','reg_date','purpose']
+      'D. 届出人情報 / INFORMANT': ['informant_name_birth','informant_relation_birth','informant_address_birth'],
+      'E. 認知・注記 / ACKNOWLEDGMENT & REMARKS': ['affidavit_father','remarks_birth'],
+      'F. 登録情報 / REGISTRATION INFORMATION': ['reg_number','reg_date','purpose']
     },
     'Marriage Certificate': {
       'A. 夫の情報 / HUSBAND INFORMATION': ['husband_name','husband_dob','husband_pob','husband_residence','husband_citizen','husband_religion','husband_occ','husband_civil','husband_father','husband_mother'],
@@ -547,9 +549,11 @@ async function doTranslate() {
 
   var jpLabels = {
     'child_name':'氏名','child_dob':'生年月日','child_pob':'出生地','child_sex':'性別','child_order':'出生順位',
-    'child_type_birth':'出生種別','child_attended':'立会者',
+    'child_type_birth':'出生種別','child_attended':'立会者','child_weight':'出生時体重（グラム）','legitimacy':'嫡出・非嫡出の別',
     'mother_name':'母の旧姓','mother_citizen':'国籍','mother_religion':'宗教','mother_occ':'職業','mother_age':'出産時年齢','mother_residence':'住所',
     'father_name':'父の氏名','father_citizen':'国籍','father_religion':'宗教','father_occ':'職業','father_age':'認知時年齢','father_residence':'住所',
+    'informant_name_birth':'届出人氏名','informant_relation_birth':'届出人と子の続柄','informant_address_birth':'届出人住所',
+    'affidavit_father':'認知宣誓供述書（父の氏名）','remarks_birth':'備考・注記',
     'husband_name':'夫の氏名','husband_dob':'生年月日','husband_pob':'出生地','husband_residence':'常住地','husband_citizen':'国籍','husband_religion':'宗教','husband_occ':'職業','husband_civil':'婚姻状況','husband_father':'夫の父の氏名','husband_mother':'夫の母の旧姓',
     'wife_name':'妻の旧姓','wife_dob':'生年月日','wife_pob':'出生地','wife_residence':'常住地','wife_citizen':'国籍','wife_religion':'宗教','wife_occ':'職業','wife_civil':'婚姻状況','wife_father':'妻の父の氏名','wife_mother':'妻の母の旧姓',
     'marriage_date':'婚姻日','marriage_place':'婚姻地','officer':'挙式執行者','officer_position':'役職・所属',
@@ -606,6 +610,11 @@ async function doTranslate() {
     '- Occupations: Housewife/Housekeeper=主婦, Farmer=農業, Carpenter=大工, Teacher=教師, Nurse=看護師, Engineer=エンジニア, Retired=退職者, Driver=運転手, OFW=海外出稼ぎ労働者\n' +
     '- Type of birth: Single=単胎, Twin=双子, Triplet=三つ子\n' +
     '- Birth attendant: Physician=医師, Nurse=看護師, Midwife=助産師, Hilot (Traditional Midwife)=ヒロット（伝統的助産師）, Others=その他, None=なし\n' +
+    '- Legitimacy: Legitimate=嫡出子, Illegitimate=非嫡出子\n' +
+    '- Birth weight: output as-is with グラム suffix (e.g. 3200 -> 3,200グラム); if blank output なし\n' +
+    '- Affidavit of acknowledgment (affidavit_father): translate name in katakana; if blank output なし\n' +
+    '- Remarks/annotations (remarks_birth): translate content faithfully; if blank output なし\n' +
+    '- Informant relationship to child: Mother=母, Father=父, Grandmother=祖母, Grandfather=祖父, Aunt=叔母, Uncle=叔父, Others=その他\n' +
     '- Manner of death: Natural=病死, Accident=事故死, Suicide=自殺, Homicide=他殺, Unknown=不明, Old Age=老衰\n' +
     '- Relationships (informant): Wife=妻, Husband=夫, Son=息子, Daughter=娘, Father=父, Mother=母, Brother=兄弟, Sister=姉妹\n' +
     '- Type of search: Nationwide Search=全国照会, Local Search=地域照会\n' +
@@ -837,16 +846,16 @@ function doDownloadPDF() {
     'body{font-family:"Noto Sans JP","Times New Roman",serif;background:#faf8f0;color:#222;margin:0;padding:0}',
     '.page{width:210mm;min-height:297mm;max-height:297mm;background:#faf8f0;padding:4mm 8mm 4mm;margin:0 auto;overflow:hidden}',
     // PSA header — ultra compact
-    '.psa-hdr{text-align:center;padding:2px 6px 2px;border-bottom:1.5px solid #999;background:#faf8f0;margin-bottom:0}',
+    '.psa-hdr{text-align:center;padding:1px 6px 1px;border-bottom:1.5px solid #999;background:#faf8f0;margin-bottom:0}',
     '.psa-rep{font-size:6.5px;color:#555;letter-spacing:0.2px}',
     '.psa-off{font-size:8px;font-weight:bold;color:#111;margin:1px 0}',
     '.psa-civ{font-size:6.5px;color:#555;margin:0}',
-    '.psa-doctit{font-size:11px;font-weight:bold;color:#111;margin:2px 0 1px;letter-spacing:0.3px}',
-    '.psa-jptit{font-size:9.5px;font-weight:bold;color:#1a2744;margin:0}',
+    '.psa-doctit{font-size:10px;font-weight:bold;color:#111;margin:1px 0 0px;letter-spacing:0.3px}',
+    '.psa-jptit{font-size:8.5px;font-weight:bold;color:#1a2744;margin:0}',
     // Meta row
-    '.meta{display:flex;justify-content:space-between;padding:1px 6px;border-bottom:1px solid #aaa;font-size:7px;color:#444;background:#f0ece0}',
+    '.meta{display:flex;justify-content:space-between;padding:1px 6px;border-bottom:1px solid #aaa;font-size:6.5px;color:#444;background:#f0ece0}',
     // Section header
-    '.sh{background:#1a2744;color:#e8c97a;font-size:7px;font-weight:bold;padding:1.5px 6px;letter-spacing:0.3px;margin-top:1px}',
+    '.sh{background:#1a2744;color:#e8c97a;font-size:6.5px;font-weight:bold;padding:1px 6px;letter-spacing:0.3px;margin-top:1px}',
     // Grid wrappers
     '.g1{display:grid;grid-template-columns:1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb}',
     '.g2{display:grid;grid-template-columns:1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb}',
@@ -854,11 +863,11 @@ function doDownloadPDF() {
     '.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb}',
     '.gcl{border-right:2px solid #888}',
     // Field box — ultra compact
-    '.fb{border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:1.5px 5px 2px;min-height:20px;background:#faf8f0}',
+    '.fb{border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:1px 5px 1.5px;min-height:15px;background:#faf8f0}',
     '.fb.s{background:#f0ece0}',
     '.fn{font-size:5.5px;color:#aaa;line-height:1.1}',
     '.fl{font-size:5.5px;color:#777;line-height:1.1;margin-bottom:1px}',
-    '.fj{font-size:9px;font-weight:bold;color:#1a2744;line-height:1.2}',
+    '.fj{font-size:8px;font-weight:bold;color:#1a2744;line-height:1.2}',
     '.fe{font-size:6.5px;color:#aaa;font-style:italic;line-height:1.1;margin-top:0}',
     // Nested grids
     '.ng2{display:grid;grid-template-columns:1fr 1fr}',
@@ -877,7 +886,7 @@ function doDownloadPDF() {
     '.sig-n{font-size:8.5px;font-weight:bold;text-decoration:underline}',
     // Footer
     '.stamp{display:flex;justify-content:space-between;padding:1.5px 6px;font-size:6.5px;color:#666;border-top:0.5px solid #aaa;background:#f0ece0;margin-top:2px}',
-    '.cbox{background:#dbeafe;border:0.5px solid #93c5fd;margin:2px 0 1px;padding:3px 6px;font-size:7px;color:#1e3a8a;line-height:1.4}',
+    '.cbox{background:#dbeafe;border:0.5px solid #93c5fd;margin:1px 0 1px;padding:2px 6px;font-size:6.5px;color:#1e3a8a;line-height:1.3}',
     '.cbox b{font-size:7.5px;display:block;margin-bottom:1px}',
     '.dbox{background:#fef9c3;border:0.5px solid #fde047;margin:1px 0 0;padding:2px 6px;font-size:6.5px;color:#713f12;line-height:1.3}',
     '.cert-block{margin-top:3px!important}',
@@ -895,7 +904,7 @@ function doDownloadPDF() {
     '@media print{',
     '@page{size:A4;margin:0}',
     'body{background:#faf8f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}',
-    '.page{margin:0;padding:4mm 8mm 4mm;width:210mm;min-height:297mm;max-height:297mm}',
+    '.page{margin:0;padding:3mm 7mm 3mm;width:210mm;min-height:297mm;max-height:297mm}',
     '}'
   ].join('');
 
@@ -931,12 +940,12 @@ function doDownloadPDF() {
         </div>
         <div style="color:rgba(255,255,255,0.4);font-size:6px;text-align:right">Philippine PSA Documents · 日本語翻訳サービス</div>
       </div>
-      <div style="background:#fefefe;padding:4px 8px">
-        <div style="font-size:6.5px;color:#1a2744;line-height:1.4;margin-bottom:4px">
+      <div style="background:#fefefe;padding:2px 8px">
+        <div style="font-size:6px;color:#1a2744;line-height:1.3;margin-bottom:2px">
           I, <strong>Reymar Arroyo</strong>, hereby certify that the above is a true, complete, and accurate Japanese translation of the original PSA document, and that I am competent to translate from English/Filipino to Japanese (JLPT N2 Certified). ·
           <span style="color:#555">私、<strong>レイマー・アロヨ</strong>（日本語能力試験N2取得）は、上記の日本語翻訳がPSA発行の原文書を忠実かつ正確に翻訳したものであることを証明します。</span>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;border-top:0.5px solid #e5e0d8;padding-top:4px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;border-top:0.5px solid #e5e0d8;padding-top:2px">
           <div>
             <div style="font-size:6px;color:#888;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:2px">Translator's Name / 翻訳者氏名</div>
             <div style="font-size:9px;font-weight:bold;color:#1a2744;border-bottom:1px solid #1a2744;padding-bottom:1px">Reymar Arroyo</div>
@@ -988,49 +997,57 @@ function doDownloadPDF() {
   if (dt === 'Birth Certificate') {
     body = psaHdr('CERTIFICATE OF LIVE BIRTH','出生証明書') +
     '<div class="meta"><span>登録番号 / Registry No.: <b>'+gv('reg_number')+'</b></span><span>翻訳日 / Date: <b>'+today+'</b> · '+todayJP+'</span></div>' +
-    '<div class="sh">A.　子の情報 / CHILD INFORMATION</div>' +
+
+    '<div class="sh">A.\u3000子の情報 / CHILD INFORMATION</div>' +
     '<div class="g1"><div class="fb s"><div class="fn">1</div><div class="fl">氏名（名・ミドルネーム・姓）/ Name (First, Middle, Last)</div><div class="fj">'+gjv('child_name')+'</div><div class="fe">'+gv('child_name')+'</div></div></div>' +
-    '<div class="g3"><div class="fb"><div class="fn">2</div><div class="fl">生年月日 / Date of Birth</div><div class="fj">'+gjv('child_dob')+'</div><div class="fe">'+gv('child_dob')+'</div></div><div class="fb s"><div class="fn">3</div><div class="fl">出生地 / Place of Birth</div><div class="fj">'+gjv('child_pob')+'</div><div class="fe">'+gv('child_pob')+'</div></div><div class="fb"><div class="fn">4</div><div class="fl">性別 / Sex</div><div class="fj">'+gjv('child_sex')+'</div></div></div>' +
-    '<div class="g3"><div class="fb"><div class="fn">5</div><div class="fl">出生順位 / Birth Order</div><div class="fj">'+gjv('child_order')+'</div><div class="fe">'+gv('child_order')+'</div></div><div class="fb s"><div class="fl">出生区分 / Type of Birth</div><div class="fj">'+gjv('child_type_birth')+'</div><div class="fe">'+gv('child_type_birth')+'</div></div><div class="fb"><div class="fl">立会者 / Attendant</div><div class="fj">'+gjv('child_attended')+'</div><div class="fe">'+gv('child_attended')+'</div></div></div>' +
-    '<div class="sh">B.　母の情報 / MOTHER\'S INFORMATION</div>' +
-    '<div class="g2">'+
-      '<div class="gcl">'+
-        '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">6</div><div class="fl">母の旧姓 / Mother\'s Maiden Name</div><div class="fj">'+gjv('mother_name')+'</div><div class="fe">'+gv('mother_name')+'</div></div></div>'+
-        '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fn">7</div><div class="fl">国籍 / Citizenship</div><div class="fj">'+gjv('mother_citizen')+'</div></div></div>'+
-        '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fl">認知時年齢 / Age at Birth</div><div class="fj">'+gv('mother_age')+'</div></div></div>'+
-      '</div>'+
-      '<div>'+
-        '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">8</div><div class="fl">宗教 / Religion</div><div class="fj">'+gjv('mother_religion')+'</div></div></div>'+
-        '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fl">職業 / Occupation</div><div class="fj">'+gjv('mother_occ')+'</div></div></div>'+
-        '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fl">住所 / Residence</div><div class="fj">'+gjv('mother_residence')+'</div><div class="fe">'+gv('mother_residence')+'</div></div></div>'+
-      '</div>'+
+    '<div class="g4"><div class="fb"><div class="fn">2</div><div class="fl">生年月日 / Date of Birth</div><div class="fj">'+gjv('child_dob')+'</div><div class="fe">'+gv('child_dob')+'</div></div><div class="fb s"><div class="fn">3</div><div class="fl">出生地 / Place of Birth</div><div class="fj">'+gjv('child_pob')+'</div><div class="fe">'+gv('child_pob')+'</div></div><div class="fb"><div class="fn">4</div><div class="fl">性別 / Sex</div><div class="fj">'+gjv('child_sex')+'</div></div><div class="fb s"><div class="fn">5</div><div class="fl">出生順位 / Birth Order</div><div class="fj">'+gjv('child_order')+'</div><div class="fe">'+gv('child_order')+'</div></div></div>' +
+    '<div class="g4"><div class="fb"><div class="fl">出生区分 / Type of Birth</div><div class="fj">'+gjv('child_type_birth')+'</div></div><div class="fb s"><div class="fl">立会者 / Attendant</div><div class="fj">'+gjv('child_attended')+'</div></div><div class="fb"><div class="fl">出生時体重 / Weight</div><div class="fj">'+gjv('child_weight')+'</div><div class="fe">'+gv('child_weight')+'</div></div><div class="fb s"><div class="fl">嫡出・非嫡出 / Legitimacy</div><div class="fj">'+gjv('legitimacy')+'</div></div></div>' +
+
+    '<div class="sh">B.\u3000母の情報 / MOTHER\'S INFORMATION</div>' +
+    '<div class="g2"><div class="gcl">'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">6</div><div class="fl">母の旧姓 / Mother\'s Maiden Name</div><div class="fj">'+gjv('mother_name')+'</div><div class="fe">'+gv('mother_name')+'</div></div></div>'+
+      '<div class="g3" style="border-left:none;border-top:none"><div class="fb"><div class="fn">7</div><div class="fl">国籍 / Citizenship</div><div class="fj">'+gjv('mother_citizen')+'</div></div><div class="fb s"><div class="fl">宗教 / Religion</div><div class="fj">'+gjv('mother_religion')+'</div></div><div class="fb"><div class="fl">年齢 / Age</div><div class="fj">'+gv('mother_age')+'</div></div></div>'+
+    '</div>'+
+    '<div>'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">8</div><div class="fl">職業 / Occupation</div><div class="fj">'+gjv('mother_occ')+'</div></div></div>'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fl">住所 / Residence</div><div class="fj">'+gjv('mother_residence')+'</div><div class="fe">'+gv('mother_residence')+'</div></div></div>'+
+    '</div>'+
     '</div>' +
-    '<div class="sh">C.　父の情報 / FATHER\'S INFORMATION</div>' +
-    '<div class="g2">'+
-      '<div class="gcl">'+
-        '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">9</div><div class="fl">父の氏名 / Father\'s Name</div><div class="fj">'+gjv('father_name')+'</div><div class="fe">'+gv('father_name')+'</div></div></div>'+
-        '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fn">10</div><div class="fl">国籍 / Citizenship</div><div class="fj">'+gjv('father_citizen')+'</div></div></div>'+
-        '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fl">認知時年齢 / Age at Birth</div><div class="fj">'+gv('father_age')+'</div></div></div>'+
-      '</div>'+
-      '<div>'+
-        '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">11</div><div class="fl">宗教 / Religion</div><div class="fj">'+gjv('father_religion')+'</div></div></div>'+
-        '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fl">職業 / Occupation</div><div class="fj">'+gjv('father_occ')+'</div></div></div>'+
-        '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fl">住所 / Residence</div><div class="fj">'+gjv('father_residence')+'</div><div class="fe">'+gv('father_residence')+'</div></div></div>'+
-      '</div>'+
+
+    '<div class="sh">C.\u3000父の情報 / FATHER\'S INFORMATION</div>' +
+    '<div class="g2"><div class="gcl">'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">9</div><div class="fl">父の氏名 / Father\'s Name</div><div class="fj">'+gjv('father_name')+'</div><div class="fe">'+gv('father_name')+'</div></div></div>'+
+      '<div class="g3" style="border-left:none;border-top:none"><div class="fb"><div class="fn">10</div><div class="fl">国籍 / Citizenship</div><div class="fj">'+gjv('father_citizen')+'</div></div><div class="fb s"><div class="fl">宗教 / Religion</div><div class="fj">'+gjv('father_religion')+'</div></div><div class="fb"><div class="fl">年齢 / Age</div><div class="fj">'+gv('father_age')+'</div></div></div>'+
+    '</div>'+
+    '<div>'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fn">11</div><div class="fl">職業 / Occupation</div><div class="fj">'+gjv('father_occ')+'</div></div></div>'+
+      '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fl">住所 / Residence</div><div class="fj">'+gjv('father_residence')+'</div><div class="fe">'+gv('father_residence')+'</div></div></div>'+
+    '</div>'+
     '</div>' +
-    '<div class="sh">D.　登録情報 / REGISTRATION INFORMATION</div>' +
-    '<div class="g2">'+
-      '<div class="gcl">'+
-        '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fl">登録番号 / Registry Number</div><div class="fj">'+gv('reg_number')+'</div></div></div>'+
-        '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fl">登録日 / Date of Registration</div><div class="fj">'+gjv('reg_date')+'</div><div class="fe">'+gv('reg_date')+'</div></div></div>'+
-      '</div>'+
-      '<div>'+
-        '<div class="g1" style="border-left:none;border-top:none"><div class="fb s"><div class="fl">発行機関 / Issuing Authority</div><div class="fj">フィリピン統計局（PSA）</div></div></div>'+
-        '<div class="g1" style="border-left:none;border-top:none"><div class="fb"><div class="fl">翻訳目的 / Purpose of Translation</div><div class="fj">'+gjv('purpose')+'</div><div class="fe">'+gv('purpose')+'</div></div></div>'+
-      '</div>'+
+
+    '<div class="sh">D.\u3000届出人情報 / INFORMANT</div>' +
+    '<div class="g3">'+
+      '<div class="fb s"><div class="fl">届出人氏名 / Informant Name</div><div class="fj">'+gjv('informant_name_birth')+'</div><div class="fe">'+gv('informant_name_birth')+'</div></div>'+
+      '<div class="fb"><div class="fl">続柄 / Relationship to Child</div><div class="fj">'+gjv('informant_relation_birth')+'</div></div>'+
+      '<div class="fb s"><div class="fl">住所 / Address</div><div class="fj">'+gjv('informant_address_birth')+'</div><div class="fe">'+gv('informant_address_birth')+'</div></div>'+
+    '</div>' +
+
+    (gv('affidavit_father') || gv('remarks_birth') ?
+      '<div class="sh">E.\u3000認知・注記 / ACKNOWLEDGMENT & REMARKS</div>' +
+      '<div class="g1">'+
+        (gv('affidavit_father') ? '<div class="fb s"><div class="fl">認知宣誓供述書（父の氏名）/ Affidavit of Acknowledgment — Father</div><div class="fj">'+gjv('affidavit_father')+'</div><div class="fe">'+gv('affidavit_father')+'</div></div>' : '') +
+        (gv('remarks_birth') ? '<div class="fb"><div class="fl">備考・注記 / Remarks & Annotations</div><div class="fj">'+gjv('remarks_birth')+'</div><div class="fe">'+gv('remarks_birth')+'</div></div>' : '') +
+      '</div>'
+    : '') +
+
+    '<div class="sh">F.\u3000登録情報 / REGISTRATION INFORMATION</div>' +
+    '<div class="g4">'+
+      '<div class="fb s"><div class="fl">登録番号 / Registry No.</div><div class="fj">'+gv('reg_number')+'</div></div>'+
+      '<div class="fb"><div class="fl">登録日 / Date of Registration</div><div class="fj">'+gjv('reg_date')+'</div><div class="fe">'+gv('reg_date')+'</div></div>'+
+      '<div class="fb s"><div class="fl">発行機関 / Issuing Authority</div><div class="fj">フィリピン統計局（PSA）</div></div>'+
+      '<div class="fb"><div class="fl">翻訳目的 / Purpose</div><div class="fj">'+gjv('purpose')+'</div><div class="fe">'+gv('purpose')+'</div></div>'+
     '</div>' +
     footer(jpTitle, dt);
-
   // ════ MARRIAGE CERTIFICATE ════
   } else if (dt === 'Marriage Certificate') {
     body = psaHdr('CERTIFICATE OF MARRIAGE','婚姻証明書') +
@@ -1476,11 +1493,20 @@ var DOC_FIELDS_ADMIN = {
   'Birth Certificate': [
     {id:'child_name',label:'Child Full Name'},{id:'child_dob',label:'Date of Birth',type:'date'},
     {id:'child_pob',label:'Place of Birth'},{id:'child_sex',label:'Sex'},
-    {id:'child_order',label:'Birth Order'},{id:'mother_name',label:"Mother Maiden Name"},
-    {id:'mother_citizen',label:'Mother Citizenship'},{id:'mother_religion',label:'Mother Religion'},
-    {id:'mother_occ',label:'Mother Occupation'},{id:'father_name',label:"Father Name"},
-    {id:'father_citizen',label:'Father Citizenship'},{id:'father_religion',label:'Father Religion'},
-    {id:'father_occ',label:'Father Occupation'},{id:'reg_number',label:'Registry Number'},
+    {id:'child_order',label:'Birth Order'},{id:'child_type_birth',label:'Type of Birth'},
+    {id:'child_attended',label:'Attendant at Birth'},{id:'child_weight',label:'Birth Weight (grams)'},
+    {id:'legitimacy',label:'Legitimacy'},
+    {id:'mother_name',label:"Mother Maiden Name"},{id:'mother_citizen',label:'Mother Citizenship'},
+    {id:'mother_religion',label:'Mother Religion'},{id:'mother_occ',label:'Mother Occupation'},
+    {id:'mother_age',label:'Mother Age at Birth'},{id:'mother_residence',label:'Mother Residence'},
+    {id:'father_name',label:"Father Name"},{id:'father_citizen',label:'Father Citizenship'},
+    {id:'father_religion',label:'Father Religion'},{id:'father_occ',label:'Father Occupation'},
+    {id:'father_age',label:'Father Age at Birth'},{id:'father_residence',label:'Father Residence'},
+    {id:'informant_name_birth',label:'Informant Name'},{id:'informant_relation_birth',label:'Informant Relationship'},
+    {id:'informant_address_birth',label:'Informant Address'},
+    {id:'affidavit_father',label:'Affidavit of Acknowledgment (Father Name)'},
+    {id:'remarks_birth',label:'Remarks / Annotations'},
+    {id:'reg_number',label:'Registry Number'},
     {id:'reg_date',label:'Date of Registration',type:'date'},{id:'purpose',label:'Purpose'}
   ],
   'Marriage Certificate': [

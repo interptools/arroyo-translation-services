@@ -709,6 +709,7 @@ const DOC_FIELDS = {
     {id:'child_order', label:'Birth order', ph:'e.g. 1st Child'},
     {id:'child_type_birth', label:'Type of birth', ph:'', type:'select', opts:['Single','Twin','Triplet','Other']},
     {id:'child_attended', label:'Attendant at birth', ph:'', type:'select', opts:['Physician','Nurse','Midwife','Hilot','Others']},
+    {id:'child_weight', label:'Birth weight (grams)', ph:'e.g. 3200'},
     {id:'mother_name', label:'Mother full maiden name', ph:'e.g. Nelly Saldivar Arroyo'},
     {id:'mother_citizen', label:'Mother citizenship', ph:'e.g. Filipino'},
     {id:'mother_religion', label:'Mother religion', ph:'e.g. Roman Catholic'},
@@ -721,6 +722,12 @@ const DOC_FIELDS = {
     {id:'father_occ', label:'Father occupation', ph:'e.g. Farmer'},
     {id:'father_age', label:'Father age at time of birth', ph:'e.g. 32'},
     {id:'father_residence', label:'Father residence', ph:'e.g. Bato, Camarines Sur'},
+    {id:'legitimacy', label:'Legitimacy', ph:'', type:'select', opts:['Legitimate','Illegitimate']},
+    {id:'informant_name_birth', label:'Informant name', ph:'e.g. Maria Santos Abad'},
+    {id:'informant_relation_birth', label:'Informant relationship to child', ph:'e.g. Mother'},
+    {id:'informant_address_birth', label:'Informant address', ph:'e.g. Bato, Camarines Sur'},
+    {id:'affidavit_father', label:'Affidavit of acknowledgment — Father name (if applicable)', ph:'e.g. Rey F Arroyo (leave blank if not on document)'},
+    {id:'remarks_birth', label:'Remarks / Annotations (if any)', ph:'e.g. Legitimated by subsequent marriage; LCR annotation no. 2010-001'},
     {id:'reg_number', label:'Registry number', ph:'e.g. 93-628'},
     {id:'reg_date', label:'Date of registration', ph:'', type:'date'},
     {id:'purpose', label:'Purpose of translation', ph:'e.g. Japanese visa application'}
@@ -942,7 +949,7 @@ async function onDocUpload(input) {
     var fieldIds = fields.map(function(f){ return f.id; }).join(', ');
 
     var tips = {
-      'Birth Certificate': 'Child name section 1 (First Middle Last columns). Sex: X mark next to Male or Female. Date of birth split into Day Month Year boxes - combine them. Place of birth: hospital or street, city, province. Birth order: 1st 2nd etc. Mother maiden name section 6 (First Middle Last). Mother citizenship, religion, occupation. Father name section 9. Father citizenship, religion, occupation. Registry number top right. Registration date near bottom.',
+      'Birth Certificate': 'Child name section 1 (First Middle Last columns). Sex: X mark next to Male or Female. Date of birth split into Day Month Year boxes - combine them. Place of birth: hospital or street, city, province. Birth order: 1st 2nd etc. Type of birth: Single Twin Triplet. Attendant at birth: Physician Nurse Midwife Hilot Others. Birth weight in grams if shown. Legitimacy: check if Legitimate or Illegitimate box is marked. Mother maiden name section 6 (First Middle Last). Mother citizenship, religion, occupation, age, residence. Father name section 9 (First Middle Last). Father citizenship, religion, occupation, age, residence. Informant section near bottom: name, relationship to child, address. Affidavit of acknowledgment section: father name if present. Remarks or annotations box: copy any handwritten or stamped text exactly. Registry number top right. Registration date near bottom.',
       'Marriage Certificate': 'Husband full name section 1. Husband date of birth, place of birth, citizenship, religion, civil status. Husband father name and mother maiden name. Wife maiden name. Wife date of birth, place of birth, citizenship, religion, civil status. Wife father name and mother maiden name. Date of marriage, place of marriage. Solemnizing officer name and position/designation. Registry number top right.',
       'Death Certificate': 'Deceased full name section 1. Sex, date of birth, place of birth, civil status, citizenship, religion, occupation, usual residence. Father name and mother maiden name. Date of death, place of death. Immediate cause, antecedent cause, underlying cause of death. Attending physician. Registry number top right.',
       'CENOMAR': 'Applicant full name at top. Date of birth, place of birth, sex, citizenship. Father name and mother maiden name. Period covered (e.g. 1945–2024) from the certification text. Reference number and date of issuance at bottom.',
