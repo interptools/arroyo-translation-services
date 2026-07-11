@@ -607,8 +607,8 @@ async function doTranslate() {
       'B. 発行情報 / ISSUANCE': ['period_covered','issuance_date','ref_number','purpose']
     },
     'Apostille': {
-      'A. アポスティーユ情報 / APOSTILLE INFORMATION': ['apo_sn','apo_country','apo_signed_by','apo_capacity','apo_seal','apo_place','apo_date','apo_by','apo_number'],
-      'B. 原文書情報 / UNDERLYING DOCUMENT': ['apo_underlying_doc','apo_ref_number','purpose']
+      'A. アポスティーユ情報 / APOSTILLE INFORMATION': ['apo_sn','apo_country','apo_signed_by','apo_capacity','apo_seal_of','apo_place','apo_date','apo_by','apo_number'],
+      'B. 原文書情報 / UNDERLYING DOCUMENT': ['apo_underlying_doc','apo_ref_number','apo_keycode','purpose']
     }
   };
 
@@ -646,10 +646,11 @@ async function doTranslate() {
     'p2_del_reason':'遅延登録の理由','p2_del_exec_city':'供述書作成都市','p2_del_exec_date':'供述書作成日',
     'p2_del_notary':'公証人（遅延登録）','p2_del_date_sworn':'宣誓日（遅延登録）','p2_del_remarks':'備考（第2ページ）',
     // Apostille labels
-    'apo_sn':'一련番号（S.N.）','apo_country':'国','apo_signed_by':'署名者（第2項）',
-    'apo_capacity':'署名者の資格・役職（第3項）','apo_seal':'印章・スタンプ（第4項）',
+    'apo_sn':'一連番号（S.N.）','apo_country':'国（第1項）','apo_signed_by':'署名者（第2項）',
+    'apo_capacity':'署名者の資格・役職（第3項）','apo_seal_of':'印章・スタンプ（第4項）',
     'apo_place':'認証地（第5項）','apo_date':'認証日（第6項）','apo_by':'認証者（第7項）',
-    'apo_number':'アポスティーユ番号（第8項）','apo_underlying_doc':'原文書の種類','apo_ref_number':'参照番号'
+    'apo_number':'アポスティーユ番号（第8項）','apo_underlying_doc':'原文書の種類',
+    'apo_ref_number':'参照番号','apo_keycode':'キーコード'
   };
 
   var skipTranslation = {'reg_number':true,'ref_number':true,'reg_date':false};
@@ -718,7 +719,12 @@ async function doTranslate() {
     '- Type of search: Nationwide Search=全国照会, Local Search=地域照会\n' +
     '- Registry/Reference numbers: output as-is (do NOT translate numbers or codes)\n' +
     '- Purpose values: Japanese visa application=日本ビザ申請, Marriage registration in Japan=日本での婚姻届, Estate settlement in Japan=日本での相続手続き\n' +
-    '- Period covered: keep the year range as-is with 年 (e.g. 1945-2024 -> 1945年〜2024年)\n\n' +
+    '- Period covered: keep the year range as-is with 年 (e.g. 1945-2024 -> 1945年〜2024年)\n' +
+    '- Apostille capacity/title: National Statistician and Civil Registrar General=国家統計官兼民事登録局長官, Civil Registrar General=民事登録局長官, Authentication Officer=認証担当官\n' +
+    '- Apostille institution: Philippine Statistics Authority=フィリピン統計局, Department of Foreign Affairs=外務省, Philippines=フィリピン共和国\n' +
+    '- Apostille city: Manila=マニラ市, Pasay=パサイ市, Makati=マカティ市\n' +
+    '- Apostille underlying doc: Birth Certificate=出生証明書, Marriage Certificate=婚姻証明書, Death Certificate=死亡証明書, CENOMAR=未婚証明書\n' +
+    '- Serial numbers, apostille numbers, keycodes, reference numbers: output as-is — do NOT translate\n\n' +
     'STRICT RULES:\n' +
     '- Output ONLY lines in FIELD_ID|Japanese format — no headers, no explanations, no extra text\n' +
     '- Every field listed above MUST have a translation line — never skip any field\n' +
@@ -934,7 +940,8 @@ function doDownloadPDF() {
   var jpTitles = {
     'Birth Certificate':'出生証明書','Marriage Certificate':'婚姻証明書',
     'Death Certificate':'死亡証明書','CENOMAR':'未婚証明書（CENOMAR）',
-    'Advisory on Marriages':'婚姻記録照会書','Certificate of No Birth Record':'出生記録なし証明書'
+    'Advisory on Marriages':'婚姻記録照会書','Certificate of No Birth Record':'出生記録なし証明書',
+    'Apostille':'アポスティーユ証明書'
   };
   var jpTitle = jpTitles[dt] || dt;
 
@@ -1037,12 +1044,12 @@ function doDownloadPDF() {
             <div style="color:rgba(255,255,255,0.55);font-size:6px;letter-spacing:0.8px;text-transform:uppercase">Official Translator Certification</div>
           </div>
         </div>
-        <div style="text-align:right"><div style="color:rgba(255,255,255,0.45);font-size:6px;font-family:Arial,sans-serif">Philippine PSA Documents · 日本語翻訳</div><div style="color:#c9a84c;font-size:10px;font-weight:bold;font-family:Arial,sans-serif;line-height:1.1">'+(pageOf||'')+'</div></div>
+        <div style="text-align:right"><div style="color:rgba(255,255,255,0.45);font-size:6px;font-family:Arial,sans-serif">Philippine PSA/DFA Documents · 日本語翻訳</div><div style="color:#c9a84c;font-size:10px;font-weight:bold;font-family:Arial,sans-serif;line-height:1.1">'+(pageOf||'')+'</div></div>
       </div>
       <div style="background:#fefefe;padding:2px 8px">
         <div style="font-size:6px;color:#1a2744;line-height:1.3;margin-bottom:2px">
-          I, <strong>Reymar Arroyo</strong>, hereby certify that the above is a true, complete, and accurate Japanese translation of the original PSA document, and that I am competent to translate from English/Filipino to Japanese (JLPT N2 Certified). ·
-          <span style="color:#555">私、<strong>レイマー・アロヨ</strong>（日本語能力試験N2取得）は、上記の日本語翻訳がPSA発行の原文書を忠実かつ正確に翻訳したものであることを証明します。</span>
+          I, <strong>Reymar Arroyo</strong>, hereby certify that the above is a true, complete, and accurate Japanese translation of the original document issued by the Philippine government (PSA/DFA), and that I am duly qualified and competent to perform translation between English, Filipino, and Japanese (JLPT N2 Certified). ·
+          <span style="color:#555">私、<strong>レイマー・アロヨ</strong>（日本語能力試験N2取得）は、上記の日本語翻訳がフィリピン政府機関（PSA／DFA）発行の原文書を忠実かつ正確に翻訳したものであることを証明します。</span>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;border-top:0.5px solid #e5e0d8;padding-top:2px">
           <div>
@@ -1394,6 +1401,94 @@ function doDownloadPDF() {
     '</div>'+
     footer(jpTitle, dt);
 
+  // ════ APOSTILLE ════
+  } else if (dt === 'Apostille') {
+    body =
+    '<div style="background:#f5f0e0;font-family:\'Times New Roman\',Georgia,serif;padding:8px 10px;border:1px solid #c8b89a;min-height:100%">' +
+
+    // Header
+    '<div style="text-align:center;margin-bottom:10px">' +
+      '<div style="font-size:10px;font-weight:bold;color:#1a2744;letter-spacing:0.5px">外務省（フィリピン共和国）</div>' +
+      '<div style="font-size:7px;color:#666;margin-top:1px">DEPARTMENT OF FOREIGN AFFAIRS · KAGAWARAN NG UGNAYANG PANLABAS</div>' +
+    '</div>' +
+
+    // SN
+    '<div style="margin-bottom:10px">' +
+      '<div style="font-size:9px;font-weight:bold;color:#1a2744">一連番号（S.N.）　<span style="font-size:10px">'+gv('apo_sn')+'</span></div>' +
+      '<div style="font-size:7px;color:#888">S.N. '+gv('apo_sn')+'</div>' +
+    '</div>' +
+
+    // Main box
+    '<div style="border:1.5px solid #888;border-radius:4px;padding:10px 12px;background:#faf6ea;margin-bottom:10px">' +
+
+      // Title
+      '<div style="text-align:center;margin-bottom:10px">' +
+        '<div style="font-size:16px;font-weight:bold;color:#1a2744;letter-spacing:2px">アポスティーユ</div>' +
+        '<div style="font-size:9px;font-weight:bold;color:#555;margin-top:1px">APOSTILLE</div>' +
+        '<div style="font-size:7px;color:#888;font-style:italic;margin-top:2px">（1961年10月5日ハーグ条約） / (Convention de La Haye du 5 Octobre 1961)</div>' +
+      '</div>' +
+
+      // Item 1
+      '<div style="margin-bottom:6px"><div style="font-size:9px;font-weight:bold;color:#1a2744">１．国：<span style="font-size:10px">'+gjv('apo_country')+'</span></div><div style="font-size:7px;color:#888;padding-left:14px">1. Country: '+gv('apo_country')+'</div></div>' +
+
+      // This public document
+      '<div style="text-align:center;margin:8px 0 6px"><div style="font-size:9px;font-weight:bold;color:#1a2744">本公文書は</div><div style="font-size:7px;color:#888;font-style:italic">This public document</div></div>' +
+
+      // Items 2-4
+      '<div style="margin-bottom:6px"><div style="font-size:9px;font-weight:bold;color:#1a2744">２．署名者：<span style="font-size:10px">'+gjv('apo_signed_by')+'</span>　により署名されており</div><div style="font-size:7px;color:#888;padding-left:14px">2. has been signed by '+gv('apo_signed_by')+'</div></div>' +
+      '<div style="margin-bottom:6px"><div style="font-size:9px;font-weight:bold;color:#1a2744">３．資格・役職：<span style="font-size:10px">'+gjv('apo_capacity')+'</span>　の資格において</div><div style="font-size:7px;color:#888;padding-left:14px">3. acting in the capacity of '+gv('apo_capacity')+'</div></div>' +
+      '<div style="margin-bottom:8px"><div style="font-size:9px;font-weight:bold;color:#1a2744">４．印章・スタンプ：<span style="font-size:10px">'+gjv('apo_seal_of')+'</span>　の印章を有しています</div><div style="font-size:7px;color:#888;padding-left:14px">4. bears the seal/stamp of '+gv('apo_seal_of')+'</div></div>' +
+
+      // Certified
+      '<div style="text-align:center;margin:8px 0 6px"><div style="font-size:9px;font-weight:bold;color:#1a2744">認証済</div><div style="font-size:7px;color:#888;font-style:italic">Certified</div></div>' +
+
+      // Items 5-8
+      '<div style="margin-bottom:6px"><div style="font-size:9px;font-weight:bold;color:#1a2744">５．認証地：<span style="font-size:10px">'+gjv('apo_place')+'</span></div><div style="font-size:7px;color:#888;padding-left:14px">5. at '+gv('apo_place')+'</div></div>' +
+      '<div style="margin-bottom:6px"><div style="font-size:9px;font-weight:bold;color:#1a2744">６．認証日：<span style="font-size:10px">'+gjv('apo_date')+'</span></div><div style="font-size:7px;color:#888;padding-left:14px">6. '+gv('apo_date')+'</div></div>' +
+      '<div style="margin-bottom:6px"><div style="font-size:9px;font-weight:bold;color:#1a2744">７．認証者：<span style="font-size:10px">'+gjv('apo_by')+'</span></div><div style="font-size:7px;color:#888;padding-left:14px">7. by '+gv('apo_by')+'</div></div>' +
+      '<div style="margin-bottom:10px"><div style="font-size:9px;font-weight:bold;color:#1a2744">８．番号：<span style="font-size:10px">'+gv('apo_number')+'</span></div><div style="font-size:7px;color:#888;padding-left:14px">8. No. '+gv('apo_number')+'</div></div>' +
+
+      // Items 9 & 10
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start">' +
+        '<div><div style="font-size:9px;font-weight:bold;color:#1a2744">９．印章・スタンプ</div><div style="font-size:7px;color:#888">9. Seal/Stamp</div></div>' +
+        '<div style="text-align:right"><div style="font-size:9px;font-weight:bold;color:#1a2744">１０．署名：</div><div style="font-size:7px;color:#888">10. Signature:</div>' +
+          '<div style="border-bottom:1px solid #555;width:100px;height:24px;margin-top:4px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px">' +
+            '<span style="font-family:\'Dancing Script\',cursive;font-size:14px;color:#1a2744">L. Fajilago</span>' +
+          '</div>' +
+          '<div style="font-size:7px;color:#888;margin-top:2px">認証担当官 / Authentication Officer</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+
+    // Below box
+    '<div style="text-align:right;margin-bottom:10px;line-height:1.7">' +
+      '<div style="font-size:9px;font-weight:bold;color:#1a2744">原文書：<span style="font-size:10px">'+gjv('apo_underlying_doc')+'</span></div>' +
+      '<div style="font-size:7px;color:#888">'+gv('apo_underlying_doc')+'</div>' +
+      '<div style="font-size:9px;font-weight:bold;color:#1a2744;margin-top:3px">参照番号：<span style="font-size:10px">'+gv('apo_ref_number')+'</span></div>' +
+      '<div style="font-size:7px;color:#888">Reference Number: '+gv('apo_ref_number')+'</div>' +
+      '<div style="font-size:9px;font-weight:bold;color:#1a2744;margin-top:4px">＊＊＊＊以下余白＊＊＊＊</div>' +
+      '<div style="font-size:7px;color:#888">****NOTHING FOLLOWS****</div>' +
+    '</div>' +
+
+    // Keycode
+    '<div style="margin-bottom:10px;line-height:1.7">' +
+      '<div style="font-size:9px;font-weight:bold;color:#1a2744">キーコード：<span style="font-size:9px">'+gv('apo_keycode')+'</span></div>' +
+      '<div style="font-size:7px;color:#888">KEYCODE: '+gv('apo_keycode')+'</div>' +
+      '<div style="font-size:8px;color:#1a2744;margin-top:2px">本文書の確認は https://www.apostille.gov.ph よりログインしてください。</div>' +
+      '<div style="font-size:7px;color:#888">To verify this document, please log in to https://www.apostille.gov.ph and follow the instructions indicated.</div>' +
+    '</div>' +
+
+    // Footer disclaimer
+    '<div style="border-top:0.5px solid #bbb;padding-top:6px;margin-bottom:8px;line-height:1.5">' +
+      '<div style="font-size:7.5px;font-weight:bold;color:#1a2744">本アポスティーユは、公文書に署名した者の署名の真正性及び署名者の資格のみを証明するものです。</div>' +
+      '<div style="font-size:7px;color:#888;margin-top:1px">This Apostille only certifies the authenticity of the signature and the capacity of the person who has signed the public document.</div>' +
+      '<div style="font-size:7.5px;font-weight:bold;color:#1a2744;margin-top:4px">本アポスティーユはフィリピン国内では無効です。</div>' +
+      '<div style="font-size:7px;color:#888;margin-top:1px">This Apostille is not valid for use in the Philippines.</div>' +
+    '</div>' +
+
+    certBlock() +
+    '</div>';
+
   } else {
     body = '<div style="padding:20px;color:#888">Unknown document type.</div>';
   }
@@ -1464,7 +1559,14 @@ async function doEmail() {
     'deceased_mother':'母親の旧姓 (Mother Maiden Name)','cause_of_death':'死因 (Cause of Death)',
     'death_date':'死亡日 (Date of Death)','death_place':'死亡地 (Place of Death)',
     'purpose':'目的 (Purpose)','ref_number':'参照番号 (Reference Number)',
-    'period_covered':'対象期間 (Period Covered)','remarks':'備考 (Remarks)'
+    'period_covered':'対象期間 (Period Covered)','remarks':'備考 (Remarks)',
+    'apo_sn':'一連番号 (Serial Number)','apo_country':'国 (Country)',
+    'apo_signed_by':'署名者 (Signed By)','apo_capacity':'資格・役職 (Capacity)',
+    'apo_seal_of':'印章・スタンプ (Seal/Stamp Of)','apo_place':'認証地 (Certified At)',
+    'apo_date':'認証日 (Date Certified)','apo_by':'認証者 (Certified By)',
+    'apo_number':'アポスティーユ番号 (Apostille Number)',
+    'apo_underlying_doc':'原文書の種類 (Underlying Document)',
+    'apo_ref_number':'参照番号 (Reference Number)','apo_keycode':'キーコード (Keycode)'
   };
 
   var tranRows = [];
@@ -1705,16 +1807,17 @@ var DOC_FIELDS_ADMIN = {
   ],
   'Apostille': [
     {id:'apo_sn',label:'Serial Number (S.N.)'},
-    {id:'apo_country',label:'Country'},
+    {id:'apo_country',label:'Country (Item 1)'},
     {id:'apo_signed_by',label:'Signed By (Item 2)'},
-    {id:'apo_capacity',label:'Capacity (Item 3)'},
-    {id:'apo_seal',label:'Seal/Stamp Of (Item 4)'},
-    {id:'apo_place',label:'Place Certified (Item 5)'},
+    {id:'apo_capacity',label:'Capacity / Title (Item 3)'},
+    {id:'apo_seal_of',label:'Seal/Stamp Of (Item 4)'},
+    {id:'apo_place',label:'Certified At (Item 5)'},
     {id:'apo_date',label:'Date Certified (Item 6)',type:'date'},
     {id:'apo_by',label:'Certified By (Item 7)'},
     {id:'apo_number',label:'Apostille Number (Item 8)'},
     {id:'apo_underlying_doc',label:'Underlying Document Type'},
     {id:'apo_ref_number',label:'Reference Number'},
+    {id:'apo_keycode',label:'Keycode'},
     {id:'purpose',label:'Purpose'}
   ]
 };

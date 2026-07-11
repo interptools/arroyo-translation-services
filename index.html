@@ -546,7 +546,7 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
       <span class="arrow" id="sample-arrow">&#9660;</span>
     </div>
     <div class="sample-body" id="sample-body">
-      <p class="sample-note">This is how your translated document will look. All 6 document types are shown below — your actual translation will contain your real document details.</p>
+      <p class="sample-note">This is how your translated document will look. All 7 document types are shown below — your actual translation will contain your real document details.</p>
 
       <!-- Tab buttons -->
       <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px">
@@ -556,6 +556,7 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
         <button class="stab" onclick="showSample('cenomar',this)">CENOMAR</button>
         <button class="stab" onclick="showSample('advisory',this)">Advisory</button>
         <button class="stab" onclick="showSample('nobirth',this)">No Birth</button>
+        <button class="stab" onclick="showSample('apostille',this)">Apostille</button>
       </div>
 
       <!-- Shared sample CSS - identical class names to PDF output -->
@@ -563,8 +564,8 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
       .stab{padding:4px 10px;border-radius:20px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--cream);color:var(--muted);font-family:Inter,sans-serif}
       .stab.active{background:var(--navy);color:var(--goldl);border-color:var(--navy)}
       .sprev{display:none}.sprev.show{display:block}
-      /* PDF-matching classes - scaled to match actual PDF output */
-      .sdoc{background:#faf8f0;border:1px solid #c8c0a0;font-family:'Times New Roman',Georgia,serif;font-size:11px}
+      /* PDF-matching classes - A4 proportioned, scaled to preview */
+      .sdoc{background:#faf8f0;border:1px solid #c8c0a0;font-family:'Times New Roman',Georgia,serif;font-size:11px;width:100%;max-width:595px;box-sizing:border-box;margin:0 auto}
       .psa-hdr{text-align:center;padding:8px 10px 7px;border-bottom:1.5px solid #999;background:#faf8f0}
       .psa-rep{font-size:8px;color:#555;letter-spacing:0.3px}
       .psa-off{font-size:10px;font-weight:bold;color:#111;margin:2px 0}
@@ -612,7 +613,16 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
       .tblock-sig{font-family:'Dancing Script',cursive;font-size:22px;color:#1a2744;line-height:1}
       .tblock-footer{margin-top:4px;padding-top:4px;border-top:0.5px solid #e5e0d8;display:flex;justify-content:space-between;align-items:center}
       .sample-only{background:#fffbeb;border-top:1px solid #fde68a;padding:8px 10px;text-align:center;font-size:11px;color:#92400e;font-weight:600;font-family:Inter,sans-serif}
+      /* Apostille-specific classes */
+      .apo-doc{background:#f5f0e0;font-family:'Times New Roman',Georgia,serif;font-size:11px;width:100%;max-width:595px;box-sizing:border-box;margin:0 auto;padding:24px 28px;border:1px solid #c8b89a}
+      .apo-box{border:1.5px solid #888;border-radius:6px;padding:16px 18px;background:#faf6ea;margin-bottom:14px;box-sizing:border-box}
+      .apo-item-jp{font-size:13px;font-weight:bold;color:#1a2744;margin-bottom:2px}
+      .apo-item-en{font-size:8.5px;color:#888;padding-left:16px;margin-bottom:8px}
+      .apo-center-jp{text-align:center;font-size:13px;font-weight:bold;color:#1a2744;margin:10px 0 2px}
+      .apo-center-en{text-align:center;font-size:8.5px;color:#888;font-style:italic;margin-bottom:10px}
       </style>
+
+      <!-- BIRTH CERTIFICATE -->
 
       <!-- BIRTH CERTIFICATE -->
       <div class="sprev show" id="sprev-birth"><div class="sdoc">
@@ -639,7 +649,7 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
             <div style="color:rgba(255,255,255,0.4);font-size:6.5px;text-align:right">Philippine PSA Documents<br>日本語翻訳サービス</div>
           </div>
           <div class="tblock-body">
-            <div class="tblock-cert">I, <strong>Reymar Arroyo</strong>, hereby certify that the above is a true, complete, and accurate Japanese translation of the original Philippine Statistics Authority (PSA) document, and that I am competent to translate from English/Filipino to Japanese.<br><span style="color:#555;font-size:7.5px">私、<strong>レイマー・アロヨ</strong>は、上記の日本語翻訳がフィリピン統計局（PSA）発行の原文書を忠実かつ正確に翻訳したものであることを証明します。</span></div>
+            <div class="tblock-cert">I, <strong>Reymar Arroyo</strong>, hereby certify that the above is a true, complete, and accurate Japanese translation of the original Philippine Statistics Authority (PSA) document, and that I am duly qualified and competent to perform translation between English, Filipino, and Japanese.<br><span style="color:#555;font-size:7.5px">私、<strong>レイマー・アロヨ</strong>は、上記の日本語翻訳がフィリピン統計局（PSA）発行の原文書を忠実かつ正確に翻訳したものであることを証明します。</span></div>
             <div class="tblock-grid">
               <div><div class="tblock-lbl">Translator's Name / 翻訳者氏名</div><div class="tblock-val">Reymar Arroyo</div><div class="tblock-sub">レイマー・アロヨ</div></div>
               <div><div class="tblock-lbl">Date of Translation / 翻訳日</div><div class="tblock-val">Today's Date</div><div class="tblock-sub">翻訳実施日</div></div>
@@ -675,8 +685,8 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
           <div class="fb"><div class="fn">17</div><div class="fl">父の氏名 / Father's Name</div><div class="fj">ホセ・デラ・クルス</div></div>
           <div class="fb s"><div class="fn">18</div><div class="fl">母の旧姓 / Mother's Maiden Name</div><div class="fj">アナ・ガルシア</div></div>
         </div></div>
-        <div class="sh">C.　婚姻情報 / MARRIAGE DETAILS</div>
-        <div class="g2"><div class="gcl"><div class="fb s"><div class="fn">19</div><div class="fl">婚姻日 / Date of Marriage</div><div class="fj">2018年4月1日</div><div class="fe">April 1, 2018</div></div><div class="fb"><div class="fn">20</div><div class="fl">婚姻地 / Place of Marriage</div><div class="fj">パンガシナン州、サン・パブロ</div></div></div><div><div class="fb s"><div class="fn">21</div><div class="fl">挙式執行者 / Solemnizing Officer</div><div class="fj">タフィ・D・デラス</div></div><div class="fb"><div class="fn">22</div><div class="fl">役職・所属 / Position</div><div class="fj">ゴッド・インク牧師</div></div></div></div>
+        <div class="sh">C.　婚姻情報 / MARRIAGE INFORMATION</div>
+        <div class="g2"><div class="gcl"><div class="fb s"><div class="fn">19</div><div class="fl">婚姻日 / Date of Marriage</div><div class="fj">2018年4月1日</div><div class="fe">April 1, 2018</div></div><div class="fb"><div class="fn">20</div><div class="fl">婚姻地 / Place of Marriage</div><div class="fj">パンガシナン州、サン・パブロ</div></div></div><div><div class="fb s"><div class="fn">21</div><div class="fl">挙式執行者 / Solemnizing Officer</div><div class="fj">ホセ・サントス神父</div><div class="fe">Rev. Fr. Jose Santos</div></div><div class="fb"><div class="fn">22</div><div class="fl">役職・所属 / Position / Designation</div><div class="fj">カトリック教会司祭、マニラ大教区</div><div class="fe">Catholic Priest, Archdiocese of Manila</div></div></div></div>
         <div class="sh">D.　登録情報 / REGISTRATION INFORMATION</div>
         <div class="g2"><div class="gcl"><div class="fb s"><div class="fl">登録番号 / Registry Number</div><div class="fj">2018-157</div></div></div><div><div class="fb"><div class="fl">翻訳目的 / Purpose</div><div class="fj">日本での婚姻届</div></div></div></div>
         <div class="stamp"><span>Documentary Stamp Tax Paid · 登録印紙税納付済</span><span>発行機関：フィリピン統計局（PSA）</span></div>
@@ -691,7 +701,7 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
             <div style="color:rgba(255,255,255,0.4);font-size:6.5px;text-align:right">Philippine PSA Documents<br>日本語翻訳サービス</div>
           </div>
           <div class="tblock-body">
-            <div class="tblock-cert">I, <strong>Reymar Arroyo</strong>, hereby certify that the above is a true, complete, and accurate Japanese translation of the original Philippine Statistics Authority (PSA) document, and that I am competent to translate from English/Filipino to Japanese.<br><span style="color:#555;font-size:7.5px">私、<strong>レイマー・アロヨ</strong>は、上記の日本語翻訳がフィリピン統計局（PSA）発行の原文書を忠実かつ正確に翻訳したものであることを証明します。</span></div>
+            <div class="tblock-cert">I, <strong>Reymar Arroyo</strong>, hereby certify that the above is a true, complete, and accurate Japanese translation of the original Philippine Statistics Authority (PSA) document, and that I am duly qualified and competent to perform translation between English, Filipino, and Japanese.<br><span style="color:#555;font-size:7.5px">私、<strong>レイマー・アロヨ</strong>は、上記の日本語翻訳がフィリピン統計局（PSA）発行の原文書を忠実かつ正確に翻訳したものであることを証明します。</span></div>
             <div class="tblock-grid">
               <div><div class="tblock-lbl">Translator's Name / 翻訳者氏名</div><div class="tblock-val">Reymar Arroyo</div><div class="tblock-sub">レイマー・アロヨ</div></div>
               <div><div class="tblock-lbl">Date of Translation / 翻訳日</div><div class="tblock-val">Today's Date</div><div class="tblock-sub">翻訳実施日</div></div>
@@ -729,7 +739,7 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
             <div style="color:rgba(255,255,255,0.4);font-size:6.5px;text-align:right">Philippine PSA Documents<br>日本語翻訳サービス</div>
           </div>
           <div class="tblock-body">
-            <div class="tblock-cert">I, <strong>Reymar Arroyo</strong>, hereby certify that the above is a true, complete, and accurate Japanese translation of the original Philippine Statistics Authority (PSA) document, and that I am competent to translate from English/Filipino to Japanese.<br><span style="color:#555;font-size:7.5px">私、<strong>レイマー・アロヨ</strong>は、上記の日本語翻訳がフィリピン統計局（PSA）発行の原文書を忠実かつ正確に翻訳したものであることを証明します。</span></div>
+            <div class="tblock-cert">I, <strong>Reymar Arroyo</strong>, hereby certify that the above is a true, complete, and accurate Japanese translation of the original Philippine Statistics Authority (PSA) document, and that I am duly qualified and competent to perform translation between English, Filipino, and Japanese.<br><span style="color:#555;font-size:7.5px">私、<strong>レイマー・アロヨ</strong>は、上記の日本語翻訳がフィリピン統計局（PSA）発行の原文書を忠実かつ正確に翻訳したものであることを証明します。</span></div>
             <div class="tblock-grid">
               <div><div class="tblock-lbl">Translator's Name / 翻訳者氏名</div><div class="tblock-val">Reymar Arroyo</div><div class="tblock-sub">レイマー・アロヨ</div></div>
               <div><div class="tblock-lbl">Date of Translation / 翻訳日</div><div class="tblock-val">Today's Date</div><div class="tblock-sub">翻訳実施日</div></div>
@@ -774,7 +784,7 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
             <div style="color:rgba(255,255,255,0.4);font-size:6.5px;text-align:right">Philippine PSA Documents<br>日本語翻訳サービス</div>
           </div>
           <div class="tblock-body">
-            <div class="tblock-cert">I, <strong>Reymar Arroyo</strong>, hereby certify that the above is a true, complete, and accurate Japanese translation of the original Philippine Statistics Authority (PSA) document, and that I am competent to translate from English/Filipino to Japanese.<br><span style="color:#555;font-size:7.5px">私、<strong>レイマー・アロヨ</strong>は、上記の日本語翻訳がフィリピン統計局（PSA）発行の原文書を忠実かつ正確に翻訳したものであることを証明します。</span></div>
+            <div class="tblock-cert">I, <strong>Reymar Arroyo</strong>, hereby certify that the above is a true, complete, and accurate Japanese translation of the original Philippine Statistics Authority (PSA) document, and that I am duly qualified and competent to perform translation between English, Filipino, and Japanese.<br><span style="color:#555;font-size:7.5px">私、<strong>レイマー・アロヨ</strong>は、上記の日本語翻訳がフィリピン統計局（PSA）発行の原文書を忠実かつ正確に翻訳したものであることを証明します。</span></div>
             <div class="tblock-grid">
               <div><div class="tblock-lbl">Translator's Name / 翻訳者氏名</div><div class="tblock-val">Reymar Arroyo</div><div class="tblock-sub">レイマー・アロヨ</div></div>
               <div><div class="tblock-lbl">Date of Translation / 翻訳日</div><div class="tblock-val">Today's Date</div><div class="tblock-sub">翻訳実施日</div></div>
@@ -821,7 +831,7 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
             <div style="color:rgba(255,255,255,0.4);font-size:6.5px;text-align:right">Philippine PSA Documents<br>日本語翻訳サービス</div>
           </div>
           <div class="tblock-body">
-            <div class="tblock-cert">I, <strong>Reymar Arroyo</strong>, hereby certify that the above is a true, complete, and accurate Japanese translation of the original Philippine Statistics Authority (PSA) document, and that I am competent to translate from English/Filipino to Japanese.<br><span style="color:#555;font-size:7.5px">私、<strong>レイマー・アロヨ</strong>は、上記の日本語翻訳がフィリピン統計局（PSA）発行の原文書を忠実かつ正確に翻訳したものであることを証明します。</span></div>
+            <div class="tblock-cert">I, <strong>Reymar Arroyo</strong>, hereby certify that the above is a true, complete, and accurate Japanese translation of the original Philippine Statistics Authority (PSA) document, and that I am duly qualified and competent to perform translation between English, Filipino, and Japanese.<br><span style="color:#555;font-size:7.5px">私、<strong>レイマー・アロヨ</strong>は、上記の日本語翻訳がフィリピン統計局（PSA）発行の原文書を忠実かつ正確に翻訳したものであることを証明します。</span></div>
             <div class="tblock-grid">
               <div><div class="tblock-lbl">Translator's Name / 翻訳者氏名</div><div class="tblock-val">Reymar Arroyo</div><div class="tblock-sub">レイマー・アロヨ</div></div>
               <div><div class="tblock-lbl">Date of Translation / 翻訳日</div><div class="tblock-val">Today's Date</div><div class="tblock-sub">翻訳実施日</div></div>
@@ -862,7 +872,7 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
             <div style="color:rgba(255,255,255,0.4);font-size:6.5px;text-align:right">Philippine PSA Documents<br>日本語翻訳サービス</div>
           </div>
           <div class="tblock-body">
-            <div class="tblock-cert">I, <strong>Reymar Arroyo</strong>, hereby certify that the above is a true, complete, and accurate Japanese translation of the original Philippine Statistics Authority (PSA) document, and that I am competent to translate from English/Filipino to Japanese.<br><span style="color:#555;font-size:7.5px">私、<strong>レイマー・アロヨ</strong>は、上記の日本語翻訳がフィリピン統計局（PSA）発行の原文書を忠実かつ正確に翻訳したものであることを証明します。</span></div>
+            <div class="tblock-cert">I, <strong>Reymar Arroyo</strong>, hereby certify that the above is a true, complete, and accurate Japanese translation of the original Philippine Statistics Authority (PSA) document, and that I am duly qualified and competent to perform translation between English, Filipino, and Japanese.<br><span style="color:#555;font-size:7.5px">私、<strong>レイマー・アロヨ</strong>は、上記の日本語翻訳がフィリピン統計局（PSA）発行の原文書を忠実かつ正確に翻訳したものであることを証明します。</span></div>
             <div class="tblock-grid">
               <div><div class="tblock-lbl">Translator's Name / 翻訳者氏名</div><div class="tblock-val">Reymar Arroyo</div><div class="tblock-sub">レイマー・アロヨ</div></div>
               <div><div class="tblock-lbl">Date of Translation / 翻訳日</div><div class="tblock-val">Today's Date</div><div class="tblock-sub">翻訳実施日</div></div>
@@ -874,10 +884,97 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
         <div class="sample-only">SAMPLE ONLY — Your actual translation will contain your real document details</div>
       </div></div>
 
+      <!-- APOSTILLE -->
+      <div class="sprev" id="sprev-apostille"><div class="apo-doc">
+        <div style="text-align:center;margin-bottom:16px">
+          <div style="font-size:14px;font-weight:bold;color:#1a2744">外務省（フィリピン共和国）</div>
+          <div style="font-size:9px;color:#666;margin-top:2px">DEPARTMENT OF FOREIGN AFFAIRS · KAGAWARAN NG UGNAYANG PANLABAS</div>
+        </div>
+        <div style="margin-bottom:14px">
+          <div style="font-size:12px;color:#1a2744"><strong>一連番号（S.N.）</strong> <strong>*****</strong></div>
+          <div style="font-size:8px;color:#888;margin-top:1px">S.N. *****</div>
+        </div>
+        <div class="apo-box">
+          <div style="text-align:center;margin-bottom:14px">
+            <div style="font-size:20px;font-weight:bold;color:#1a2744;letter-spacing:2px">アポスティーユ</div>
+            <div style="font-size:11px;font-weight:bold;color:#555;margin-top:2px">APOSTILLE</div>
+            <div style="font-size:8px;color:#888;font-style:italic;margin-top:3px">（1961年10月5日ハーグ条約） / (Convention de La Haye du 5 Octobre 1961)</div>
+          </div>
+          <div class="apo-item-jp">１．国：フィリピン共和国</div>
+          <div class="apo-item-en">1. Country: Philippines</div>
+          <div class="apo-center-jp">本公文書は</div>
+          <div class="apo-center-en">This public document</div>
+          <div class="apo-item-jp">２．署名者：*****　により署名されており</div>
+          <div class="apo-item-en">2. has been signed by *****</div>
+          <div class="apo-item-jp">３．資格・役職：*****　の資格において</div>
+          <div class="apo-item-en">3. acting in the capacity of *****</div>
+          <div class="apo-item-jp">４．印章・スタンプ：*****　の印章を有しています</div>
+          <div class="apo-item-en">4. bears the seal/stamp of *****</div>
+          <div class="apo-center-jp">認証済</div>
+          <div class="apo-center-en">Certified</div>
+          <div class="apo-item-jp">５．認証地：*****</div>
+          <div class="apo-item-en">5. at *****</div>
+          <div class="apo-item-jp">６．認証日：*****年**月**日</div>
+          <div class="apo-item-en">6. the ** day of ***** 20**</div>
+          <div class="apo-item-jp">７．認証者：*****</div>
+          <div class="apo-item-en">7. by *****</div>
+          <div class="apo-item-jp">８．番号：*****</div>
+          <div class="apo-item-en" style="margin-bottom:14px">8. No. *****</div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">
+            <div>
+              <div class="apo-item-jp" style="margin-bottom:2px">９．印章・スタンプ</div>
+              <div style="font-size:8.5px;color:#888">9. Seal/Stamp</div>
+            </div>
+            <div style="text-align:right">
+              <div class="apo-item-jp" style="margin-bottom:2px">１０．署名：</div>
+              <div style="font-size:8.5px;color:#888;margin-bottom:6px">10. Signature:</div>
+              <div style="border-bottom:1px solid #555;width:130px;height:28px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:2px">
+                <span style="font-size:11px;color:#aaa;letter-spacing:2px">* * * * *</span>
+              </div>
+              <div style="font-size:8px;color:#888;margin-top:3px">認証担当官 / Authentication Officer</div>
+            </div>
+          </div>
+        </div>
+        <div style="text-align:right;margin-bottom:14px;line-height:1.9">
+          <div style="font-size:12px;font-weight:bold;color:#1a2744">原文書：*****</div>
+          <div style="font-size:8px;color:#888">Underlying Document: *****</div>
+          <div style="font-size:12px;font-weight:bold;color:#1a2744;margin-top:3px">参照番号：*****</div>
+          <div style="font-size:8px;color:#888">Reference Number: *****</div>
+          <div style="font-size:11px;font-weight:bold;color:#1a2744;margin-top:5px">＊＊＊＊以下余白＊＊＊＊</div>
+          <div style="font-size:8px;color:#888">****NOTHING FOLLOWS****</div>
+        </div>
+        <div style="margin-bottom:12px;line-height:1.8">
+          <div style="font-size:11px;font-weight:bold;color:#1a2744">キーコード：*****</div>
+          <div style="font-size:8px;color:#888">KEYCODE: *****</div>
+          <div style="font-size:9px;color:#1a2744;margin-top:3px">本文書の確認は https://www.apostille.gov.ph よりログインしてください。</div>
+          <div style="font-size:8px;color:#888">To verify this document, please log in to https://www.apostille.gov.ph and follow the instructions indicated.</div>
+        </div>
+        <div style="border-top:0.5px solid #bbb;padding-top:8px;margin-bottom:12px;line-height:1.6">
+          <div style="font-size:8.5px;font-weight:bold;color:#1a2744">本アポスティーユは、公文書に署名した者の署名の真正性及び署名者の資格のみを証明するものです。</div>
+          <div style="font-size:7.5px;color:#888;margin-top:1px">This Apostille only certifies the authenticity of the signature and the capacity of the person who has signed the public document.</div>
+          <div style="font-size:8.5px;font-weight:bold;color:#1a2744;margin-top:5px">本アポスティーユはフィリピン国内では無効です。</div>
+          <div style="font-size:7.5px;color:#888;margin-top:1px">This Apostille is not valid for use in the Philippines.</div>
+        </div>
+        <div class="tblock">
+          <div class="tblock-hdr">
+            <div><div style="color:#e8c97a;font-size:8.5px;font-weight:bold;letter-spacing:0.5px">ARROYO TRANSLATION SERVICES</div><div style="color:rgba(255,255,255,0.55);font-size:6.5px;letter-spacing:1px;text-transform:uppercase">翻訳者証明 / Translator's Declaration</div></div>
+            <div style="color:rgba(255,255,255,0.4);font-size:6.5px;text-align:right">Philippine DFA Documents<br>日本語翻訳サービス</div>
+          </div>
+          <div class="tblock-body">
+            <div class="tblock-cert">私、<strong>レイマー・アロヨ</strong>は、上記の日本語翻訳が1961年ハーグ条約に基づきフィリピン共和国外務省（DFA）が発行したアポスティーユ証明書を忠実かつ正確に翻訳したものであることを証明します。<br><span style="color:#888;font-size:7.5px">I, <strong>Reymar Arroyo</strong>, hereby certify that the above is a true, complete, and accurate Japanese translation of the original Apostille Certificate issued by the Department of Foreign Affairs (DFA), Republic of the Philippines, under the Hague Convention of 5 October 1961, and that I am duly qualified and competent to perform translation between English, Filipino, and Japanese.</span></div>
+            <div class="tblock-grid">
+              <div><div class="tblock-lbl">翻訳者 / Translator</div><div class="tblock-val">レイマー・アロヨ</div><div class="tblock-sub">Reymar Arroyo</div></div>
+              <div><div class="tblock-lbl">翻訳日 / Date of Translation</div><div class="tblock-val">Today's Date</div><div class="tblock-sub">翻訳実施日</div></div>
+              <div><div class="tblock-lbl">署名 / Signature</div><div style="height:32px;border-bottom:1px solid #1a2744;display:flex;align-items:flex-end;padding-bottom:2px"><span class="tblock-sig">Reymar Arroyo</span></div><div style="font-size:6.5px;color:#aaa;margin-top:2px">Authorized Translator</div></div>
+            </div>
+            <div class="tblock-footer"><div style="font-size:6.5px;color:#999">This certification is valid for Japanese immigration, visa, and municipal office submissions.</div><div style="font-size:6.5px;color:#c9a84c;font-weight:600">ARROYO TRANSLATION SERVICES</div></div>
+          </div>
+        </div>
+        <div class="sample-only">SAMPLE ONLY — Your actual translation will contain your real document details</div>
+      </div></div>
+
     </div>
   </div>
-
-  <!-- DISCLAIMER -->
   <div class="card-section">
     <div class="disclaimer">
       <strong>Accepted use:</strong> This translation is suitable for Japanese visa applications and marriage registration at a Japanese municipal office (&#24310;&#25152;). It is NOT valid for court proceedings or notarized legal submissions. For such purposes, please consult a certified legal translator.
@@ -1073,16 +1170,17 @@ const DOC_FIELDS = {
   ],
   'Apostille': [
     {id:'apo_sn', label:'Serial number (S.N.)', ph:'e.g. 26e-0063046'},
-    {id:'apo_country', label:'Country', ph:'e.g. Philippines'},
+    {id:'apo_country', label:'Country (Item 1)', ph:'e.g. Philippines'},
     {id:'apo_signed_by', label:'Signed by (Item 2)', ph:'e.g. Claire Dennis S. Mapa'},
-    {id:'apo_capacity', label:'Capacity (Item 3)', ph:'e.g. National Statistician and Civil Registrar General'},
-    {id:'apo_seal', label:'Seal/stamp of (Item 4)', ph:'e.g. Philippine Statistics Authority'},
-    {id:'apo_place', label:'Place certified (Item 5)', ph:'e.g. Manila'},
+    {id:'apo_capacity', label:'Capacity / Title (Item 3)', ph:'e.g. National Statistician and Civil Registrar General'},
+    {id:'apo_seal_of', label:'Seal/stamp of (Item 4)', ph:'e.g. Philippine Statistics Authority'},
+    {id:'apo_place', label:'Certified at (Item 5)', ph:'e.g. Manila'},
     {id:'apo_date', label:'Date certified (Item 6)', ph:'', type:'date'},
     {id:'apo_by', label:'Certified by (Item 7)', ph:'e.g. LEONIDES F. FAJILAGO'},
     {id:'apo_number', label:'Apostille number (Item 8)', ph:'e.g. 26e-0063046'},
     {id:'apo_underlying_doc', label:'Underlying document type', ph:'e.g. Birth Certificate'},
     {id:'apo_ref_number', label:'Reference number', ph:'e.g. 2670115267'},
+    {id:'apo_keycode', label:'Keycode', ph:'e.g. 5L7DZRZL4FC6C2E'},
     {id:'purpose', label:'Purpose of translation', ph:'e.g. Marriage registration in Japan'}
   ]
 };
@@ -1161,7 +1259,9 @@ function onDoctypeChange(val) {
   var p2wrap = document.getElementById('page2-upload-wrap');
   if (val === 'Birth Certificate') {
     p2wrap.style.display = 'block';
-    if (p1badge) p1badge.textContent = 'PAGE 1 OF 1 · 第1ページ';
+    // Only reset to 1 OF 1 if no page 2 file uploaded yet
+    var doc2Already = document.getElementById('f-doc2').files && document.getElementById('f-doc2').files.length > 0;
+    if (p1badge) p1badge.textContent = doc2Already ? 'PAGE 1 OF 2 · 第1ページ（全2ページ）' : 'PAGE 1 OF 1 · 第1ページ';
   } else {
     p2wrap.style.display = 'none';
     doc2FileData = null;
@@ -1441,7 +1541,7 @@ async function onDocUpload(input) {
       'CENOMAR': 'Applicant full name at top. Date of birth, place of birth, sex, citizenship. Father name and mother maiden name. Period covered (e.g. 1945–2024) from the certification text. Reference number and date of issuance at bottom.',
       'Advisory on Marriages': 'Subject full name. Date of birth, place of birth, sex. Number of marriages found. Name of bride/groom spouse. Date of marriage, place of marriage. Remarks or annotation (e.g. With Foreign Divorce Decree). Period covered from certification text. Date of issuance.',
       'Certificate of No Birth Record': 'Subject full name. Date of birth, place of birth. Father name and mother maiden name. Date of issuance.',
-      'Apostille': 'This is a DFA Apostille certificate from the Philippines. Read: Serial Number (S.N.) at top left. Item 1 Country. Item 2 signed by (full name). Item 3 capacity/title. Item 4 seal/stamp of (institution name). Item 5 place certified (city). Item 6 date (day month year — convert to YYYY-MM-DD). Item 7 certified by (full name in uppercase). Item 8 apostille number. Bottom right: underlying document type (e.g. Birth Certificate) and reference number.'
+      'Apostille': 'This is a DFA Apostille certificate from the Philippines. Read: Serial Number (S.N.) at top left. Item 1 Country. Item 2 signed by (full name). Item 3 capacity/title. Item 4 seal/stamp of (institution name). Item 5 place certified (city). Item 6 date (day month year — convert to YYYY-MM-DD). Item 7 certified by (full name in uppercase). Item 8 apostille number. Underlying document type and reference number at bottom right. KEYCODE value at bottom left.'
     };
 
     var prompt = 'You are an expert at reading Philippine government documents. ' +
