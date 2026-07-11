@@ -207,8 +207,12 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
 
       <div class="img-row">
         <div class="img-box">
-          <div class="img-box-label">PSA Document</div>
+          <div class="img-box-label">PSA Document — Page 1</div>
           <div id="m-doc-img"></div>
+        </div>
+        <div class="img-box" id="m-doc2-box" style="display:none">
+          <div class="img-box-label" style="color:#c9a84c;font-weight:700">📄 Page 2 — Affidavits</div>
+          <div id="m-doc2-img"></div>
         </div>
         <div class="img-box">
           <div class="img-box-label">Payment Proof</div>
@@ -217,8 +221,14 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
       </div>
 
       <div class="fields-box">
-        <div class="fields-box-title">Document Fields</div>
+        <div class="fields-box-title">Document Fields — Page 1</div>
         <div class="fields-grid" id="m-fields"></div>
+      </div>
+
+      <!-- Page 2 affidavit fields — shown only when hasPage2 -->
+      <div class="fields-box" id="m-page2-box" style="display:none;border-color:#c9a84c">
+        <div class="fields-box-title" style="color:#c9a84c">Page 2 — Affidavit Fields</div>
+        <div class="fields-grid" id="m-page2-fields"></div>
       </div>
 
       <!-- Consent badge — admin only -->
@@ -390,6 +400,23 @@ function openModal(id) {
     docImg.innerHTML = '<div class="no-img">No document uploaded</div>';
   }
 
+  // Page 2 image
+  var doc2Box = document.getElementById('m-doc2-box');
+  var doc2Img = document.getElementById('m-doc2-img');
+  var doc2Src = (s.doc2File && s.doc2File.url) ? s.doc2File.url :
+                (s.doc2File && s.doc2File.data && s.doc2File.data.length > 100) ?
+                'data:image/jpeg;base64,' + s.doc2File.data : '';
+  if (doc2Src || s.hasPage2) {
+    doc2Box.style.display = 'block';
+    if (doc2Src) {
+      var _img3 = new Image(); _img3.style.cssText='width:100%;display:block;max-height:200px;object-fit:contain'; _img3.onload=function(){doc2Img.innerHTML=''; doc2Img.appendChild(this);}; _img3.onerror=function(){doc2Img.innerHTML='<div class="no-img">Image unavailable</div>';}; _img3.src=doc2Src;
+    } else {
+      doc2Img.innerHTML = '<div class="no-img">Page 2 data only (no thumbnail)</div>';
+    }
+  } else {
+    doc2Box.style.display = 'none';
+  }
+
   // Payment proof image - use Cloudinary URL if available, fallback to base64
   var proofImg = document.getElementById('m-proof-img');
   var proofSrc = (s.proofFile && s.proofFile.url) ? s.proofFile.url :
@@ -401,7 +428,7 @@ function openModal(id) {
     proofImg.innerHTML = '<div class="no-img">No payment proof uploaded</div>';
   }
 
-  // Document fields
+  // Document fields (Page 1)
   var fieldsHtml = '';
   if (s.fields) {
     Object.entries(s.fields).forEach(function(entry) {
@@ -410,6 +437,25 @@ function openModal(id) {
     });
   }
   document.getElementById('m-fields').innerHTML = fieldsHtml || '<div style="color:#6b7280;font-size:12px">No fields recorded</div>';
+
+  // Page 2 affidavit fields
+  var p2Box = document.getElementById('m-page2-box');
+  var p2FieldsEl = document.getElementById('m-page2-fields');
+  if (s.hasPage2 && s.page2Fields && Object.keys(s.page2Fields).some(function(k){ return s.page2Fields[k]; })) {
+    var p2Html = '';
+    var p2Labels = {
+      p2_pat_father:'Father (Paternity)', p2_pat_mother:'Mother (Paternity)', p2_pat_child:'Child (Paternity)', p2_pat_child_dob:'Child DOB (Paternity)', p2_pat_city:'City Sworn (Paternity)', p2_pat_date_sworn:'Date Sworn (Paternity)', p2_pat_notary:'Notary (Paternity)', p2_pat_ctc:'CTC/ID of Father', p2_pat_ctc_place:'CTC Issued At', p2_pat_ctc_date:'CTC Issued On',
+      p2_del_affiant:'Affiant (Delayed)', p2_del_civil:'Civil Status (Affiant)', p2_del_affiant_addr:'Affiant Address', p2_del_child:'Child (Delayed)', p2_del_child_dob:'Child DOB (Delayed)', p2_del_child_pob:'Child POB (Delayed)', p2_del_attendant:'Attendant', p2_del_attendant_addr:'Attendant Address', p2_del_citizen:'Citizenship', p2_del_father:'Father (Delayed)', p2_del_mother:'Mother (Delayed)', p2_del_married:'Parents Married?', p2_del_marriage_date:'Marriage Date', p2_del_marriage_place:'Marriage Place', p2_del_reason:'Reason for Delay', p2_del_exec_city:'City Executed', p2_del_exec_date:'Date Executed', p2_del_notary:'Notary (Delayed)', p2_del_date_sworn:'Date Sworn (Delayed)', p2_del_remarks:'Remarks (Page 2)'
+    };
+    Object.entries(s.page2Fields).forEach(function(entry) {
+      var k = entry[0], v = entry[1];
+      if (v) p2Html += '<div class="field-item"><label>' + (p2Labels[k] || k.replace(/_/g,' ')) + '</label><span>' + v + '</span></div>';
+    });
+    p2FieldsEl.innerHTML = p2Html || '<div style="color:#6b7280;font-size:12px">No Page 2 fields recorded</div>';
+    p2Box.style.display = 'block';
+  } else {
+    p2Box.style.display = 'none';
+  }
 
   // Consent badge
   var consentBox = document.getElementById('m-consent');
@@ -569,7 +615,17 @@ async function doTranslate() {
     'search_type':'照会範囲',
     'reg_number':'登録番号','reg_date':'登録日','issuance_date':'発行日','ref_number':'参照番号',
     'period_covered':'対象期間',
-    'purpose':'翻訳目的'
+    'purpose':'翻訳目的',
+    // Page 2 labels
+    'p2_pat_father':'父の氏名（認知宣誓）','p2_pat_mother':'母の氏名（認知宣誓）','p2_pat_child':'子の氏名（認知宣誓）','p2_pat_child_dob':'子の生年月日（認知宣誓）',
+    'p2_pat_city':'宣誓都市（認知）','p2_pat_date_sworn':'宣誓日（認知）','p2_pat_notary':'公証人（認知）','p2_pat_ctc':'父のCTC/有効ID番号','p2_pat_ctc_place':'CTC発行地','p2_pat_ctc_date':'CTC発行日',
+    'p2_del_affiant':'宣誓者氏名（遅延登録）','p2_del_civil':'宣誓者の婚姻状況','p2_del_affiant_addr':'宣誓者住所',
+    'p2_del_child':'子の氏名（遅延登録）','p2_del_child_dob':'子の生年月日（遅延登録）','p2_del_child_pob':'子の出生地（遅延登録）',
+    'p2_del_attendant':'立会者（遅延登録）','p2_del_attendant_addr':'立会者住所','p2_del_citizen':'子の国籍',
+    'p2_del_father':'父の氏名（遅延登録）','p2_del_mother':'母の氏名（遅延登録）',
+    'p2_del_married':'両親の婚姻有無','p2_del_marriage_date':'婚姻日','p2_del_marriage_place':'婚姻地',
+    'p2_del_reason':'遅延登録の理由','p2_del_exec_city':'供述書作成都市','p2_del_exec_date':'供述書作成日',
+    'p2_del_notary':'公証人（遅延登録）','p2_del_date_sworn':'宣誓日（遅延登録）','p2_del_remarks':'備考（第2ページ）'
   };
 
   var skipTranslation = {'reg_number':true,'ref_number':true,'reg_date':false};
@@ -583,6 +639,24 @@ async function doTranslate() {
       }
     });
   });
+
+  // Append Page 2 affidavit fields if present
+  if (s.hasPage2 && s.page2Fields) {
+    var hasPaternity = Object.keys(s.page2Fields).filter(function(k){ return k.startsWith('p2_pat_') && s.page2Fields[k]; }).length > 0;
+    var hasDelayed = Object.keys(s.page2Fields).filter(function(k){ return k.startsWith('p2_del_') && s.page2Fields[k]; }).length > 0;
+    if (hasPaternity) {
+      sectionText += '\nP2-A. 認知宣誓供述書 / AFFIDAVIT OF ACKNOWLEDGMENT/ADMISSION OF PATERNITY\n';
+      ['p2_pat_father','p2_pat_mother','p2_pat_child','p2_pat_child_dob','p2_pat_city','p2_pat_date_sworn','p2_pat_notary','p2_pat_ctc','p2_pat_ctc_place','p2_pat_ctc_date'].forEach(function(fid) {
+        if (s.page2Fields[fid]) sectionText += '  ' + fid + ' (' + (jpLabels[fid] || fid) + '): ' + s.page2Fields[fid] + '\n';
+      });
+    }
+    if (hasDelayed) {
+      sectionText += '\nP2-B. 出生遅延登録宣誓供述書 / AFFIDAVIT FOR DELAYED REGISTRATION OF BIRTH\n';
+      ['p2_del_affiant','p2_del_civil','p2_del_affiant_addr','p2_del_child','p2_del_child_dob','p2_del_child_pob','p2_del_attendant','p2_del_attendant_addr','p2_del_citizen','p2_del_father','p2_del_mother','p2_del_married','p2_del_marriage_date','p2_del_marriage_place','p2_del_reason','p2_del_exec_city','p2_del_exec_date','p2_del_notary','p2_del_date_sworn','p2_del_remarks'].forEach(function(fid) {
+        if (s.page2Fields[fid]) sectionText += '  ' + fid + ' (' + (jpLabels[fid] || fid) + '): ' + s.page2Fields[fid] + '\n';
+      });
+    }
+  }
 
   var prompt = 'You are a professional Japanese translator for Philippine PSA civil registry documents.\n\n' +
     'DOCUMENT TYPE: ' + s.doctype + '\n' +
@@ -909,7 +983,7 @@ function doDownloadPDF() {
   ].join('');
 
   // ── PSA HEADER (shared) ──
-  function psaHdr(doctit, jptit, formNote) {
+  function psaHdr(doctit, jptit, formNote, pageLabel) {
     return '<div class="psa-hdr">' +
       (formNote ? '<div style="font-size:6px;color:#666;text-align:left">'+formNote+'</div>' : '') +
       '<div class="psa-rep">Republic of the Philippines · フィリピン共和国</div>' +
@@ -917,11 +991,12 @@ function doDownloadPDF() {
       '<div class="psa-civ">OFFICE OF THE CIVIL REGISTRAR GENERAL · 民事登録局</div>' +
       '<div class="psa-doctit">'+doctit+'</div>' +
       '<div class="psa-jptit">'+jptit+'　— 日本語翻訳</div>' +
+      (pageLabel ? '<div style="display:inline-block;background:#1a2744;color:#c9a84c;font-size:7.5px;font-weight:bold;padding:1px 10px;border-radius:2px;margin:2px 0;font-family:Arial,sans-serif;letter-spacing:0.5px">'+pageLabel+'</div>' : '') +
     '</div>';
   }
 
   // ── FOOTER (shared) ──
-  function certBlock() {
+  function certBlock(pageOf) {
     return `<div class="cert-block" style="margin-top:3px;border:1.5px solid #1a2744;border-radius:3px;overflow:hidden;page-break-inside:avoid">
       <div style="background:#1a2744;padding:3px 8px;display:flex;align-items:center;justify-content:space-between">
         <div style="display:flex;align-items:center;gap:6px">
@@ -938,7 +1013,7 @@ function doDownloadPDF() {
             <div style="color:rgba(255,255,255,0.55);font-size:6px;letter-spacing:0.8px;text-transform:uppercase">Official Translator Certification</div>
           </div>
         </div>
-        <div style="color:rgba(255,255,255,0.4);font-size:6px;text-align:right">Philippine PSA Documents · 日本語翻訳サービス</div>
+        <div style="text-align:right"><div style="color:rgba(255,255,255,0.45);font-size:6px;font-family:Arial,sans-serif">Philippine PSA Documents · 日本語翻訳</div><div style="color:#c9a84c;font-size:10px;font-weight:bold;font-family:Arial,sans-serif;line-height:1.1">'+(pageOf||'')+'</div></div>
       </div>
       <div style="background:#fefefe;padding:2px 8px">
         <div style="font-size:6px;color:#1a2744;line-height:1.3;margin-bottom:2px">
@@ -982,20 +1057,23 @@ function doDownloadPDF() {
     </div>`;
   }
 
-  function footer(jptit, doctype) {
+  function footer(jptit, doctype, pageOf) {
     return '<div class="stamp"><span>Documentary Stamp Tax Paid · 登録印紙税納付済</span><span>発行機関：フィリピン統計局（PSA）</span></div>' +
     '<div class="cbox"><b>【翻訳証明】</b>' +
     '本翻訳はフィリピン統計局（PSA）発行の原文書（'+jptit+'）を正確に日本語に翻訳したものです。翻訳者はその正確性を保証します。<br>' +
     '<em>CERTIFICATION: This is a faithful Japanese translation of the original '+doctype+' issued by the Philippine Statistics Authority (PSA). The translator certifies the accuracy of this translation.</em>' +
     '</div>' +
-    certBlock();
+    certBlock(pageOf);
   }
 
   var body = '';
+  var page2body = '';
 
   // ════ BIRTH CERTIFICATE ════
   if (dt === 'Birth Certificate') {
-    body = psaHdr('CERTIFICATE OF LIVE BIRTH','出生証明書') +
+    var totalPages = s.hasPage2 ? 2 : 1;
+    var p1Label = 'PAGE 1 OF ' + totalPages + ' · 第1ページ（全' + totalPages + 'ページ）';
+    body = psaHdr('CERTIFICATE OF LIVE BIRTH','出生証明書', null, p1Label) +
     '<div class="meta"><span>登録番号 / Registry No.: <b>'+gv('reg_number')+'</b></span><span>翻訳日 / Date: <b>'+today+'</b> · '+todayJP+'</span></div>' +
 
     '<div class="sh">A.\u3000子の情報 / CHILD INFORMATION</div>' +
@@ -1047,7 +1125,46 @@ function doDownloadPDF() {
       '<div class="fb s"><div class="fl">発行機関 / Issuing Authority</div><div class="fj">フィリピン統計局（PSA）</div></div>'+
       '<div class="fb"><div class="fl">翻訳目的 / Purpose</div><div class="fj">'+gjv('purpose')+'</div><div class="fe">'+gv('purpose')+'</div></div>'+
     '</div>' +
-    footer(jpTitle, dt);
+    footer(jpTitle, dt, p1Label);
+
+  // ════ BIRTH CERTIFICATE PAGE 2 ════
+  if (s.hasPage2 && s.page2Fields) {
+    var p2f = s.page2Fields || {};
+    function gp2(id) { return jpMap[id] || p2f[id] || ''; }
+    function gjp2(id) {
+      if (jpMap[id]) return jpMap[id];
+      var v = p2f[id] || ''; if (!v) return '';
+      if (v.match(/^\d{4}-\d{2}-\d{2}$/)) { var pp=v.split('-'); return pp[0]+'年'+parseInt(pp[1])+'月'+parseInt(pp[2])+'日'; }
+      return COMMON[v] || v;
+    }
+    function gjp2v(id) { return gjp2(id) || gp2(id) || '—'; }
+    var p2Label = 'PAGE 2 OF 2 · 第2ページ（全2ページ）';
+    var page2body = psaHdr('CERTIFICATE OF LIVE BIRTH — PAGE 2 / AFFIDAVITS','出生証明書 第2ページ — 宣誓供述書', null, p2Label) +
+    '<div class="meta"><span>登録番号 / Registry No.: <b>'+gv('reg_number')+'</b></span><span>翻訳日 / Date: <b>'+today+'</b> · '+todayJP+'</span></div>' +
+
+    (Object.keys(p2f).some(function(k){ return k.startsWith('p2_pat_') && p2f[k]; }) ?
+      '<div class="sh">P2-A.\u3000認知宣誓供述書 / AFFIDAVIT OF ACKNOWLEDGMENT / ADMISSION OF PATERNITY</div>' +
+      '<div class="g2"><div class="fb s"><div class="fn">P2-A-1</div><div class="fl">父の氏名 / Father\'s Name</div><div class="fj">'+gjp2v('p2_pat_father')+'</div><div class="fe">'+gp2('p2_pat_father')+'</div></div><div class="fb"><div class="fn">P2-A-2</div><div class="fl">母の氏名 / Mother\'s Name</div><div class="fj">'+gjp2v('p2_pat_mother')+'</div><div class="fe">'+gp2('p2_pat_mother')+'</div></div></div>' +
+      '<div class="g2"><div class="fb s"><div class="fn">P2-A-3</div><div class="fl">認知された子の氏名 / Child Name Acknowledged</div><div class="fj">'+gjp2v('p2_pat_child')+'</div><div class="fe">'+gp2('p2_pat_child')+'</div></div><div class="fb"><div class="fn">P2-A-4</div><div class="fl">子の生年月日 / Child Date of Birth</div><div class="fj">'+gjp2v('p2_pat_child_dob')+'</div><div class="fe">'+gp2('p2_pat_child_dob')+'</div></div></div>' +
+      '<div class="g3"><div class="fb s"><div class="fn">P2-A-5</div><div class="fl">宣誓都市 / City where Sworn</div><div class="fj">'+gjp2v('p2_pat_city')+'</div><div class="fe">'+gp2('p2_pat_city')+'</div></div><div class="fb"><div class="fn">P2-A-6</div><div class="fl">宣誓日 / Date Sworn</div><div class="fj">'+gjp2v('p2_pat_date_sworn')+'</div><div class="fe">'+gp2('p2_pat_date_sworn')+'</div></div><div class="fb s"><div class="fn">P2-A-7</div><div class="fl">公証人 / Notary Public</div><div class="fj">'+gjp2v('p2_pat_notary')+'</div><div class="fe">'+gp2('p2_pat_notary')+'</div></div></div>' +
+      '<div class="g3"><div class="fb"><div class="fn">P2-A-8</div><div class="fl">父のCTC/有効ID番号 / Father\'s CTC/Valid ID No.</div><div class="fj">'+gp2('p2_pat_ctc')+'</div></div><div class="fb s"><div class="fn">P2-A-9</div><div class="fl">CTC発行地 / CTC Issued At</div><div class="fj">'+gjp2v('p2_pat_ctc_place')+'</div><div class="fe">'+gp2('p2_pat_ctc_place')+'</div></div><div class="fb"><div class="fn">P2-A-10</div><div class="fl">CTC発行日 / CTC Issued On</div><div class="fj">'+gjp2v('p2_pat_ctc_date')+'</div><div class="fe">'+gp2('p2_pat_ctc_date')+'</div></div></div>'
+    : '') +
+
+    (Object.keys(p2f).some(function(k){ return k.startsWith('p2_del_') && p2f[k]; }) ?
+      '<div style="border-top:2px dashed #c9a84c;margin:3px 0"></div>' +
+      '<div class="sh" style="background:#7a5c1a">P2-B.\u3000出生遅延登録宣誓供述書 / AFFIDAVIT FOR DELAYED REGISTRATION OF BIRTH</div>' +
+      '<div class="g3"><div class="fb s"><div class="fn">P2-B-1</div><div class="fl">宣誓者氏名 / Affiant Name</div><div class="fj">'+gjp2v('p2_del_affiant')+'</div><div class="fe">'+gp2('p2_del_affiant')+'</div></div><div class="fb"><div class="fn">P2-B-2</div><div class="fl">宣誓者の婚姻状況 / Civil Status</div><div class="fj">'+gjp2v('p2_del_civil')+'</div></div><div class="fb s"><div class="fn">P2-B-3</div><div class="fl">宣誓者住所 / Affiant Address</div><div class="fj">'+gjp2v('p2_del_affiant_addr')+'</div><div class="fe">'+gp2('p2_del_affiant_addr')+'</div></div></div>' +
+      '<div class="g2"><div class="fb"><div class="fn">P2-B-4</div><div class="fl">登録対象の子の氏名 / Child\'s Name</div><div class="fj">'+gjp2v('p2_del_child')+'</div><div class="fe">'+gp2('p2_del_child')+'</div></div><div class="fb s"><div class="fn">P2-B-5</div><div class="fl">子の生年月日 / Date of Birth</div><div class="fj">'+gjp2v('p2_del_child_dob')+'</div><div class="fe">'+gp2('p2_del_child_dob')+'</div></div></div>' +
+      '<div class="g2"><div class="fb"><div class="fn">P2-B-6</div><div class="fl">子の出生地 / Place of Birth</div><div class="fj">'+gjp2v('p2_del_child_pob')+'</div><div class="fe">'+gp2('p2_del_child_pob')+'</div></div><div class="fb s"><div class="fn">P2-B-7</div><div class="fl">立会者氏名 / Attendant at Birth</div><div class="fj">'+gjp2v('p2_del_attendant')+'</div><div class="fe">'+gp2('p2_del_attendant')+'</div></div></div>' +
+      '<div class="g3"><div class="fb"><div class="fn">P2-B-8</div><div class="fl">立会者住所 / Attendant Address</div><div class="fj">'+gjp2v('p2_del_attendant_addr')+'</div><div class="fe">'+gp2('p2_del_attendant_addr')+'</div></div><div class="fb s"><div class="fn">P2-B-9</div><div class="fl">子の国籍 / Citizenship</div><div class="fj">'+gjp2v('p2_del_citizen')+'</div></div><div class="fb"><div class="fn">P2-B-10</div><div class="fl">遅延登録の理由 / Reason for Delay</div><div class="fj">'+gjp2v('p2_del_reason')+'</div><div class="fe">'+gp2('p2_del_reason')+'</div></div></div>' +
+      '<div class="g2"><div class="fb s"><div class="fn">P2-B-11</div><div class="fl">父の氏名 / Father\'s Name</div><div class="fj">'+gjp2v('p2_del_father')+'</div><div class="fe">'+gp2('p2_del_father')+'</div></div><div class="fb"><div class="fn">P2-B-12</div><div class="fl">母の氏名 / Mother\'s Name</div><div class="fj">'+gjp2v('p2_del_mother')+'</div><div class="fe">'+gp2('p2_del_mother')+'</div></div></div>' +
+      '<div class="g4"><div class="fb s"><div class="fn">P2-B-13</div><div class="fl">両親の婚姻有無 / Parents Married?</div><div class="fj">'+gjp2v('p2_del_married')+'</div></div><div class="fb"><div class="fn">P2-B-14</div><div class="fl">婚姻日 / Marriage Date</div><div class="fj">'+(gp2('p2_del_marriage_date') ? gjp2v('p2_del_marriage_date') : '—（未婚）')+'</div></div><div class="fb s"><div class="fn">P2-B-15</div><div class="fl">供述書作成都市 / City Executed</div><div class="fj">'+gjp2v('p2_del_exec_city')+'</div><div class="fe">'+gp2('p2_del_exec_city')+'</div></div><div class="fb"><div class="fn">P2-B-16</div><div class="fl">供述書作成日 / Date Executed</div><div class="fj">'+gjp2v('p2_del_exec_date')+'</div><div class="fe">'+gp2('p2_del_exec_date')+'</div></div></div>' +
+      '<div class="g3"><div class="fb s"><div class="fn">P2-B-17</div><div class="fl">公証人（第2供述書）/ Notary Public</div><div class="fj">'+gjp2v('p2_del_notary')+'</div><div class="fe">'+gp2('p2_del_notary')+'</div></div><div class="fb"><div class="fn">P2-B-18</div><div class="fl">宣誓日 / Date Sworn</div><div class="fj">'+gjp2v('p2_del_date_sworn')+'</div><div class="fe">'+gp2('p2_del_date_sworn')+'</div></div><div class="fb s"><div class="fn">P2-B-19</div><div class="fl">備考・注記 / Remarks</div><div class="fj">'+(gp2('p2_del_remarks') || '—（なし）')+'</div></div></div>'
+    : '') +
+
+    footer('出生証明書 第2ページ — 宣誓供述書', 'Certificate of Live Birth (Page 2 — Affidavits)', p2Label);
+  }
+
   // ════ MARRIAGE CERTIFICATE ════
   } else if (dt === 'Marriage Certificate') {
     body = psaHdr('CERTIFICATE OF MARRIAGE','婚姻証明書') +
@@ -1257,14 +1374,20 @@ function doDownloadPDF() {
     body = '<div style="padding:20px;color:#888">Unknown document type.</div>';
   }
 
+  // Build page 2 HTML block (Birth Certificate only)
+  var page2Html = (typeof page2body !== 'undefined' && page2body)
+    ? '<div style="page-break-before:always"></div><div class="page">'+page2body+'</div>'
+    : '';
+
   var docHtml = '<!DOCTYPE html><html lang="ja"><head>'+
     '<meta charset="UTF-8">'+
     '<meta name="viewport" content="width=device-width,initial-scale=1">'+
     '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Dancing+Script:wght@600&display=swap" rel="stylesheet">'+
-    '<title>'+dt+' - Japanese Translation</title>'+
-    '<style>'+CSS+'</style>'+
+    '<title>'+dt+' - Japanese Translation'+(page2Html?' (2 Pages)':'')+'</title>'+
+    '<style>'+CSS+'\n@media print{.page{page-break-after:auto}}</style>'+
     '</head><body>'+
     '<div class="page">'+body+'</div>'+
+    page2Html+
     '<scr'+'ipt>document.fonts.ready.then(function(){setTimeout(function(){window.print();},700);});</'+'script>'+
     '</body></html>';
 
