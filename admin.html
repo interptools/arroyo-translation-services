@@ -2084,6 +2084,41 @@ var DOC_FIELDS_ADMIN = {
   ]
 };
 
+var PAGE2_FIELDS_ADMIN = [
+  // Paternity affidavit
+  {id:'p2_pat_father', label:'[Paternity] Father Name', section:'p2'},
+  {id:'p2_pat_mother', label:'[Paternity] Mother Name', section:'p2'},
+  {id:'p2_pat_child',  label:'[Paternity] Child Name', section:'p2'},
+  {id:'p2_pat_child_dob', label:'[Paternity] Child DOB', section:'p2'},
+  {id:'p2_pat_city',   label:'[Paternity] City Sworn', section:'p2'},
+  {id:'p2_pat_date_sworn', label:'[Paternity] Date Sworn', section:'p2'},
+  {id:'p2_pat_notary', label:'[Paternity] Notary Public', section:'p2'},
+  {id:'p2_pat_ctc',    label:'[Paternity] Father CTC/ID No.', section:'p2'},
+  {id:'p2_pat_ctc_place', label:'[Paternity] CTC Issued At', section:'p2'},
+  {id:'p2_pat_ctc_date',  label:'[Paternity] CTC Issued On', section:'p2'},
+  // Delayed registration affidavit
+  {id:'p2_del_affiant', label:'[Delayed] Affiant Name', section:'p2'},
+  {id:'p2_del_civil',   label:'[Delayed] Affiant Civil Status', section:'p2'},
+  {id:'p2_del_affiant_addr', label:'[Delayed] Affiant Address', section:'p2'},
+  {id:'p2_del_child',   label:'[Delayed] Child Name', section:'p2'},
+  {id:'p2_del_child_dob', label:'[Delayed] Child DOB', section:'p2'},
+  {id:'p2_del_child_pob', label:'[Delayed] Child POB', section:'p2'},
+  {id:'p2_del_attendant', label:'[Delayed] Attendant Name', section:'p2'},
+  {id:'p2_del_attendant_addr', label:'[Delayed] Attendant Address', section:'p2'},
+  {id:'p2_del_citizen', label:'[Delayed] Child Citizenship', section:'p2'},
+  {id:'p2_del_father',  label:'[Delayed] Father Name', section:'p2'},
+  {id:'p2_del_mother',  label:'[Delayed] Mother Name', section:'p2'},
+  {id:'p2_del_married', label:'[Delayed] Parents Married?', section:'p2'},
+  {id:'p2_del_marriage_date',  label:'[Delayed] Marriage Date', section:'p2'},
+  {id:'p2_del_marriage_place', label:'[Delayed] Marriage Place', section:'p2'},
+  {id:'p2_del_reason',  label:'[Delayed] Reason for Delay', section:'p2'},
+  {id:'p2_del_exec_city',  label:'[Delayed] City Executed', section:'p2'},
+  {id:'p2_del_exec_date',  label:'[Delayed] Date Executed', section:'p2'},
+  {id:'p2_del_notary',     label:'[Delayed] Notary Public', section:'p2'},
+  {id:'p2_del_date_sworn', label:'[Delayed] Date Sworn', section:'p2'},
+  {id:'p2_del_remarks',    label:'[Delayed] Remarks', section:'p2'},
+];
+
 function toggleEdit() {
   var s = subs.find(function(x) { return x.id === activeId; });
   if (!s) return;
@@ -2094,38 +2129,73 @@ function toggleEdit() {
   var fields = DOC_FIELDS_ADMIN[s.doctype] || [];
   var grid = document.getElementById('edit-fields-grid');
   var fieldData = (s.fields && typeof s.fields === 'object') ? s.fields : {};
-  grid.innerHTML = fields.map(function(f) {
+  var html = fields.map(function(f) {
     var val = fieldData[f.id] || '';
     return '<div class="edit-field"><label>' + f.label + '</label>' +
       '<input type="' + (f.type || 'text') + '" id="ef-' + f.id + '" value="' + val.replace(/"/g,'&quot;') + '"></div>';
   }).join('');
+
+  // Add Page 2 fields for Birth Certificate with hasPage2
+  if (s.doctype === 'Birth Certificate' && s.hasPage2) {
+    var p2Data = (s.page2Fields && typeof s.page2Fields === 'object') ? s.page2Fields : {};
+    html += '<div style="grid-column:1/-1;margin-top:12px;padding-top:10px;border-top:2px solid #c9a84c;font-size:11px;font-weight:700;color:#c9a84c;letter-spacing:0.5px">📄 PAGE 2 — AFFIDAVIT FIELDS</div>';
+    html += PAGE2_FIELDS_ADMIN.map(function(f) {
+      var val = p2Data[f.id] || '';
+      return '<div class="edit-field"><label>' + f.label + '</label>' +
+        '<input type="text" id="p2ef-' + f.id + '" value="' + val.replace(/"/g,'&quot;') + '"></div>';
+    }).join('');
+  }
+
+  grid.innerHTML = html;
   panel.style.display = 'block';
 }
 
 async function saveEdit() {
   var s = subs.find(function(x) { return x.id === activeId; });
   if (!s) return;
-  // Ensure s.fields exists before writing to it
   if (!s.fields || typeof s.fields !== 'object') s.fields = {};
   var fields = DOC_FIELDS_ADMIN[s.doctype] || [];
-  // Read all input values back into s.fields
   fields.forEach(function(f) {
     var el = document.getElementById('ef-' + f.id);
     if (el) s.fields[f.id] = el.value.trim();
   });
-  // Disable button to prevent double-save
+
+  // Save Page 2 fields if present
+  if (s.doctype === 'Birth Certificate' && s.hasPage2) {
+    if (!s.page2Fields || typeof s.page2Fields !== 'object') s.page2Fields = {};
+    PAGE2_FIELDS_ADMIN.forEach(function(f) {
+      var el = document.getElementById('p2ef-' + f.id);
+      if (el) s.page2Fields[f.id] = el.value.trim();
+    });
+  }
+
   var btn = document.querySelector('.edit-save-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
   try {
     await saveSubs();
-    // Refresh the Document Fields display in the modal
+    // Refresh Page 1 fields display
     var fieldsHtml = '';
     Object.entries(s.fields).forEach(function(entry) {
       var k = entry[0], v = entry[1];
       if (v) fieldsHtml += '<div class="field-item"><label>' + k.replace(/_/g,' ') + '</label><span>' + v + '</span></div>';
     });
     document.getElementById('m-fields').innerHTML = fieldsHtml || '<div style="color:#6b7280;font-size:12px">No fields recorded</div>';
-    // Close edit panel
+
+    // Refresh Page 2 fields display
+    if (s.hasPage2 && s.page2Fields) {
+      var p2Labels = {
+        p2_pat_father:'Father (Paternity)', p2_pat_mother:'Mother (Paternity)', p2_pat_child:'Child (Paternity)', p2_pat_child_dob:'Child DOB (Paternity)', p2_pat_city:'City Sworn (Paternity)', p2_pat_date_sworn:'Date Sworn (Paternity)', p2_pat_notary:'Notary (Paternity)', p2_pat_ctc:'CTC/ID of Father', p2_pat_ctc_place:'CTC Issued At', p2_pat_ctc_date:'CTC Issued On',
+        p2_del_affiant:'Affiant (Delayed)', p2_del_civil:'Civil Status (Affiant)', p2_del_affiant_addr:'Affiant Address', p2_del_child:'Child (Delayed)', p2_del_child_dob:'Child DOB (Delayed)', p2_del_child_pob:'Child POB (Delayed)', p2_del_attendant:'Attendant', p2_del_attendant_addr:'Attendant Address', p2_del_citizen:'Citizenship', p2_del_father:'Father (Delayed)', p2_del_mother:'Mother (Delayed)', p2_del_married:'Parents Married?', p2_del_marriage_date:'Marriage Date', p2_del_marriage_place:'Marriage Place', p2_del_reason:'Reason for Delay', p2_del_exec_city:'City Executed', p2_del_exec_date:'Date Executed', p2_del_notary:'Notary (Delayed)', p2_del_date_sworn:'Date Sworn (Delayed)', p2_del_remarks:'Remarks (Page 2)'
+      };
+      var p2Html = '';
+      Object.entries(s.page2Fields).forEach(function(entry) {
+        var k = entry[0], v = entry[1];
+        if (v) p2Html += '<div class="field-item"><label>' + (p2Labels[k] || k.replace(/_/g,' ')) + '</label><span>' + v + '</span></div>';
+      });
+      var p2FieldsEl = document.getElementById('m-page2-fields');
+      if (p2FieldsEl) p2FieldsEl.innerHTML = p2Html || '<div style="color:#6b7280;font-size:12px">No Page 2 fields recorded</div>';
+    }
+
     document.getElementById('edit-panel').style.display = 'none';
     document.getElementById('edit-fields-grid').innerHTML = '';
     toast('Details updated for ' + s.name);
