@@ -241,6 +241,10 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
         <button class="abtn abtn-pdf" id="b-pdf" onclick="doDownloadPDF()">↓ Download PDF</button>
         <button class="abtn" id="b-affidavit" onclick="doGenerateAffidavit()" style="background:#fef3c7;color:#92400e">📜 Generate Affidavit</button>
         <button class="abtn abtn-email" id="b-email" onclick="doEmail()">✉ Email Customer</button>
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#555;cursor:pointer;margin-left:4px">
+          <input type="checkbox" id="chk-notary" style="width:14px;height:14px;cursor:pointer">
+          Include notarization notice in email
+        </label>
         <button class="abtn abtn-edit" id="b-edit" onclick="toggleEdit()">✏ Edit Details</button>
         <button class="abtn" id="b-edit-trans" onclick="toggleTranslationEditor()" style="background:#e0f2fe;color:#0369a1">✏ Edit Translation</button>
         <button class="abtn" id="b-delete" onclick="doDelete()" style="background:#fee2e2;color:#dc2626;margin-left:auto">🗑 Delete</button>
@@ -1095,15 +1099,6 @@ function doDownloadPDF() {
     '本翻訳はフィリピン統計局（PSA）発行の原文書（'+jptit+'）を正確に日本語に翻訳したものです。翻訳者はその正確性を保証します。<br>' +
     '<em>CERTIFICATION: This is a faithful Japanese translation of the original '+doctype+' issued by the Philippine Statistics Authority (PSA). The translator certifies the accuracy of this translation.</em>' +
     '</div>' +
-    '<div style="background:#fff3cd;border:2px solid #f59e0b;border-radius:4px;padding:5px 8px;margin:3px 0;page-break-inside:avoid">' +
-      '<div style="font-size:8px;font-weight:bold;color:#92400e;letter-spacing:0.3px;margin-bottom:2px">⚠️ IMPORTANT — NOTARIZATION REQUIRED · 公証が必要です</div>' +
-      '<div style="font-size:6.5px;color:#78350f;line-height:1.5">' +
-        'This translation must be <strong>notarized by a Philippine Notary Public</strong> before submission to Japanese immigration, embassy, or municipal offices. ' +
-        'Please bring this document and your original PSA document to any notary public and request a <strong>Sworn Translator\'s Certification (Affidavit)</strong>.<br>' +
-        '<span style="color:#92400e">本翻訳書を日本の入国管理局・大使館・役所に提出する前に、<strong>フィリピン公証人（ノータリー・パブリック）による公証</strong>が必要です。' +
-        '本翻訳書と原本のPSA書類をお持ちの上、公証人事務所にて<strong>翻訳者宣誓供述書（アフィダビット）</strong>の作成をご依頼ください。</span>' +
-      '</div>' +
-    '</div>' +
     certBlock(pageOf);
   }
 
@@ -1413,65 +1408,125 @@ function doDownloadPDF() {
 
   // ════ APOSTILLE ════
   } else if (dt === 'Apostille') {
+
+    // --- Date ordinal helper: "2026-07-09" → "the 9th day of July 2026" ---
+    var apoDateOrdinal = (function() {
+      var raw = gv('apo_date');
+      if (!raw) return '—';
+      var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      var d = new Date(raw);
+      if (isNaN(d)) return raw;
+      var day = d.getUTCDate();
+      var suffix = (day >= 11 && day <= 13) ? 'th' : ['th','st','nd','rd','th'][Math.min(day % 10, 4)];
+      return 'the ' + day + suffix + ' day of ' + months[d.getUTCMonth()] + ' ' + d.getUTCFullYear();
+    })();
+
+    // --- Dynamic signature: derive initials from apo_by (e.g. "LEONIDES F. FAJILAGO" → "L. Fajilago") ---
+    var apoSigName = (function() {
+      var raw = gv('apo_by');
+      if (!raw) return '—';
+      var parts = raw.trim().split(/\s+/);
+      if (parts.length === 1) return raw;
+      var last = parts[parts.length - 1];
+      last = last.charAt(0).toUpperCase() + last.slice(1).toLowerCase();
+      var first = parts[0].charAt(0).toUpperCase() + '.';
+      return first + ' ' + last;
+    })();
+
     body =
     '<div style="background:#f5f0e0;font-family:\'Times New Roman\',Georgia,serif;padding:8px 10px;border:1px solid #c8b89a;min-height:100%">' +
 
-    // Header
+    // Header — Japanese primary (translation highlight), English secondary (original reference)
     '<div style="text-align:center;margin-bottom:10px">' +
-      '<div style="font-size:10px;font-weight:bold;color:#1a2744;letter-spacing:0.5px">外務省（フィリピン共和国）</div>' +
-      '<div style="font-size:7px;color:#666;margin-top:1px">DEPARTMENT OF FOREIGN AFFAIRS · KAGAWARAN NG UGNAYANG PANLABAS</div>' +
+      '<div style="font-size:11px;font-weight:bold;color:#1a2744;letter-spacing:0.5px">外務省（フィリピン共和国）</div>' +
+      '<div style="font-size:7px;color:#888;margin-top:1px">DEPARTMENT OF FOREIGN AFFAIRS · KAGAWARAN NG UGNAYANG PANLABAS</div>' +
     '</div>' +
 
-    // SN
+    // SN — Japanese primary
     '<div style="margin-bottom:10px">' +
-      '<div style="font-size:9px;font-weight:bold;color:#1a2744">一連番号（S.N.）　<span style="font-size:10px">'+gv('apo_sn')+'</span></div>' +
+      '<div style="font-size:10px;font-weight:bold;color:#1a2744">一連番号（S.N.）　<span style="font-size:11px">'+gv('apo_sn')+'</span></div>' +
       '<div style="font-size:7px;color:#888">S.N. '+gv('apo_sn')+'</div>' +
     '</div>' +
 
     // Main box
     '<div style="border:1.5px solid #888;border-radius:4px;padding:10px 12px;background:#faf6ea;margin-bottom:10px">' +
 
-      // Title
+      // Title — Japanese primary, APOSTILLE secondary
       '<div style="text-align:center;margin-bottom:10px">' +
-        '<div style="font-size:16px;font-weight:bold;color:#1a2744;letter-spacing:2px">アポスティーユ</div>' +
+        '<div style="font-size:18px;font-weight:bold;color:#1a2744;letter-spacing:2px">アポスティーユ</div>' +
         '<div style="font-size:9px;font-weight:bold;color:#555;margin-top:1px">APOSTILLE</div>' +
         '<div style="font-size:7px;color:#888;font-style:italic;margin-top:2px">（1961年10月5日ハーグ条約） / (Convention de La Haye du 5 Octobre 1961)</div>' +
       '</div>' +
 
-      // Item 1
-      '<div style="margin-bottom:6px"><div style="font-size:9px;font-weight:bold;color:#1a2744">１．国：<span style="font-size:10px">'+gjv('apo_country')+'</span></div><div style="font-size:7px;color:#888;padding-left:14px">1. Country: '+gv('apo_country')+'</div></div>' +
+      // Item 1 — Japanese primary
+      '<div style="margin-bottom:6px">' +
+        '<div style="font-size:9px;font-weight:bold;color:#1a2744">１．国：<span style="font-size:10px">'+gjv('apo_country')+'</span></div>' +
+        '<div style="font-size:7px;color:#888;padding-left:14px">1. Country: '+gv('apo_country')+'</div>' +
+      '</div>' +
 
-      // This public document
-      '<div style="text-align:center;margin:8px 0 6px"><div style="font-size:9px;font-weight:bold;color:#1a2744">本公文書は</div><div style="font-size:7px;color:#888;font-style:italic">This public document</div></div>' +
+      // This public document — Japanese primary
+      '<div style="text-align:center;margin:8px 0 6px">' +
+        '<div style="font-size:9px;font-weight:bold;color:#1a2744">本公文書は</div>' +
+        '<div style="font-size:7px;color:#888;font-style:italic">This public document</div>' +
+      '</div>' +
 
-      // Items 2-4
-      '<div style="margin-bottom:6px"><div style="font-size:9px;font-weight:bold;color:#1a2744">２．署名者：<span style="font-size:10px">'+gjv('apo_signed_by')+'</span>　により署名されており</div><div style="font-size:7px;color:#888;padding-left:14px">2. has been signed by '+gv('apo_signed_by')+'</div></div>' +
-      '<div style="margin-bottom:6px"><div style="font-size:9px;font-weight:bold;color:#1a2744">３．資格・役職：<span style="font-size:10px">'+gjv('apo_capacity')+'</span>　の資格において</div><div style="font-size:7px;color:#888;padding-left:14px">3. acting in the capacity of '+gv('apo_capacity')+'</div></div>' +
-      '<div style="margin-bottom:8px"><div style="font-size:9px;font-weight:bold;color:#1a2744">４．印章・スタンプ：<span style="font-size:10px">'+gjv('apo_seal_of')+'</span>　の印章を有しています</div><div style="font-size:7px;color:#888;padding-left:14px">4. bears the seal/stamp of '+gv('apo_seal_of')+'</div></div>' +
+      // Items 2-4 — Japanese primary
+      '<div style="margin-bottom:6px">' +
+        '<div style="font-size:9px;font-weight:bold;color:#1a2744">２．署名者：<span style="font-size:10px">'+gjv('apo_signed_by')+'</span>　により署名されており</div>' +
+        '<div style="font-size:7px;color:#888;padding-left:14px">2. has been signed by '+gv('apo_signed_by')+'</div>' +
+      '</div>' +
+      '<div style="margin-bottom:6px">' +
+        '<div style="font-size:9px;font-weight:bold;color:#1a2744">３．資格・役職：<span style="font-size:10px">'+gjv('apo_capacity')+'</span>　の資格において</div>' +
+        '<div style="font-size:7px;color:#888;padding-left:14px">3. acting in the capacity of '+gv('apo_capacity')+'</div>' +
+      '</div>' +
+      '<div style="margin-bottom:8px">' +
+        '<div style="font-size:9px;font-weight:bold;color:#1a2744">４．印章・スタンプ：<span style="font-size:10px">'+gjv('apo_seal_of')+'</span>　の印章を有しています</div>' +
+        '<div style="font-size:7px;color:#888;padding-left:14px">4. bears the seal/stamp of '+gv('apo_seal_of')+'</div>' +
+      '</div>' +
 
-      // Certified
-      '<div style="text-align:center;margin:8px 0 6px"><div style="font-size:9px;font-weight:bold;color:#1a2744">認証済</div><div style="font-size:7px;color:#888;font-style:italic">Certified</div></div>' +
+      // Certified — Japanese primary
+      '<div style="text-align:center;margin:8px 0 6px">' +
+        '<div style="font-size:9px;font-weight:bold;color:#1a2744">認証済</div>' +
+        '<div style="font-size:7px;color:#888;font-style:italic">Certified</div>' +
+      '</div>' +
 
-      // Items 5-8
-      '<div style="margin-bottom:6px"><div style="font-size:9px;font-weight:bold;color:#1a2744">５．認証地：<span style="font-size:10px">'+gjv('apo_place')+'</span></div><div style="font-size:7px;color:#888;padding-left:14px">5. at '+gv('apo_place')+'</div></div>' +
-      '<div style="margin-bottom:6px"><div style="font-size:9px;font-weight:bold;color:#1a2744">６．認証日：<span style="font-size:10px">'+gjv('apo_date')+'</span></div><div style="font-size:7px;color:#888;padding-left:14px">6. '+gv('apo_date')+'</div></div>' +
-      '<div style="margin-bottom:6px"><div style="font-size:9px;font-weight:bold;color:#1a2744">７．認証者：<span style="font-size:10px">'+gjv('apo_by')+'</span></div><div style="font-size:7px;color:#888;padding-left:14px">7. by '+gv('apo_by')+'</div></div>' +
-      '<div style="margin-bottom:10px"><div style="font-size:9px;font-weight:bold;color:#1a2744">８．番号：<span style="font-size:10px">'+gv('apo_number')+'</span></div><div style="font-size:7px;color:#888;padding-left:14px">8. No. '+gv('apo_number')+'</div></div>' +
+      // Items 5-8 — Japanese primary, Item 6 ordinal English in sub-label
+      '<div style="margin-bottom:6px">' +
+        '<div style="font-size:9px;font-weight:bold;color:#1a2744">５．認証地：<span style="font-size:10px">'+gjv('apo_place')+'</span></div>' +
+        '<div style="font-size:7px;color:#888;padding-left:14px">5. at '+gv('apo_place')+'</div>' +
+      '</div>' +
+      '<div style="margin-bottom:6px">' +
+        '<div style="font-size:9px;font-weight:bold;color:#1a2744">６．認証日：<span style="font-size:10px">'+gjv('apo_date')+'</span></div>' +
+        '<div style="font-size:7px;color:#888;padding-left:14px">6. '+apoDateOrdinal+'</div>' +
+      '</div>' +
+      '<div style="margin-bottom:6px">' +
+        '<div style="font-size:9px;font-weight:bold;color:#1a2744">７．認証者：<span style="font-size:10px">'+gjv('apo_by')+'</span></div>' +
+        '<div style="font-size:7px;color:#888;padding-left:14px">7. by '+gv('apo_by')+'</div>' +
+      '</div>' +
+      '<div style="margin-bottom:10px">' +
+        '<div style="font-size:9px;font-weight:bold;color:#1a2744">８．番号：<span style="font-size:10px">'+gv('apo_number')+'</span></div>' +
+        '<div style="font-size:7px;color:#888;padding-left:14px">8. No. '+gv('apo_number')+'</div>' +
+      '</div>' +
 
-      // Items 9 & 10
+      // Items 9 & 10 — Japanese primary, dynamic signature
       '<div style="display:flex;justify-content:space-between;align-items:flex-start">' +
-        '<div><div style="font-size:9px;font-weight:bold;color:#1a2744">９．印章・スタンプ</div><div style="font-size:7px;color:#888">9. Seal/Stamp</div></div>' +
-        '<div style="text-align:right"><div style="font-size:9px;font-weight:bold;color:#1a2744">１０．署名：</div><div style="font-size:7px;color:#888">10. Signature:</div>' +
-          '<div style="border-bottom:1px solid #555;width:100px;height:24px;margin-top:4px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px">' +
-            '<span style="font-family:\'Dancing Script\',cursive;font-size:14px;color:#1a2744">L. Fajilago</span>' +
+        '<div>' +
+          '<div style="font-size:9px;font-weight:bold;color:#1a2744">９．印章・スタンプ</div>' +
+          '<div style="font-size:7px;color:#888">9. Seal/Stamp</div>' +
+        '</div>' +
+        '<div style="text-align:right">' +
+          '<div style="font-size:9px;font-weight:bold;color:#1a2744">１０．署名：</div>' +
+          '<div style="font-size:7px;color:#888">10. Signature:</div>' +
+          '<div style="border-bottom:1px solid #555;width:130px;height:30px;margin-top:4px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:2px">' +
+            '<span style="font-family:\'Dancing Script\',cursive;font-size:16px;color:#1a2744">'+apoSigName+'</span>' +
           '</div>' +
           '<div style="font-size:7px;color:#888;margin-top:2px">認証担当官 / Authentication Officer</div>' +
         '</div>' +
       '</div>' +
     '</div>' +
 
-    // Below box
-    '<div style="text-align:right;margin-bottom:10px;line-height:1.7">' +
+    // Below box — right-aligned, Japanese primary
+    '<div style="text-align:right;margin-bottom:10px;line-height:1.8">' +
       '<div style="font-size:9px;font-weight:bold;color:#1a2744">原文書：<span style="font-size:10px">'+gjv('apo_underlying_doc')+'</span></div>' +
       '<div style="font-size:7px;color:#888">'+gv('apo_underlying_doc')+'</div>' +
       '<div style="font-size:9px;font-weight:bold;color:#1a2744;margin-top:3px">参照番号：<span style="font-size:10px">'+gv('apo_ref_number')+'</span></div>' +
@@ -1480,7 +1535,7 @@ function doDownloadPDF() {
       '<div style="font-size:7px;color:#888">****NOTHING FOLLOWS****</div>' +
     '</div>' +
 
-    // Keycode
+    // Keycode — Japanese primary
     '<div style="margin-bottom:10px;line-height:1.7">' +
       '<div style="font-size:9px;font-weight:bold;color:#1a2744">キーコード：<span style="font-size:9px">'+gv('apo_keycode')+'</span></div>' +
       '<div style="font-size:7px;color:#888">KEYCODE: '+gv('apo_keycode')+'</div>' +
@@ -1488,12 +1543,15 @@ function doDownloadPDF() {
       '<div style="font-size:7px;color:#888">To verify this document, please log in to https://www.apostille.gov.ph and follow the instructions indicated.</div>' +
     '</div>' +
 
-    // Footer disclaimer
-    '<div style="border-top:0.5px solid #bbb;padding-top:6px;margin-bottom:8px;line-height:1.5">' +
-      '<div style="font-size:7.5px;font-weight:bold;color:#1a2744">本アポスティーユは、公文書に署名した者の署名の真正性及び署名者の資格のみを証明するものです。</div>' +
-      '<div style="font-size:7px;color:#888;margin-top:1px">This Apostille only certifies the authenticity of the signature and the capacity of the person who has signed the public document.</div>' +
-      '<div style="font-size:7.5px;font-weight:bold;color:#1a2744;margin-top:4px">本アポスティーユはフィリピン国内では無効です。</div>' +
-      '<div style="font-size:7px;color:#888;margin-top:1px">This Apostille is not valid for use in the Philippines.</div>' +
+    // Footer disclaimer — full 4 paragraphs, Japanese primary, English secondary
+    '<div style="border-top:0.5px solid #bbb;padding-top:6px;margin-bottom:8px;line-height:1.6;text-align:center">' +
+      '<div style="font-size:7px;color:#1a2744;margin-bottom:2px">本アポスティーユは、公文書に署名した者の署名の真正性及び署名者の資格のみを証明するものです。また、適切な場合には、当該公文書が有するスタンプ・印章の同一性についても証明します。</div>' +
+      '<div style="font-size:6.5px;color:#888;margin-bottom:3px">This Apostille only certifies the authenticity of the signature and the capacity of the person who has signed the public document, and, where appropriate, the identity of the seal or stamp which the public document bears.</div>' +
+      '<div style="font-size:7px;color:#1a2744;margin-bottom:2px">本アポスティーユは、発行された文書の内容を証明するものではありません。</div>' +
+      '<div style="font-size:6.5px;color:#888;margin-bottom:3px">This Apostille does not certify the content of the document for which it was issued.</div>' +
+      '<div style="font-size:6.5px;color:#888;margin-bottom:3px">This certificate does not constitute an Apostille under the Hague Convention of 5 Octobre 1961 when it is presented in a country which is not a Party to the Convention or with which the Convention is not in force as a result of an objection. In such cases, the certificate should be presented to the consular section of the mission representing that country.</div>' +
+      '<div style="font-size:7px;color:#1a2744;margin-bottom:2px">本アポスティーユはフィリピン国内では無効です。</div>' +
+      '<div style="font-size:6.5px;color:#888">This Apostille is not valid for use in the Philippines.</div>' +
     '</div>' +
 
     certBlock() +
@@ -1693,6 +1751,8 @@ async function doEmail() {
     return;
   }
 
+  var includeNotary = document.getElementById('chk-notary') && document.getElementById('chk-notary').checked;
+
   var docLabel   = s.doctype || '-';
   var purpose    = s.purpose || 'Japanese visa application';
   var refNo      = s.id || '-';
@@ -1780,6 +1840,7 @@ async function doEmail() {
     '─────────────────────────────\n' +
     tranText + '\n\n' +
     '─────────────────────────────\n' +
+    (includeNotary ?
     '⚠️  IMPORTANT: NOTARIZATION REQUIRED\n' +
     '─────────────────────────────\n' +
     'Before submitting to Japanese immigration, embassy, or any\n' +
@@ -1791,11 +1852,11 @@ async function doEmail() {
     '2. Request a "Sworn Translator\'s Certification" (Affidavit)\n' +
     '3. The notary will seal and sign the affidavit (approx. ₱300–₱600)\n' +
     '4. Submit the notarized translation together with the original\n\n' +
-    '─────────────────────────────\n' +
+    '─────────────────────────────\n' : '') +
     'HOW TO USE YOUR TRANSLATION\n' +
     '─────────────────────────────\n' +
     '• Print the PDF in A4 size, no margins\n' +
-    '• Get it notarized FIRST (see above)\n' +
+    (includeNotary ? '• Get it notarized at any Notary Public office (see above)\n' : '') +
     '• Attach it together with your original PSA document\n' +
     '• Submit both to the ' + purpose + ' office or embassy\n' +
     '• Keep a digital copy for your records\n\n' +
@@ -1871,7 +1932,8 @@ async function doEmail() {
         '</p>' +
       '</div>' +
 
-      // Notarization warning
+      // Notarization warning — only if checkbox is ticked
+      (includeNotary ?
       '<div style="background:#fffbeb;border:2px solid #f59e0b;border-radius:8px;padding:16px 20px;margin-bottom:20px;">' +
         '<div style="font-size:13px;font-weight:700;color:#92400e;margin-bottom:10px;">⚠️ Important: Notarization Required Before Submission</div>' +
         '<p style="font-size:12px;color:#78350f;margin:0 0 10px;line-height:1.75;">' +
@@ -1888,14 +1950,14 @@ async function doEmail() {
         '<p style="font-size:11px;color:#92400e;margin:10px 0 0;padding-top:8px;border-top:1px solid #fde68a;font-style:italic;">' +
           '公証が必要です。日本の入国管理局・大使館・役所への提出前に、フィリピン公証人による公証（翻訳者宣誓供述書）を必ず取得してください。' +
         '</p>' +
-      '</div>' +
+      '</div>' : '') +
 
       // How to use
       '<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:14px 18px;margin-bottom:20px;">' +
         '<div style="font-size:11px;font-weight:700;color:#166534;margin-bottom:8px;">📋 How to Use Your Translation</div>' +
         '<ol style="font-size:12px;color:#166534;margin:0;padding-left:18px;line-height:2.1;">' +
           '<li>Print the PDF in <strong>A4 size</strong>, no margins</li>' +
-          '<li><strong>Get it notarized</strong> at any Notary Public office (see above)</li>' +
+          (includeNotary ? '<li><strong>Get it notarized</strong> at any Notary Public office (see above)</li>' : '') +
           '<li>Attach it together with your original PSA document</li>' +
           '<li>Submit both to the <strong>' + purpose + '</strong> office or embassy</li>' +
           '<li>Keep a digital copy for your records</li>' +
