@@ -752,6 +752,8 @@ async function doTranslate() {
     'DOCUMENT FIELDS TO TRANSLATE:\n' + sectionText + '\n\n' +
     'TRANSLATION RULES:\n' +
     '- Names: convert ALL names to katakana phonetic spelling (e.g. JUAN -> フアン, DELA CRUZ -> デラ・クルス, SANTOS -> サントス, REYES -> レイエス)\n' +
+    '- EXCEPTION for Japanese names: if the name is Japanese (e.g. Hirahara, Yusuke / Hirahara Yusuke), use the kanji form. Known mappings: HIRAHARA=平原, YUSUKE=裕輔, EIICHI=永一. Format: 平原 裕輔 for father, 平原 永一（ヘルモシラ）for child (surname first, middle name in brackets)\n' +
+    '- Negligence/Neglect=過失 (NOT 怠慢 — 過失 is the correct legal term)\n' +
     '- Dates in YYYY-MM-DD format: convert to Japanese (e.g. 1993-04-22 -> 1993年4月22日)\n' +
     '- Dates as text: convert to Japanese (e.g. April 22, 1993 -> 1993年4月22日)\n' +
     '- Places: use standard Japanese katakana pronunciation\n' +
@@ -1139,10 +1141,10 @@ function doDownloadPDF() {
     '.page{position:relative;margin:0;padding:3mm 7mm 3mm 3mm;width:210mm;min-height:297mm;max-height:297mm}',
     '}',
     // Rotated right-margin annotation
-    '.rot-wrap{position:absolute;top:0;right:0;height:100%;width:12mm;display:flex;align-items:center;justify-content:center;pointer-events:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}',
-    '.rot-ann{writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);background:#c8e6c9;border-left:2px solid #388e3c;border-right:2px solid #388e3c;padding:6px 2px;color:#1b5e20;line-height:1.5;max-height:220mm;font-family:"Noto Sans JP",sans-serif}',
-    '.rot-en{font-size:5.5px;font-weight:bold;display:block;margin-bottom:2px}',
-    '.rot-jp{font-size:6px;font-weight:bold;display:block}'
+    '.rot-wrap{position:absolute;top:0;right:0;height:100%;width:11mm;display:flex;align-items:center;justify-content:center;pointer-events:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}',
+    '.rot-ann{display:block;white-space:nowrap;transform:rotate(-90deg);transform-origin:center center;background:#c8e6c9;border-top:2px solid #388e3c;border-bottom:2px solid #388e3c;padding:3px 8px;color:#1b5e20;font-family:"Noto Sans JP",sans-serif;width:260mm;text-align:center}',
+    '.rot-en{font-size:6px;font-weight:bold;display:block;margin-bottom:1px;letter-spacing:0}',
+    '.rot-jp{font-size:6.5px;font-weight:bold;display:block;letter-spacing:0}'
   ].join('');
 
   // ── PSA HEADER (shared) ──
