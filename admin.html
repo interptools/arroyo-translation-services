@@ -1791,41 +1791,38 @@ function doDownloadPDF() {
     ? '<div style="page-break-before:always"></div><div class="page">'+page2body+'</div>'
     : '';
 
-  // Wrap .fj values in editable spans so user can click-to-edit before printing
+  // Make all .fj values contenteditable
   function makeEditable(html) {
-    // Make every .fj div contenteditable on click
-    return html.replace(/<div class="fj">/g, '<div class="fj" contenteditable="true" spellcheck="false" onclick="this.focus()" title="Click to edit">');
+    return html.replace(/<div class="fj">/g,
+      '<div class="fj" contenteditable="true" spellcheck="false" title="Click to edit">');
   }
 
-  var editableBody    = makeEditable(body);
-  var editablePage2   = page2Html ? '<div style="page-break-before:always"></div><div class="page">' + makeEditable(page2Html.replace(/^<div style="page-break-before:always"><\/div><div class="page">/, '').replace(/<\/div>$/, '')) + '</div>' : '';
+  var editableBody  = makeEditable(body);
+  var editablePage2 = page2Html
+    ? '<div style="page-break-before:always"></div><div class="page">' +
+      makeEditable(page2Html.replace(/^<div style="page-break-before:always"><\/div><div class="page">/, '').replace(/<\/div>$/, '')) +
+      '</div>'
+    : '';
+
+  // Toolbar HTML — injected directly, no script needed
+  var TOOLBAR = '<div style="position:fixed;top:0;left:0;right:0;background:#1a2744;padding:9px 20px;' +
+    'display:flex;align-items:center;gap:14px;z-index:9999;font-family:Arial,sans-serif;' +
+    'box-shadow:0 2px 8px rgba(0,0,0,0.3);-webkit-print-color-adjust:exact;" class="no-print">' +
+    '<span style="font-size:13px;font-weight:700;color:#e8c97a;">✏ Edit Mode</span>' +
+    '<button onclick="window.print()" style="padding:7px 18px;background:#c9a84c;color:#1a2744;' +
+      'border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Arial,sans-serif;">' +
+      '🖨&nbsp; Print / Save as PDF' +
+    '</button>' +
+    '<span style="font-size:11px;color:rgba(255,255,255,0.55);">Click any Japanese field value to edit before printing</span>' +
+    '</div>' +
+    '<div style="height:46px" class="no-print"></div>';
 
   var EDIT_CSS = [
-    // Edit toolbar — hidden on print
-    '.edit-toolbar{position:fixed;top:0;left:0;right:0;background:#1a2744;color:#e8c97a;padding:8px 16px;display:flex;align-items:center;gap:12px;z-index:9999;font-family:Inter,sans-serif;font-size:13px}',
-    '.edit-toolbar button{padding:6px 16px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif}',
-    '.etb-print{background:#c9a84c;color:#1a2744}',
-    '.etb-hint{font-size:11px;color:rgba(255,255,255,0.6);margin-left:8px}',
-    // Editable field highlight
-    '[contenteditable]{outline:none;border-radius:2px;transition:background .15s;cursor:text}',
-    '[contenteditable]:hover{background:rgba(201,168,76,0.12)!important}',
-    '[contenteditable]:focus{background:rgba(201,168,76,0.22)!important;box-shadow:0 0 0 1.5px #c9a84c}',
-    // Push page down to not overlap toolbar
-    'body{padding-top:44px}',
-    '@media print{.edit-toolbar{display:none!important}body{padding-top:0}[contenteditable]{background:transparent!important;box-shadow:none!important}}'
+    '[contenteditable="true"]{outline:none;cursor:text;border-radius:2px;transition:background .15s}',
+    '[contenteditable="true"]:hover{background:rgba(201,168,76,0.15)!important}',
+    '[contenteditable="true"]:focus{background:rgba(201,168,76,0.25)!important;box-shadow:0 0 0 1.5px #c9a84c;outline:none}',
+    '@media print{.no-print{display:none!important}[contenteditable]{background:transparent!important;box-shadow:none!important;cursor:default}}'
   ].join('');
-
-  var EDIT_SCRIPT =
-    'document.fonts.ready.then(function(){' +
-      // Show toolbar
-      'var tb=document.createElement("div");' +
-      'tb.className="edit-toolbar";' +
-      'tb.innerHTML=' +
-        '"<span style=\"font-weight:700;color:#e8c97a\">✏ Edit Mode</span>" +' +
-        '"<button class=\"etb-print\" onclick=\"window.print()\">🖨 Print / Save as PDF</button>" +' +
-        '"<span class=\"etb-hint\">Click any field value to edit · Changes apply before printing</span>";' +
-      'document.body.prepend(tb);' +
-    '});';
 
   var docHtml = '<!DOCTYPE html><html lang="ja"><head>'+
     '<meta charset="UTF-8">'+
@@ -1834,9 +1831,9 @@ function doDownloadPDF() {
     '<title>'+dt+' - Japanese Translation'+(page2Html?' (2 Pages)':'')+'</title>'+
     '<style>'+CSS+'\n'+EDIT_CSS+'\n@media print{.page{page-break-after:auto}}</style>'+
     '</head><body>'+
+    TOOLBAR+
     '<div class="page">'+editableBody+'</div>'+
     editablePage2+
-    '<scr'+'ipt>'+EDIT_SCRIPT+'</'+'script>'+
     '</body></html>';
 
   var blob = new Blob([docHtml], {type:'text/html'});
