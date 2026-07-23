@@ -1791,23 +1791,59 @@ function doDownloadPDF() {
     ? '<div style="page-break-before:always"></div><div class="page">'+page2body+'</div>'
     : '';
 
+  // Wrap .fj values in editable spans so user can click-to-edit before printing
+  function makeEditable(html) {
+    // Make every .fj div contenteditable on click
+    return html.replace(/<div class="fj">/g, '<div class="fj" contenteditable="true" spellcheck="false" onclick="this.focus()" title="Click to edit">');
+  }
+
+  var editableBody    = makeEditable(body);
+  var editablePage2   = page2Html ? '<div style="page-break-before:always"></div><div class="page">' + makeEditable(page2Html.replace(/^<div style="page-break-before:always"><\/div><div class="page">/, '').replace(/<\/div>$/, '')) + '</div>' : '';
+
+  var EDIT_CSS = [
+    // Edit toolbar — hidden on print
+    '.edit-toolbar{position:fixed;top:0;left:0;right:0;background:#1a2744;color:#e8c97a;padding:8px 16px;display:flex;align-items:center;gap:12px;z-index:9999;font-family:Inter,sans-serif;font-size:13px}',
+    '.edit-toolbar button{padding:6px 16px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif}',
+    '.etb-print{background:#c9a84c;color:#1a2744}',
+    '.etb-hint{font-size:11px;color:rgba(255,255,255,0.6);margin-left:8px}',
+    // Editable field highlight
+    '[contenteditable]{outline:none;border-radius:2px;transition:background .15s;cursor:text}',
+    '[contenteditable]:hover{background:rgba(201,168,76,0.12)!important}',
+    '[contenteditable]:focus{background:rgba(201,168,76,0.22)!important;box-shadow:0 0 0 1.5px #c9a84c}',
+    // Push page down to not overlap toolbar
+    'body{padding-top:44px}',
+    '@media print{.edit-toolbar{display:none!important}body{padding-top:0}[contenteditable]{background:transparent!important;box-shadow:none!important}}'
+  ].join('');
+
+  var EDIT_SCRIPT =
+    'document.fonts.ready.then(function(){' +
+      // Show toolbar
+      'var tb=document.createElement("div");' +
+      'tb.className="edit-toolbar";' +
+      'tb.innerHTML=' +
+        '"<span style=\"font-weight:700;color:#e8c97a\">✏ Edit Mode</span>" +' +
+        '"<button class=\"etb-print\" onclick=\"window.print()\">🖨 Print / Save as PDF</button>" +' +
+        '"<span class=\"etb-hint\">Click any field value to edit · Changes apply before printing</span>";' +
+      'document.body.prepend(tb);' +
+    '});';
+
   var docHtml = '<!DOCTYPE html><html lang="ja"><head>'+
     '<meta charset="UTF-8">'+
     '<meta name="viewport" content="width=device-width,initial-scale=1">'+
     '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Dancing+Script:wght@600&display=swap" rel="stylesheet">'+
     '<title>'+dt+' - Japanese Translation'+(page2Html?' (2 Pages)':'')+'</title>'+
-    '<style>'+CSS+'\n@media print{.page{page-break-after:auto}}</style>'+
+    '<style>'+CSS+'\n'+EDIT_CSS+'\n@media print{.page{page-break-after:auto}}</style>'+
     '</head><body>'+
-    '<div class="page">'+body+'</div>'+
-    page2Html+
-    '<scr'+'ipt>document.fonts.ready.then(function(){setTimeout(function(){window.print();},700);});</'+'script>'+
+    '<div class="page">'+editableBody+'</div>'+
+    editablePage2+
+    '<scr'+'ipt>'+EDIT_SCRIPT+'</'+'script>'+
     '</body></html>';
 
   var blob = new Blob([docHtml], {type:'text/html'});
   var url = URL.createObjectURL(blob);
   var win = window.open(url,'_blank');
   if (!win) { var a=document.createElement('a'); a.href=url; a.download=s.id+'-JP-'+dt.replace(/\s+/g,'-')+'.html'; a.click(); }
-  toast('PDF ready — open new tab → Print → Save as PDF (A4, no margins)');
+  toast('PDF ready — click any field to edit, then Print → Save as PDF');
 }
 
 
