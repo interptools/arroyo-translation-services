@@ -954,7 +954,7 @@ function doDownloadPDF() {
   var CSS = [
     '*{box-sizing:border-box;margin:0;padding:0}',
     'body{font-family:"Noto Sans JP","Times New Roman",serif;background:#faf8f0;color:#222;margin:0;padding:0}',
-    '.page{width:210mm;min-height:297mm;max-height:297mm;background:#faf8f0;padding:4mm 8mm 4mm;margin:0 auto;overflow:hidden}',
+    '.page{position:relative;width:210mm;min-height:297mm;max-height:297mm;background:#faf8f0;padding:4mm 8mm 4mm 4mm;margin:0 auto;overflow:hidden}',
     // PSA header — ultra compact
     '.psa-hdr{text-align:center;padding:1px 6px 1px;border-bottom:1.5px solid #999;background:#faf8f0;margin-bottom:0}',
     '.psa-rep{font-size:6.5px;color:#555;letter-spacing:0.2px}',
@@ -1014,8 +1014,11 @@ function doDownloadPDF() {
     '@media print{',
     '@page{size:A4;margin:0}',
     'body{background:#faf8f0;-webkit-print-color-adjust:exact;print-color-adjust:exact}',
-    '.page{margin:0;padding:3mm 7mm 3mm;width:210mm;min-height:297mm;max-height:297mm}',
-    '}'
+    '.page{position:relative;margin:0;padding:3mm 7mm 3mm 3mm;width:210mm;min-height:297mm;max-height:297mm}',
+    '}',
+    // Rotated right-margin annotation
+    '.rot-wrap{position:absolute;top:0;right:0;height:100%;width:14mm;display:flex;align-items:center;justify-content:center;pointer-events:none}',
+    '.rot-ann{writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);background:#e8f5e9;border-left:1px solid #a5d6a7;padding:4px 2px;font-size:5px;color:#1b5e20;line-height:1.4;max-height:200mm;overflow:hidden;white-space:nowrap;font-family:"Noto Sans JP",sans-serif}'
   ].join('');
 
   // ── PSA HEADER (shared) ──
@@ -1161,7 +1164,14 @@ function doDownloadPDF() {
       '<div class="fb s"><div class="fl">発行機関 / Issuing Authority</div><div class="fj">フィリピン統計局（PSA）</div></div>'+
       '<div class="fb"><div class="fl">翻訳目的 / Purpose</div><div class="fj">'+gjv('purpose')+'</div><div class="fe">'+gv('purpose')+'</div></div>'+
     '</div>' +
-    footer(jpTitle, dt, p1Label);
+    footer(jpTitle, dt, p1Label) +
+    // Rotated right-margin correction annotation — only if remarks_birth has correction text
+    (gv('remarks_birth') && /ocrg|corrected|訂正|correction/i.test(gv('remarks_birth'))
+      ? '<div class="rot-wrap"><div class="rot-ann">' +
+          '<span style="font-size:5.5px;font-weight:bold">' + gv('remarks_birth') + '</span>' +
+          '<br><span style="font-size:5px;color:#2e7d32;margin-top:2px;display:block">' + gjv('remarks_birth') + '</span>' +
+        '</div></div>'
+      : '');
 
   // ════ BIRTH CERTIFICATE PAGE 2 ════
   if (s.hasPage2 && s.page2Fields) {
