@@ -2050,13 +2050,7 @@ function doDownloadPDF() {
   // ════ PHILIPPINE PAYSLIP ════
   } else if (dt === 'Philippine Payslip') {
 
-    function psAmt(label_jp, label_en, val, alt) {
-      var bg = alt ? 'background:#f0ece0' : 'background:#faf8f0';
-      return (gv(val) ? '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
-        '<div class="fb" style="'+bg+'"><div class="fl">'+label_jp+' / '+label_en+'</div></div>' +
-        '<div class="fb s" style="'+bg+';text-align:right"><div class="fj">'+gjv(val)+'</div><div class="fe">'+gv(val)+'</div></div>' +
-        '</div>' : '');
-    }
+
 
     body = psaHdr('PAYSLIP — PHILIPPINE','フィリピン給与明細書', null, null) +
     '<div class="meta"><span>会社 / Company: <b contenteditable="true">'+gv('company_name')+'</b></span><span>給与期間 / Period: <b contenteditable="true">'+gv('pay_period')+'</b></span><span>翻訳日 / Date: <b contenteditable="true">'+today+'</b> · <b contenteditable="true">'+todayJP+'</b></span></div>' +
@@ -2129,13 +2123,7 @@ function doDownloadPDF() {
   // ════ JAPANESE PAYSLIP ════
   } else if (dt === 'Japanese Payslip') {
 
-    function jpAmt(label_jp, label_en, val, alt) {
-      var bg = alt ? 'background:#f0ece0' : 'background:#faf8f0';
-      return (gv(val) ? '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
-        '<div class="fb" style="'+bg+'"><div class="fl">'+label_jp+' / '+label_en+'</div></div>' +
-        '<div class="fb s" style="'+bg+';text-align:right"><div class="fj">'+gjv(val)+'</div><div class="fe">'+gv(val)+'</div></div>' +
-        '</div>' : '');
-    }
+
 
     body = psaHdr('PAYSLIP — JAPANESE / 給与明細書','給与明細書 — 英語翻訳', null, null) +
     '<div class="meta"><span>会社 / Company: <b contenteditable="true">'+gv('company_name')+'</b></span><span>支給月 / Period: <b contenteditable="true">'+gv('pay_period')+'</b></span><span>翻訳日 / Date: <b contenteditable="true">'+today+'</b> · <b contenteditable="true">'+todayJP+'</b></span></div>' +
@@ -2208,13 +2196,7 @@ function doDownloadPDF() {
   // ════ CERTIFICATE OF EMPLOYMENT ════
   } else if (dt === 'Certificate of Employment') {
 
-    function coeRow(lj, le, val, alt) {
-      var bg = alt ? 'background:#f0ece0' : 'background:#faf8f0';
-      return '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
-        '<div class="fb s" style="'+bg+'"><div class="fl">'+lj+' / '+le+'</div></div>' +
-        '<div class="fb" style="'+bg+'"><div class="fj">'+gjv(val)+'</div><div class="fe">'+gv(val)+'</div></div>' +
-      '</div>';
-    }
+
 
     body = psaHdr('CERTIFICATE OF EMPLOYMENT','在職証明書', null, null) +
     '<div class="meta"><span>発行日 / Issue Date: <b contenteditable="true">'+gjv('coe_issue_date')+'</b></span>' +
