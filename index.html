@@ -1863,9 +1863,20 @@ async function onDocUpload(input) {
     });
 
     status.style.cssText = 'display:flex;background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12px;align-items:center;gap:8px';
-    status.innerHTML = filled > 0
-      ? '✓ AI filled ' + filled + ' fields from your document. Please review and correct if needed.'
-      : 'Document uploaded. Please fill in the fields below.';
+    if (filled > 0) {
+      status.innerHTML = '✓ AI filled ' + filled + ' fields from your document. Please review and correct if needed.';
+    } else {
+      // Show what AI returned to help diagnose
+      var keys = Object.keys(extracted);
+      var preview = keys.length > 0
+        ? 'AI returned ' + keys.length + ' fields but none matched form fields. Keys: ' + keys.slice(0,5).join(', ')
+        : 'AI returned no data. Raw: ' + raw.slice(0,120);
+      status.style.cssText = 'display:flex;background:#fffbeb;border:1px solid #fde068;color:#92400e;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12px;gap:8px';
+      status.innerHTML = '⚠ Could not auto-fill fields. ' + preview + '. Please fill in manually below.';
+      console.log('AI raw response:', raw);
+      console.log('Extracted:', extracted);
+      console.log('Field IDs expected:', fieldIds);
+    }
 
     if (filled > 0) {
       showScanReview(filled, effectiveDoctype);
