@@ -1416,31 +1416,6 @@ function doDownloadPDF() {
   var page2body = '';
 
   // ════ BIRTH CERTIFICATE ════
-  // Payslip helpers
-      function psRow(label_jp, label_en, val_jp, val_en, alt) {
-        var bg = alt ? 'background:#f0ece0' : 'background:#faf8f0';
-        return '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
-          '<div class="fb s" style="'+bg+'"><div class="fl">'+label_jp+' / '+label_en+'</div></div>' +
-          '<div class="fb" style="'+bg+'"><div class="fj">'+val_jp+'</div><div class="fe">'+val_en+'</div></div>' +
-          '</div>';
-      }
-
-      function psAmt(label_jp, label_en, val, alt) {
-        var bg = alt ? 'background:#f0ece0' : 'background:#faf8f0';
-        return '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
-          '<div class="fb" style="'+bg+'"><div class="fl">'+label_jp+' / '+label_en+'</div></div>' +
-          '<div class="fb s" style="'+bg+';text-align:right"><div class="fj">'+gjv(val)+'</div><div class="fe">'+gv(val)+'</div></div>' +
-          '</div>';
-      }
-
-      function jpAmt(label_jp, label_en, val, alt) {
-        var bg = alt ? 'background:#f0ece0' : 'background:#faf8f0';
-        return '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
-          '<div class="fb" style="'+bg+'"><div class="fl">'+label_jp+' / '+label_en+'</div></div>' +
-          '<div class="fb s" style="'+bg+';text-align:right"><div class="fj">'+gjv(val)+'</div><div class="fe">'+gv(val)+'</div></div>' +
-          '</div>';
-      }
-
   if (dt === 'Birth Certificate') {
     var totalPages = s.hasPage2 ? 2 : 1;
     var p1Label = 'PAGE 1 OF ' + totalPages + ' · 第1ページ（全' + totalPages + 'ページ）';
@@ -2071,63 +2046,56 @@ function doDownloadPDF() {
   // ════ CERTIFICATE OF EMPLOYMENT ════
   } else if (dt === 'Certificate of Employment') {
 
-    body = '<div style=\"background:#f5f0e0;font-family:\'Times New Roman\',Georgia,serif;padding:8px 10px;border:1px solid #c8b89a;min-height:100%\">' +
-    '<div style=\"text-align:center;padding-bottom:5px;border-bottom:2px solid #1a2744;margin-bottom:6px\">' +
-      '<div style=\"font-size:10px;font-weight:bold;color:#1a2744;letter-spacing:0.5px\">'+gv('coe_company').toUpperCase()+'</div>' +
-      '<div style=\"font-size:6.5px;color:#666;margin-top:1px\">'+gv('coe_company_address')+(gv('coe_company_tel') ? ' · '+gv('coe_company_tel') : '')+(gv('coe_company_tin') ? ' · TIN: '+gv('coe_company_tin') : '')+'</div>' +
-      '<div style=\"font-size:12px;font-weight:bold;color:#1a2744;margin:4px 0 1px;letter-spacing:1px\">CERTIFICATE OF EMPLOYMENT</div>' +
-      '<div style=\"font-size:8px;color:#555;font-style:italic\">在職証明書　／　Certificate of Employment — English to Japanese Translation</div>' +
+    body = '<div style=\'background:#f5f0e0;font-family:Times New Roman,Georgia,serif;padding:8px 10px;border:1px solid #c8b89a;min-height:100%\'>' +
+    '<div style=\'text-align:center;padding-bottom:5px;border-bottom:2px solid #1a2744;margin-bottom:6px\'>' +
+      '<div style=\'font-size:10px;font-weight:bold;color:#1a2744\'>'+gv('coe_company').toUpperCase()+'</div>' +
+      '<div style=\'font-size:6.5px;color:#666;margin-top:1px\'>'+gv('coe_company_address')+(gv('coe_company_tel') ? ' · '+gv('coe_company_tel') : '')+(gv('coe_company_tin') ? ' · TIN: '+gv('coe_company_tin') : '')+'</div>' +
+      '<div style=\'font-size:12px;font-weight:bold;color:#1a2744;margin:4px 0 1px;letter-spacing:1px\'>CERTIFICATE OF EMPLOYMENT</div>' +
+      '<div style=\'font-size:8px;color:#555;font-style:italic\'>在職証明書　／　Certificate of Employment — English to Japanese Translation</div>' +
     '</div>' +
-    '<div style=\"display:flex;justify-content:space-between;font-size:7.5px;color:#444;margin:4px 0 6px\">' +
-      '<span>発行日 / Date Issued: <b contenteditable=\"true\" spellcheck=\"false\">'+gjv('coe_issue_date')+'</b> <span style=\"color:#888\">('+gv('coe_issue_date')+')</span></span>' +
-      '<span>翻訳日 / Translation Date: <b contenteditable=\"true\" spellcheck=\"false\">'+todayJP+'</b></span>' +
+    '<div style=\'display:flex;justify-content:space-between;font-size:7.5px;color:#444;margin:4px 0 6px\'>' +
+      '<span>発行日 / Date Issued: <b>'+gjv('coe_issue_date')+'</b> <span style=\'color:#888\'>('+gv('coe_issue_date')+')</span></span>' +
+      '<span>翻訳日 / Translation Date: <b>'+todayJP+'</b></span>' +
     '</div>' +
-    '<div style=\"font-size:8.5px;line-height:1.85;color:#222;margin-bottom:8px\">' +
-      '<p style=\"margin-bottom:5px\"><b>TO WHOM IT MAY CONCERN: / 関係各位：</b></p>' +
-      '<p style=\"margin-bottom:4px\">以下の者が在職していることを証明します：<br><em style=\"font-size:7.5px;color:#888\">This is to certify that the following individual is employed by this company:</em></p>' +
-      '<p style=\"margin-bottom:4px\">氏名 / Name: <span class=\"fill fill-lg\">'+gjv('coe_emp_name')+'</span> <span style=\"font-size:7px;color:#888\">('+gv('coe_emp_name')+')</span></p>' +
-      '<p style=\"margin-bottom:4px\">は現在、弊社に <b>'+gjv('coe_emp_status')+'</b> <span style=\"font-size:7px;color:#888\">('+gv('coe_emp_status')+')</span> として在籍しており、<br><em style=\"font-size:7.5px;color:#888\">is currently employed as '+gv('coe_emp_status')+'</em></p>' +
-      '<p style=\"margin-bottom:4px\">役職 / Position: <span class=\"fill\">'+gjv('coe_emp_position')+'</span> <span style=\"font-size:7px;color:#888\">('+gv('coe_emp_position')+')</span>' +
-        (gv('coe_emp_dept') ? '<br>部署 / Department: <span class=\"fill\">'+gjv('coe_emp_dept')+'</span> <span style=\"font-size:7px;color:#888\">('+gv('coe_emp_dept')+')</span>' : '') +
+    '<div style=\'font-size:8.5px;line-height:1.85;color:#222;margin-bottom:8px\'>' +
+      '<p style=\'margin-bottom:5px\'><b>TO WHOM IT MAY CONCERN: / 関係各位：</b></p>' +
+      '<p style=\'margin-bottom:4px\'>以下の者が在職していることを証明します：<br><em style=\'font-size:7.5px;color:#888\'>This is to certify that the following individual is employed by this company:</em></p>' +
+      '<p style=\'margin-bottom:4px\'>氏名 / Name: <span class=\'fill fill-lg\'>'+gjv('coe_emp_name')+'</span> <span style=\'font-size:7px;color:#888\'>('+gv('coe_emp_name')+')</span></p>' +
+      '<p style=\'margin-bottom:4px\'>は現在、弊社に <b>'+gjv('coe_emp_status')+'</b> <span style=\'font-size:7px;color:#888\'>('+gv('coe_emp_status')+')</span> として在籍しており。</p>' +
+      '<p style=\'margin-bottom:4px\'>役職 / Position: <span class=\'fill\'>'+gjv('coe_emp_position')+'</span> <span style=\'font-size:7px;color:#888\'>('+gv('coe_emp_position')+')</span>' +
+        (gv('coe_emp_dept') ? '<br>部署 / Department: <span class=\'fill\'>'+gjv('coe_emp_dept')+'</span> <span style=\'font-size:7px;color:#888\'>('+gv('coe_emp_dept')+')</span>' : '') +
       '</p>' +
-      '<p style=\"margin-bottom:4px\">在籍期間 / Employment Period: <span class=\"fill\">'+gjv('coe_start_date')+'</span> 〜 <span class=\"fill\">'+gjv('coe_end_date')+'</span><br><em style=\"font-size:7.5px;color:#888\">'+gv('coe_start_date')+' to '+gv('coe_end_date')+'</em></p>' +
-      '<p style=\"margin-bottom:4px\">月額基本給 / Monthly Basic Salary: <span class=\"fill\">'+gjv('coe_monthly_salary')+'</span>' +
-        (gv('coe_salary_currency') ? ' <span style=\"font-size:7px;color:#888\">('+gv('coe_salary_currency')+')</span>' : '') +
-        (gv('coe_allowances') ? '<br>各種手当 / Allowances: <span class=\"fill\">'+gjv('coe_allowances')+'</span>' : '') +
-        (gv('coe_gross_monthly') ? ' &nbsp;月額総支給額 / Gross: <span class=\"fill\">'+gjv('coe_gross_monthly')+'</span>' : '') +
-      '</p>' +
-      '<p style=\"margin-bottom:4px\">本証明書は、<span class=\"fill fill-lg\">'+gjv('purpose')+'</span> の目的のために発行します。<br><em style=\"font-size:7.5px;color:#888\">This certification is issued for '+gv('purpose')+' purposes.</em></p>' +
+      '<p style=\'margin-bottom:4px\'>在籍期間 / Employment Period: <span class=\'fill\'>'+gjv('coe_start_date')+'</span> 〜 <span class=\'fill\'>'+gjv('coe_end_date')+'</span><br><em style=\'font-size:7.5px;color:#888\'>'+gv('coe_start_date')+' to '+gv('coe_end_date')+'</em></p>' +
+      '<p style=\'margin-bottom:4px\'>月額基本給 / Monthly Basic Salary: <span class=\'fill\'>'+gjv('coe_monthly_salary')+'</span>'+(gv('coe_salary_currency') ? ' <span style=\'font-size:7px;color:#888\'>('+gv('coe_salary_currency')+')</span>' : '')+(gv('coe_allowances') ? '<br>各種手当 / Allowances: <span class=\'fill\'>'+gjv('coe_allowances')+'</span>' : '')+'</p>' +
+      '<p style=\'margin-bottom:4px\'>本証明書は <span class=\'fill fill-lg\'>'+gjv('purpose')+'</span> の目的のために発行します。<br><em style=\'font-size:7.5px;color:#888\'>This certification is issued for '+gv('purpose')+' purposes.</em></p>' +
     '</div>' +
-    '<div style=\"border-top:1.5px dashed #c9a84c;margin:6px 0;padding-top:5px\">' +
-      '<div style=\"font-size:6.5px;font-weight:bold;color:#c9a84c;letter-spacing:1px;margin-bottom:4px\">📋 REFERENCE DATA / 参照データ（スキャン・翻訳用）</div>' +
-      '<div style=\"background:#1a2744;color:#e8c97a;font-size:6.5px;font-weight:bold;padding:1.5px 5px\">A.　雇用者情報 / EMPLOYER</div>' +
-      '<div style=\"display:grid;grid-template-columns:1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb\">' +
-        '<div style=\"border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 5px;background:#f0ece0\"><div class=\"fn\">会社名 / Company</div><div class=\"fj\">'+gjv('coe_company')+'</div><div class=\"fe\">'+gv('coe_company')+'</div></div>' +
-        '<div style=\"border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 5px;background:#faf8f0\"><div class=\"fn\">TIN / TIN番号</div><div class=\"fj\">'+gv('coe_company_tin')+'</div><div class=\"fe\">'+gv('coe_company_tin')+'</div></div>' +
+    '<div style=\'border-top:1.5px dashed #c9a84c;margin:6px 0;padding-top:5px\'>' +
+      '<div style=\'font-size:6.5px;font-weight:bold;color:#c9a84c;letter-spacing:1px;margin-bottom:4px\'>📋 REFERENCE DATA / 参照データ（スキャン・翻訳用）</div>' +
+      '<div style=\'background:#1a2744;color:#e8c97a;font-size:6.5px;font-weight:bold;padding:1.5px 5px\'>A.　雇用者情報 / EMPLOYER</div>' +
+      '<div style=\'display:grid;grid-template-columns:1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb\'>' +
+        '<div style=\'border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 5px;background:#f0ece0\'><div class=\'fn\'>会社名 / Company</div><div class=\'fj\'>'+gjv('coe_company')+'</div><div class=\'fe\'>'+gv('coe_company')+'</div></div>' +
+        '<div style=\'border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 5px\'><div class=\'fn\'>TIN番号 / TIN</div><div class=\'fj\'>'+gv('coe_company_tin')+'</div><div class=\'fe\'>'+gv('coe_company_tin')+'</div></div>' +
       '</div>' +
-      '<div style=\"background:#1a2744;color:#e8c97a;font-size:6.5px;font-weight:bold;padding:1.5px 5px;margin-top:2px\">B.　従業員情報 / EMPLOYEE</div>' +
-      '<div style=\"display:grid;grid-template-columns:1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb\">' +
-        '<div style=\"border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 5px;background:#f0ece0\"><div class=\"fn\">氏名 / Name</div><div class=\"fj\">'+gjv('coe_emp_name')+'</div><div class=\"fe\">'+gv('coe_emp_name')+'</div></div>' +
-        '<div style=\"border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 5px;background:#faf8f0\"><div class=\"fn\">役職 / Position</div><div class=\"fj\">'+gjv('coe_emp_position')+'</div><div class=\"fe\">'+gv('coe_emp_position')+'</div></div>' +
+      '<div style=\'background:#1a2744;color:#e8c97a;font-size:6.5px;font-weight:bold;padding:1.5px 5px;margin-top:2px\'>B.　従業員情報 / EMPLOYEE</div>' +
+      '<div style=\'display:grid;grid-template-columns:1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb\'>' +
+        '<div style=\'border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 5px;background:#f0ece0\'><div class=\'fn\'>氏名 / Name</div><div class=\'fj\'>'+gjv('coe_emp_name')+'</div><div class=\'fe\'>'+gv('coe_emp_name')+'</div></div>' +
+        '<div style=\'border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 5px\'><div class=\'fn\'>役職 / Position</div><div class=\'fj\'>'+gjv('coe_emp_position')+'</div><div class=\'fe\'>'+gv('coe_emp_position')+'</div></div>' +
       '</div>' +
-      '<div style=\"display:grid;grid-template-columns:1fr 1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb\">' +
-        '<div style=\"border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 5px;background:#f0ece0\"><div class=\"fn\">雇用形態 / Status</div><div class=\"fj\">'+gjv('coe_emp_status')+'</div><div class=\"fe\">'+gv('coe_emp_status')+'</div></div>' +
-        '<div style=\"border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 5px;background:#faf8f0\"><div class=\"fn\">在籍開始 / Since</div><div class=\"fj\">'+gjv('coe_start_date')+'</div><div class=\"fe\">'+gv('coe_start_date')+'</div></div>' +
-        '<div style=\"border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 5px;background:#f0ece0\"><div class=\"fn\">月額給与 / Salary</div><div class=\"fj\">'+gjv('coe_monthly_salary')+'</div><div class=\"fe\">'+gv('coe_monthly_salary')+'</div></div>' +
+      '<div style=\'display:grid;grid-template-columns:1fr 1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb\'>' +
+        '<div style=\'border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 5px;background:#f0ece0\'><div class=\'fn\'>雇用形態 / Status</div><div class=\'fj\'>'+gjv('coe_emp_status')+'</div><div class=\'fe\'>'+gv('coe_emp_status')+'</div></div>' +
+        '<div style=\'border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 5px\'><div class=\'fn\'>在籍開始 / Since</div><div class=\'fj\'>'+gjv('coe_start_date')+'</div><div class=\'fe\'>'+gv('coe_start_date')+'</div></div>' +
+        '<div style=\'border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 5px;background:#f0ece0\'><div class=\'fn\'>月額給与 / Salary</div><div class=\'fj\'>'+gjv('coe_monthly_salary')+'</div><div class=\'fe\'>'+gv('coe_monthly_salary')+'</div></div>' +
       '</div>' +
     '</div>' +
-    '<div style=\"display:flex;justify-content:space-between;align-items:flex-start;margin-top:6px;padding-top:5px;border-top:0.5px solid #bbb\">' +
-      '<div style=\"flex:1\">' +
-        '<div style=\"font-size:7px;color:#666;margin-bottom:2px\">証明者署名 / Authorized Signatory</div>' +
-        '<div style=\"height:14mm;border-bottom:1px solid #1a2744;margin-bottom:2px;width:70mm\"></div>' +
-        '<div style=\"font-size:7.5px;font-weight:bold;color:#1a2744\">'+gv('coe_signatory')+'</div>' +
-        '<div style=\"font-size:6.5px;color:#666\">'+gv('coe_signatory_position')+' · '+gv('coe_company')+'</div>' +
+    '<div style=\'display:flex;justify-content:space-between;align-items:flex-start;margin-top:6px;padding-top:5px;border-top:0.5px solid #bbb\'>' +
+      '<div style=\'flex:1\'><div style=\'font-size:7px;color:#666;margin-bottom:2px\'>証明者署名 / Authorized Signatory</div>' +
+        '<div style=\'height:14mm;border-bottom:1px solid #1a2744;margin-bottom:2px;width:70mm\'></div>' +
+        '<div style=\'font-size:7.5px;font-weight:bold;color:#1a2744\'>'+gv('coe_signatory')+'</div>' +
+        '<div style=\'font-size:6.5px;color:#666\'>'+gv('coe_signatory_position')+' · '+gv('coe_company')+'</div>' +
       '</div>' +
-      '<div style=\"width:22mm;height:22mm;border:1px solid #bbb;display:flex;align-items:center;justify-content:center;margin-left:8mm;flex-shrink:0\">' +
-        '<div style=\"font-size:6px;color:#aaa;text-align:center\">会社印<br>Company Seal</div>' +
-      '</div>' +
+      '<div style=\'width:22mm;height:22mm;border:1px solid #bbb;display:flex;align-items:center;justify-content:center;margin-left:8mm;flex-shrink:0\'><div style=\'font-size:6px;color:#aaa;text-align:center\'>会社印<br>Seal</div></div>' +
     '</div>' +
-    '<div class=\"cbox\" style=\"margin-top:4px\"><b>【翻訳証明】</b>本翻訳はフィリピンの事業者（'+gv('coe_company')+'）が発行した在職証明書を正確に日本語に翻訳したものです。翻訳者はその正確性を保証します。<br>' +
+    '<div class=\'cbox\'><b>【翻訳証明】</b>本翻訳はフィリピンの事業者（'+gv('coe_company')+'）が発行した在職証明書を正確に日本語に翻訳したものです。翻訳者はその正確性を保証します。<br>' +
     '<em>CERTIFICATION: This is a faithful Japanese translation of the original Certificate of Employment issued by '+gv('coe_company')+'. The translator certifies the accuracy of this translation.</em></div>' +
     certBlock() + '</div>';
 
@@ -2207,59 +2175,56 @@ function doDownloadPDF() {
   // ════ BANK CERTIFICATE ════
   } else if (dt === 'Bank Certificate') {
 
-    body = '<div style=\"background:#f5f0e0;font-family:\'Times New Roman\',Georgia,serif;padding:8px 10px;border:1px solid #c8b89a;min-height:100%\">' +
-    '<div style=\"text-align:center;padding-bottom:5px;border-bottom:2px solid #1a2744;margin-bottom:6px\">' +
-      '<div style=\"font-size:10px;font-weight:bold;color:#1a2744;letter-spacing:0.5px\">'+gv('bank_name').toUpperCase()+(gv('bank_branch') ? ' — '+gv('bank_branch').toUpperCase() : '')+'</div>' +
-      '<div style=\"font-size:6.5px;color:#666;margin-top:1px\">'+gv('bank_address')+(gv('bank_tel') ? ' · Tel: '+gv('bank_tel') : '')+'</div>' +
-      '<div style=\"font-size:12px;font-weight:bold;color:#1a2744;margin:4px 0 1px;letter-spacing:1px\">BANK CERTIFICATE / 残高証明書</div>' +
-      '<div style=\"font-size:8px;color:#555;font-style:italic\">残高証明書　／　Bank Certificate — English to Japanese Translation</div>' +
+    body = '<div style=\'background:#f5f0e0;font-family:Times New Roman,Georgia,serif;padding:8px 10px;border:1px solid #c8b89a;min-height:100%\'>' +
+    '<div style=\'text-align:center;padding-bottom:5px;border-bottom:2px solid #1a2744;margin-bottom:6px\'>' +
+      '<div style=\'font-size:10px;font-weight:bold;color:#1a2744\'>'+gv('bank_name').toUpperCase()+(gv('bank_branch') ? ' — '+gv('bank_branch').toUpperCase() : '')+'</div>' +
+      '<div style=\'font-size:6.5px;color:#666;margin-top:1px\'>'+gv('bank_address')+(gv('bank_tel') ? ' · Tel: '+gv('bank_tel') : '')+'</div>' +
+      '<div style=\'font-size:12px;font-weight:bold;color:#1a2744;margin:4px 0 1px;letter-spacing:1px\'>BANK CERTIFICATE / 残高証明書</div>' +
+      '<div style=\'font-size:8px;color:#555;font-style:italic\'>残高証明書　／　Bank Certificate — English to Japanese Translation</div>' +
     '</div>' +
-    '<div style=\"display:flex;justify-content:space-between;font-size:7.5px;color:#444;margin:4px 0 6px\">' +
-      '<span>発行日 / Date Issued: <b contenteditable=\"true\" spellcheck=\"false\">'+gjv('bank_issue_date')+'</b> <span style=\"color:#888\">('+gv('bank_issue_date')+')</span></span>' +
-      '<span>翻訳日 / Translation Date: <b contenteditable=\"true\" spellcheck=\"false\">'+todayJP+'</b></span>' +
+    '<div style=\'display:flex;justify-content:space-between;font-size:7.5px;color:#444;margin:4px 0 6px\'>' +
+      '<span>発行日 / Date Issued: <b>'+gjv('bank_issue_date')+'</b> <span style=\'color:#888\'>('+gv('bank_issue_date')+')</span></span>' +
+      '<span>翻訳日 / Translation Date: <b>'+todayJP+'</b></span>' +
     '</div>' +
-    '<div style=\"font-size:8.5px;line-height:1.85;color:#222;margin-bottom:8px\">' +
-      '<p style=\"margin-bottom:5px\"><b>TO WHOM IT MAY CONCERN: / 関係各位：</b></p>' +
-      '<p style=\"margin-bottom:4px\">以下の者が口座を保有していることを証明します：<br><em style=\"font-size:7.5px;color:#888\">This is to certify that the following individual holds an account with this bank:</em></p>' +
-      '<p style=\"margin-bottom:4px\">口座名義人 / Account Name: <span class=\"fill fill-lg\">'+gjv('bank_acct_name')+'</span> <span style=\"font-size:7px;color:#888\">('+gv('bank_acct_name')+')</span></p>' +
-      '<p style=\"margin-bottom:4px\">口座種別 / Account Type: <span class=\"fill\">'+gjv('bank_acct_type')+'</span> &nbsp; 口座番号 / Account No.: <span class=\"fill\">'+gv('bank_acct_number')+'</span> &nbsp; 通貨 / Currency: <span class=\"fill\">'+gjv('bank_currency')+'</span></p>' +
-      (gv('bank_open_date') ? '<p style=\"margin-bottom:4px\">口座開設日 / Account Opened: <span class=\"fill\">'+gjv('bank_open_date')+'</span> <span style=\"font-size:7px;color:#888\">('+gv('bank_open_date')+')</span></p>' : '') +
-      '<p style=\"margin-bottom:4px\">残高照会日 / Balance As Of: <span class=\"fill\">'+gjv('bank_balance_date')+'</span><br>現在残高 / Current Balance: <span class=\"fill fill-lg\" style=\"font-size:10px;color:#16a34a;font-weight:bold\">'+gjv('bank_balance')+'</span></p>' +
-      (gv('bank_adb') ? '<p style=\"margin-bottom:4px\">平均日次残高（ADB）/ Average Daily Balance: <span class=\"fill fill-lg\">'+gjv('bank_adb')+'</span>'+(gv('bank_adb_period') ? ' <span style=\"font-size:7px;color:#888\">対象期間: '+gv('bank_adb_period')+'</span>' : '')+'</p>' : '') +
-      '<p style=\"margin-bottom:4px\">口座は良好な状態にあり、現在も有効です。/ The account is active and in good standing.</p>' +
-      '<p style=\"margin-bottom:4px\">本証明書は、<span class=\"fill fill-lg\">'+gjv('purpose')+'</span> の目的のために発行します。<br><em style=\"font-size:7.5px;color:#888\">This certification is issued for '+gv('purpose')+' purposes.</em></p>' +
+    '<div style=\'font-size:8.5px;line-height:1.85;color:#222;margin-bottom:8px\'>' +
+      '<p style=\'margin-bottom:5px\'><b>TO WHOM IT MAY CONCERN: / 関係各位：</b></p>' +
+      '<p style=\'margin-bottom:4px\'>以下の者が口座を保有していることを証明します：<br><em style=\'font-size:7.5px;color:#888\'>This is to certify that the following individual holds an account with this bank:</em></p>' +
+      '<p style=\'margin-bottom:4px\'>口座名義人 / Account Name: <span class=\'fill fill-lg\'>'+gjv('bank_acct_name')+'</span> <span style=\'font-size:7px;color:#888\'>('+gv('bank_acct_name')+')</span></p>' +
+      '<p style=\'margin-bottom:4px\'>口座種別 / Account Type: <span class=\'fill\'>'+gjv('bank_acct_type')+'</span> &nbsp; 口座番号 / Account No.: <span class=\'fill\'>'+gv('bank_acct_number')+'</span> &nbsp; 通貨 / Currency: <span class=\'fill\'>'+gjv('bank_currency')+'</span></p>' +
+      (gv('bank_open_date') ? '<p style=\'margin-bottom:4px\'>口座開設日 / Account Opened: <span class=\'fill\'>'+gjv('bank_open_date')+'</span></p>' : '') +
+      '<p style=\'margin-bottom:4px\'>残高照会日 / Balance As Of: <span class=\'fill\'>'+gjv('bank_balance_date')+'</span><br>現在残高 / Current Balance: <span class=\'fill fill-lg\'><b style=\'color:#16a34a\'>'+gjv('bank_balance')+'</b></span></p>' +
+      (gv('bank_adb') ? '<p style=\'margin-bottom:4px\'>平均日次残高（ADB）/ Average Daily Balance: <span class=\'fill fill-lg\'>'+gjv('bank_adb')+'</span>'+(gv('bank_adb_period') ? ' <span style=\'font-size:7px;color:#888\'>対象期間: '+gv('bank_adb_period')+'</span>' : '')+'</p>' : '') +
+      '<p style=\'margin-bottom:4px\'>口座は良好な状態にあり現在も有効です。/ The account is active and in good standing.</p>' +
+      '<p style=\'margin-bottom:4px\'>本証明書は <span class=\'fill fill-lg\'>'+gjv('purpose')+'</span> の目的のために発行します。<br><em style=\'font-size:7.5px;color:#888\'>This certification is issued for '+gv('purpose')+' purposes.</em></p>' +
     '</div>' +
-    '<div style=\"border-top:1.5px dashed #c9a84c;margin:6px 0;padding-top:5px\">' +
-      '<div style=\"font-size:6.5px;font-weight:bold;color:#c9a84c;letter-spacing:1px;margin-bottom:4px\">📋 REFERENCE DATA / 参照データ（スキャン・翻訳用）</div>' +
-      '<div style=\"background:#1a2744;color:#e8c97a;font-size:6.5px;font-weight:bold;padding:1.5px 5px\">A.　銀行・口座情報 / BANK & ACCOUNT</div>' +
-      '<div style=\"display:grid;grid-template-columns:1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb\">' +
-        '<div style=\"border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 5px;background:#f0ece0\"><div class=\"fn\">銀行名 / Bank</div><div class=\"fj\">'+gjv('bank_name')+'</div><div class=\"fe\">'+gv('bank_name')+'</div></div>' +
-        '<div style=\"border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 5px;background:#faf8f0\"><div class=\"fn\">支店 / Branch</div><div class=\"fj\">'+gjv('bank_branch')+'</div><div class=\"fe\">'+gv('bank_branch')+'</div></div>' +
+    '<div style=\'border-top:1.5px dashed #c9a84c;margin:6px 0;padding-top:5px\'>' +
+      '<div style=\'font-size:6.5px;font-weight:bold;color:#c9a84c;letter-spacing:1px;margin-bottom:4px\'>📋 REFERENCE DATA / 参照データ（スキャン・翻訳用）</div>' +
+      '<div style=\'background:#1a2744;color:#e8c97a;font-size:6.5px;font-weight:bold;padding:1.5px 5px\'>A.　銀行・口座情報 / BANK & ACCOUNT</div>' +
+      '<div style=\'display:grid;grid-template-columns:1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb\'>' +
+        '<div style=\'border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 5px;background:#f0ece0\'><div class=\'fn\'>銀行名 / Bank</div><div class=\'fj\'>'+gjv('bank_name')+'</div><div class=\'fe\'>'+gv('bank_name')+'</div></div>' +
+        '<div style=\'border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 5px\'><div class=\'fn\'>支店 / Branch</div><div class=\'fj\'>'+gjv('bank_branch')+'</div><div class=\'fe\'>'+gv('bank_branch')+'</div></div>' +
       '</div>' +
-      '<div style=\"display:grid;grid-template-columns:1fr 1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb\">' +
-        '<div style=\"border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 5px;background:#f0ece0\"><div class=\"fn\">口座名義 / Account Name</div><div class=\"fj\">'+gjv('bank_acct_name')+'</div><div class=\"fe\">'+gv('bank_acct_name')+'</div></div>' +
-        '<div style=\"border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 5px;background:#faf8f0\"><div class=\"fn\">口座種別 / Type</div><div class=\"fj\">'+gjv('bank_acct_type')+'</div><div class=\"fe\">'+gv('bank_acct_type')+'</div></div>' +
-        '<div style=\"border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 5px;background:#f0ece0\"><div class=\"fn\">通貨 / Currency</div><div class=\"fj\">'+gjv('bank_currency')+'</div><div class=\"fe\">'+gv('bank_currency')+'</div></div>' +
+      '<div style=\'display:grid;grid-template-columns:1fr 1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb\'>' +
+        '<div style=\'border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 5px;background:#f0ece0\'><div class=\'fn\'>口座名義 / Name</div><div class=\'fj\'>'+gjv('bank_acct_name')+'</div><div class=\'fe\'>'+gv('bank_acct_name')+'</div></div>' +
+        '<div style=\'border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 5px\'><div class=\'fn\'>口座種別 / Type</div><div class=\'fj\'>'+gjv('bank_acct_type')+'</div><div class=\'fe\'>'+gv('bank_acct_type')+'</div></div>' +
+        '<div style=\'border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 5px;background:#f0ece0\'><div class=\'fn\'>通貨 / Currency</div><div class=\'fj\'>'+gjv('bank_currency')+'</div><div class=\'fe\'>'+gv('bank_currency')+'</div></div>' +
       '</div>' +
-      '<div style=\"background:#1a2744;color:#e8c97a;font-size:6.5px;font-weight:bold;padding:1.5px 5px;margin-top:2px\">B.　残高情報 / BALANCE</div>' +
-      '<div style=\"display:grid;grid-template-columns:1fr 1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb\">' +
-        '<div style=\"border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 5px;background:#f0fdf4\"><div class=\"fn\">現在残高 / Balance</div><div class=\"fj\" style=\"color:#16a34a\">'+gjv('bank_balance')+'</div><div class=\"fe\" style=\"color:#16a34a\">'+gv('bank_balance_date')+'</div></div>' +
-        '<div style=\"border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 5px;background:#faf8f0\"><div class=\"fn\">平均日次残高 / ADB</div><div class=\"fj\">'+gjv('bank_adb')+'</div><div class=\"fe\">'+gv('bank_adb_period')+'</div></div>' +
-        '<div style=\"border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 5px;background:#f0fdf4\"><div class=\"fn\">口座状況 / Status</div><div class=\"fj\" style=\"color:#16a34a\">良好</div><div class=\"fe\">In Good Standing</div></div>' +
-      '</div>' +
-    '</div>' +
-    '<div style=\"display:flex;justify-content:space-between;align-items:flex-start;margin-top:6px;padding-top:5px;border-top:0.5px solid #bbb\">' +
-      '<div style=\"flex:1\">' +
-        '<div style=\"font-size:7px;color:#666;margin-bottom:2px\">担当者署名 / Bank Officer Signature</div>' +
-        '<div style=\"height:14mm;border-bottom:1px solid #1a2744;margin-bottom:2px;width:70mm\"></div>' +
-        '<div style=\"font-size:7.5px;font-weight:bold;color:#1a2744\">'+gv('bank_officer')+'</div>' +
-        '<div style=\"font-size:6.5px;color:#666\">'+gv('bank_officer_position')+' · '+gv('bank_name')+(gv('bank_branch') ? ' — '+gv('bank_branch') : '')+'</div>' +
-      '</div>' +
-      '<div style=\"width:22mm;height:22mm;border:1px solid #bbb;display:flex;align-items:center;justify-content:center;margin-left:8mm;flex-shrink:0\">' +
-        '<div style=\"font-size:6px;color:#aaa;text-align:center\">銀行印<br>Bank Seal</div>' +
+      '<div style=\'background:#1a2744;color:#e8c97a;font-size:6.5px;font-weight:bold;padding:1.5px 5px;margin-top:2px\'>B.　残高情報 / BALANCE</div>' +
+      '<div style=\'display:grid;grid-template-columns:1fr 1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb\'>' +
+        '<div style=\'border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 5px;background:#f0fdf4\'><div class=\'fn\'>現在残高 / Balance</div><div class=\'fj\'><b style=\'color:#16a34a\'>'+gjv('bank_balance')+'</b></div><div class=\'fe\'>'+gv('bank_balance_date')+'</div></div>' +
+        '<div style=\'border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 5px\'><div class=\'fn\'>平均日次残高 / ADB</div><div class=\'fj\'>'+gjv('bank_adb')+'</div><div class=\'fe\'>'+gv('bank_adb_period')+'</div></div>' +
+        '<div style=\'border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:2px 5px;background:#f0fdf4\'><div class=\'fn\'>口座状況 / Status</div><div class=\'fj\'><b style=\'color:#16a34a\'>良好</b></div><div class=\'fe\'>In Good Standing</div></div>' +
       '</div>' +
     '</div>' +
-    '<div class=\"cbox\" style=\"margin-top:4px\"><b>【翻訳証明】</b>本翻訳は'+gv('bank_name')+'（'+gv('bank_branch')+'）が発行した残高証明書を正確に日本語に翻訳したものです。翻訳者はその正確性を保証します。<br>' +
+    '<div style=\'display:flex;justify-content:space-between;align-items:flex-start;margin-top:6px;padding-top:5px;border-top:0.5px solid #bbb\'>' +
+      '<div style=\'flex:1\'><div style=\'font-size:7px;color:#666;margin-bottom:2px\'>担当者署名 / Bank Officer Signature</div>' +
+        '<div style=\'height:14mm;border-bottom:1px solid #1a2744;margin-bottom:2px;width:70mm\'></div>' +
+        '<div style=\'font-size:7.5px;font-weight:bold;color:#1a2744\'>'+gv('bank_officer')+'</div>' +
+        '<div style=\'font-size:6.5px;color:#666\'>'+gv('bank_officer_position')+' · '+gv('bank_name')+(gv('bank_branch') ? ' — '+gv('bank_branch') : '')+'</div>' +
+      '</div>' +
+      '<div style=\'width:22mm;height:22mm;border:1px solid #bbb;display:flex;align-items:center;justify-content:center;margin-left:8mm;flex-shrink:0\'><div style=\'font-size:6px;color:#aaa;text-align:center\'>銀行印<br>Bank Seal</div></div>' +
+    '</div>' +
+    '<div class=\'cbox\'><b>【翻訳証明】</b>本翻訳は'+gv('bank_name')+'（'+gv('bank_branch')+'）が発行した残高証明書を正確に日本語に翻訳したものです。翻訳者はその正確性を保証します。<br>' +
     '<em>CERTIFICATION: This is a faithful Japanese translation of the original Bank Certificate issued by '+gv('bank_name')+', '+gv('bank_branch')+'. The translator certifies the accuracy of this translation.</em></div>' +
     certBlock() + '</div>';
 
@@ -2357,16 +2322,11 @@ function doDownloadPDF() {
 
   // Make all .fj (Japanese) and .fe (English) values contenteditable
   function makeEditable(html) {
-    var CE = ' contenteditable="true" spellcheck="false" title="Click to edit"';
     return html
-      .replace(/<div class="fj">/g, '<div class="fj"' + CE + '>')
-      .replace(/<div class="fj" style="([^"]*)">/g, '<div class="fj" style="$1"' + CE + '>')
-      .replace(/<div class="fe">/g, '<div class="fe"' + CE + '>')
-      .replace(/<div class="fe" style="([^"]*)">/g, '<div class="fe" style="$1"' + CE + '>')
-      .replace(/<span class="fill">/g, '<span class="fill"' + CE + '>')
-      .replace(/<span class="fill fill-lg">/g, '<span class="fill fill-lg"' + CE + '>')
-      .replace(/<span class="fill-lg">/g, '<span class="fill-lg"' + CE + '>')
-      .replace(/<span class="dval">/g, '<span class="dval"' + CE + '>');
+      .replace(/<div class="fj">/g,
+        '<div class="fj" contenteditable="true" spellcheck="false" title="Click to edit">')
+      .replace(/<div class="fe">/g,
+        '<div class="fe" contenteditable="true" spellcheck="false" title="Click to edit">');
   }
 
   var editableBody  = makeEditable(body);
@@ -2393,8 +2353,8 @@ function doDownloadPDF() {
     '[contenteditable="true"]{outline:none;cursor:text;border-radius:2px;transition:background .15s}',
     '[contenteditable="true"]:hover{background:rgba(201,168,76,0.18)!important}',
     '[contenteditable="true"]:focus{background:rgba(201,168,76,0.28)!important;box-shadow:0 0 0 1.5px #c9a84c;outline:none}',
-    'span.fill[contenteditable="true"],span.fill-lg[contenteditable="true"]{display:inline-block;min-width:40px}',
-    'span.dval[contenteditable="true"]{display:inline-block;min-width:40px}',
+    'span.fill[contenteditable],span.fill-lg[contenteditable]{display:inline-block;min-width:40px}',
+    'span.dval[contenteditable]{display:inline-block;min-width:40px}',
     '@media print{.no-print{display:none!important}[contenteditable]{background:transparent!important;box-shadow:none!important;cursor:default}}'
   ].join('');
 
@@ -2408,6 +2368,13 @@ function doDownloadPDF() {
     TOOLBAR+
     '<div class="page">'+editableBody+'</div>'+
     editablePage2+
+    '<script>document.addEventListener(\'DOMContentLoaded\',function(){' +
+    '[\'.fj\',\'.fe\',\'.fill\',\'.fill-lg\',\'.dval\'].forEach(function(sel){' +
+    'document.querySelectorAll(sel).forEach(function(el){' +
+    'el.setAttribute(\'contenteditable\',\'true\');' +
+    'el.setAttribute(\'spellcheck\',\'false\');' +
+    'el.setAttribute(\'title\',\'Click to edit\');});});' +
+    '});<\/script>'+
     '</body></html>';
 
   var blob = new Blob([docHtml], {type:'text/html'});
@@ -2933,21 +2900,21 @@ var DOC_FIELDS_ADMIN = {
     {id:'net_pay',label:'Net Pay'},{id:'purpose',label:'Purpose'}
   ],
   'Japanese Payslip': [
-    {id:'company_name',label:'Company Name (会社名)'},{id:'company_address',label:'Company Address'},
-    {id:'company_tel',label:'Company Tel'},{id:'company_hojin_no',label:'Corporate Number (法人番号)'},
+    {id:'company_name',label:'Company Name'},{id:'company_address',label:'Company Address'},
+    {id:'company_tel',label:'Company Tel'},{id:'company_hojin_no',label:'Corporate Number'},
     {id:'company_hr',label:'HR / Authorized Signatory'},
-    {id:'emp_name',label:'Employee Name (氏名)'},{id:'emp_id',label:'Employee ID (社員番号)'},
-    {id:'emp_dept',label:'Department (部署)'},{id:'emp_position',label:'Position (役職)'},
-    {id:'pay_period',label:'Pay Period (支給期間)'},
-    {id:'kihonkyu',label:'Basic Salary (基本給)'},{id:'yakushoku_teate',label:'Management Allowance (役職手当)'},
-    {id:'shokumu_teate',label:'Job Allowance (職務手当)'},{id:'jikan_gai',label:'Overtime (時間外手当)'},
-    {id:'kyujitsu_teate',label:'Holiday Pay (休日手当)'},{id:'tsukin_teate',label:'Commuting Allowance (通勤手当)'},
-    {id:'juutaku_teate',label:'Housing Allowance (住宅手当)'},{id:'other_teate',label:'Other Allowances (その他手当)'},
-    {id:'kenkou_hoken',label:'Health Insurance (健康保険)'},{id:'kousei_nenkin',label:'Pension (厚生年金)'},
-    {id:'koyo_hoken',label:'Employment Insurance (雇用保険)'},{id:'shotoku_zei',label:'Income Tax (所得税)'},
-    {id:'juumin_zei',label:'Resident Tax (住民税)'},{id:'other_koujo',label:'Other Deductions (その他控除)'},
-    {id:'shikyu_gokei',label:'Total Earnings (支給合計)'},{id:'koujo_gokei',label:'Total Deductions (控除合計)'},
-    {id:'sashihiki_shikyu',label:'Net Pay (差引支給額)'},{id:'purpose',label:'Purpose'}
+    {id:'emp_name',label:'Employee Name'},{id:'emp_id',label:'Employee ID'},
+    {id:'emp_dept',label:'Department'},{id:'emp_position',label:'Position'},
+    {id:'pay_period',label:'Pay Period'},
+    {id:'kihonkyu',label:'Basic Salary'},{id:'yakushoku_teate',label:'Management Allowance'},
+    {id:'shokumu_teate',label:'Job Allowance'},{id:'jikan_gai',label:'Overtime'},
+    {id:'kyujitsu_teate',label:'Holiday Pay'},{id:'tsukin_teate',label:'Commuting Allowance'},
+    {id:'juutaku_teate',label:'Housing Allowance'},{id:'other_teate',label:'Other Allowances'},
+    {id:'kenkou_hoken',label:'Health Insurance'},{id:'kousei_nenkin',label:'Pension'},
+    {id:'koyo_hoken',label:'Employment Insurance'},{id:'shotoku_zei',label:'Income Tax'},
+    {id:'juumin_zei',label:'Resident Tax'},{id:'other_koujo',label:'Other Deductions'},
+    {id:'shikyu_gokei',label:'Total Earnings'},{id:'koujo_gokei',label:'Total Deductions'},
+    {id:'sashihiki_shikyu',label:'Net Pay'},{id:'purpose',label:'Purpose'}
   ],
   'Certificate of Employment': [
     {id:'coe_company',label:'Company Name'},{id:'coe_company_address',label:'Company Address'},
@@ -2955,11 +2922,10 @@ var DOC_FIELDS_ADMIN = {
     {id:'coe_signatory',label:'Signatory Name'},{id:'coe_signatory_position',label:'Signatory Position'},
     {id:'coe_emp_name',label:'Employee Name'},{id:'coe_emp_position',label:'Position'},
     {id:'coe_emp_dept',label:'Department'},{id:'coe_emp_status',label:'Employment Status'},
-    {id:'coe_start_date',label:'Start Date',type:'date'},{id:'coe_end_date',label:'End Date / Present',type:'date'},
+    {id:'coe_start_date',label:'Start Date',type:'date'},{id:'coe_end_date',label:'End Date',type:'date'},
     {id:'coe_monthly_salary',label:'Monthly Salary'},{id:'coe_salary_currency',label:'Currency'},
     {id:'coe_allowances',label:'Allowances'},{id:'coe_gross_monthly',label:'Gross Monthly'},
-    {id:'coe_issue_date',label:'Date Issued',type:'date'},{id:'coe_purpose',label:'COE Purpose'},
-    {id:'purpose',label:'Translation Purpose'}
+    {id:'coe_issue_date',label:'Date Issued',type:'date'},{id:'purpose',label:'Purpose'}
   ],
   'ITR / BIR Form 2316': [
     {id:'itr_emp_name',label:'Employee Name'},{id:'itr_emp_tin',label:'Employee TIN'},
@@ -2970,10 +2936,9 @@ var DOC_FIELDS_ADMIN = {
     {id:'itr_gross_comp',label:'Gross Compensation'},{id:'itr_taxable_comp',label:'Taxable Compensation'},
     {id:'itr_non_taxable',label:'Non-Taxable Compensation'},{id:'itr_basic_salary',label:'Basic Salary'},
     {id:'itr_13th_month',label:'13th Month Pay'},{id:'itr_other_benefits',label:'Other Benefits'},
-    {id:'itr_deminimis',label:'De Minimis Benefits'},
-    {id:'itr_rdo_code',label:'RDO Code'},{id:'itr_tax_withheld_prev',label:'Tax Withheld (Previous)'},
-    {id:'itr_tax_withheld_curr',label:'Tax Withheld (Current)'},{id:'itr_total_tax',label:'Total Tax Withheld'},
-    {id:'itr_tax_due',label:'Tax Due'},{id:'purpose',label:'Purpose'}
+    {id:'itr_deminimis',label:'De Minimis Benefits'},{id:'itr_rdo_code',label:'RDO Code'},
+    {id:'itr_tax_withheld_prev',label:'Tax Withheld (Previous)'},{id:'itr_tax_withheld_curr',label:'Tax Withheld (Current)'},
+    {id:'itr_total_tax',label:'Total Tax Withheld'},{id:'itr_tax_due',label:'Tax Due'},{id:'purpose',label:'Purpose'}
   ],
   'Bank Certificate': [
     {id:'bank_name',label:'Bank Name'},{id:'bank_branch',label:'Branch'},
@@ -2993,9 +2958,8 @@ var DOC_FIELDS_ADMIN = {
     {id:'bank_currency',label:'Currency'},
     {id:'bank_stmt_from',label:'Statement From',type:'date'},{id:'bank_stmt_to',label:'Statement To',type:'date'},
     {id:'bank_opening_bal',label:'Opening Balance'},{id:'bank_closing_bal',label:'Closing Balance'},
-    {id:'bank_adb',label:'Average Daily Balance'},
-    {id:'bank_total_deposits',label:'Total Deposits'},{id:'bank_total_withdrawals',label:'Total Withdrawals'},
-    {id:'bank_remarks',label:'Remarks'},
+    {id:'bank_adb',label:'Average Daily Balance'},{id:'bank_total_deposits',label:'Total Deposits'},
+    {id:'bank_total_withdrawals',label:'Total Withdrawals'},{id:'bank_remarks',label:'Remarks'},
     {id:'bank_officer',label:'Certifying Officer'},{id:'bank_officer_position',label:'Officer Position'},
     {id:'bank_issue_date',label:'Date Issued',type:'date'},{id:'purpose',label:'Purpose'}
   ]
