@@ -752,7 +752,15 @@ async function doTranslate() {
     'DOCUMENT FIELDS TO TRANSLATE:\n' + sectionText + '\n\n' +
     'TRANSLATION RULES:\n' +
     '- Names: convert ALL names to katakana phonetic spelling (e.g. JUAN -> フアン, DELA CRUZ -> デラ・クルス, SANTOS -> サントス, REYES -> レイエス)\n' +
-    '- EXCEPTION for Japanese names: if the name is Japanese (e.g. Hirahara, Yusuke / Hirahara Yusuke), use the kanji form. Known mappings: HIRAHARA=平原, YUSUKE=裕輔, EIICHI=永一. Format: 平原 裕輔 for father, 平原 永一（ヘルモシラ）for child (surname first, middle name in brackets)\n' +
+    '- JAPANESE NAME RULE (CRITICAL): Any person whose citizenship is Japanese MUST have their name written in KANJI, NOT katakana.\n' +
+    '- father_name: if father_citizen=Japanese → kanji format 姓 名 (e.g. Hirahara Yusuke → 平原 裕輔)\n' +
+    '- mother_name: if mother_citizen=Japanese → kanji format 姓 名 (e.g. Yamamoto Hanako → 山本 花子)\n' +
+    '- child_name: if EITHER parent is Japanese → write as: given name kanji + middle name katakana + surname kanji, matching original PSA order (First Middle Last). e.g. Eiichi Hermosilla Hirahara → 永一 ヘルモシラ 平原. No brackets, no parentheses.\n' +
+    '- affidavit_father: if Japanese father → kanji (e.g. Yusuke Hirahara → 平原 裕輔)\n' +
+    '- p2_pat_father, p2_del_father: same kanji rule if Japanese\n' +
+    '- p2_pat_mother, p2_del_mother: same kanji rule if Japanese\n' +
+    '- p2_pat_child, p2_del_child: same kanji rule if either parent is Japanese\n' +
+    '- If you cannot determine kanji with certainty, use the most common kanji reading for that name.\n' +
     '- Negligence/Neglect=過失 (NOT 怠慢 — 過失 is the correct legal term)\n' +
     '- Dates in YYYY-MM-DD format: convert to Japanese (e.g. 1993-04-22 -> 1993年4月22日)\n' +
     '- Dates as text: convert to Japanese (e.g. April 22, 1993 -> 1993年4月22日)\n' +
@@ -1057,10 +1065,69 @@ function doDownloadPDF() {
   };
 
   function gv(id) { return f[id] || ''; }
+  // Japanese name kanji map — surname romaji → kanji
+  var JP_SURNAME = {
+    'hirahara':'平原','yamamoto':'山本','tanaka':'田中','suzuki':'鈴木','sato':'佐藤',
+    'watanabe':'渡辺','ito':'伊藤','kobayashi':'小林','kato':'加藤','yoshida':'吉田',
+    'yamada':'山田','sasaki':'佐々木','yamaguchi':'山口','matsumoto':'松本','inoue':'井上',
+    'kimura':'木村','hayashi':'林','shimizu':'清水','nakamura':'中村','ogawa':'小川',
+    'ikeda':'池田','nomura':'野村','fujita':'藤田','mori':'森','maeda':'前田',
+    'abe':'阿部','nishimura':'西村','fujii':'藤井','okamoto':'岡本','goto':'後藤'
+  };
+  var JP_GIVEN = {
+    'yusuke':'裕輔','eiichi':'永一','kenji':'健二','takeshi':'剛','hiroshi':'浩',
+    'taro':'太郎','jiro':'次郎','ichiro':'一郎','kazuki':'一樹','daisuke':'大輔',
+    'ryota':'涼太','shota':'翔太','kenta':'健太','naoki':'直樹','masashi':'雅史',
+    'akira':'明','makoto':'誠','noboru':'昇','satoshi':'聡','kenichi':'健一',
+    'yoshiki':'良樹','takuya':'拓也','tomoya':'友哉','haruki':'春樹','sota':'颯太',
+    'yuki':'勇樹','ren':'蓮','haruto':'陽翔','souta':'蒼太','riku':'陸'
+  };
+
+  function toKanjiName(romaji) {
+    // Try to convert a Japanese name in romaji to kanji
+    // Format: "Surname Givenname" or "Givenname Surname"
+    if (!romaji) return null;
+    var parts = romaji.trim().toLowerCase().split(/\s+/);
+    if (parts.length < 2) return null;
+    // Try surname first (Last First order from PSA)
+    var surnameKanji = JP_SURNAME[parts[parts.length-1]] || JP_SURNAME[parts[0]];
+    var givenKanji   = JP_GIVEN[parts[0]] || JP_GIVEN[parts[1]];
+    if (surnameKanji && givenKanji) return surnameKanji + '　' + givenKanji;
+    // Partial match — at least surname
+    if (surnameKanji) return surnameKanji + '　' + (JP_GIVEN[parts[0]] || JP_GIVEN[parts[1]] || parts[0]);
+    return null;
+  }
+
   function gj(id) {
     if (jpMap[id]) return jpMap[id];
     var en = gv(id); if (!en) return '';
     if (en.match(/^\d{4}-\d{2}-\d{2}$/)) { var p=en.split('-'); return p[0]+'年'+parseInt(p[1])+'月'+parseInt(p[2])+'日'; }
+    // Japanese name fields — use kanji if father OR mother is Japanese
+    var isJpFather = (gv('father_citizen')||'').toLowerCase().indexOf('japanese') >= 0 ||
+                     (gv('father_citizen')||'').indexOf('日本') >= 0;
+    var isJpMother = (gv('mother_citizen')||'').toLowerCase().indexOf('japanese') >= 0 ||
+                     (gv('mother_citizen')||'').indexOf('日本') >= 0;
+    var isJpParent = isJpFather || isJpMother;
+
+    // Always apply kanji to whoever is Japanese
+    if (isJpFather && (id === 'father_name' || id === 'affidavit_father')) {
+      var k = toKanjiName(en); if (k) return k;
+    }
+    if (isJpMother && id === 'mother_name') {
+      var k = toKanjiName(en); if (k) return k;
+    }
+    if (isJpParent && id === 'child_name') {
+      // Determine which parent is Japanese to get the surname
+      var nameParts = en.trim().split(/\s+/);
+      if (nameParts.length >= 3) {
+        // PSA format: First Middle Last — Last is Japanese surname
+        var jpSurname = JP_SURNAME[nameParts[nameParts.length-1].toLowerCase()];
+        var jpGiven   = JP_GIVEN[nameParts[0].toLowerCase()];
+        var middle    = nameParts.slice(1, nameParts.length-1).join('・');
+        if (jpSurname && jpGiven) return jpSurname + '　' + jpGiven + '（' + middle + '）';
+        if (jpSurname) return jpSurname + '　' + nameParts[0] + '（' + middle + '）';
+      }
+    }
     return COMMON[en] || en;
   }
   function gjv(id) { return gj(id) || gv(id) || '—'; }
@@ -1307,6 +1374,23 @@ function doDownloadPDF() {
       if (jpMap[id]) return jpMap[id];
       var v = p2f[id] || ''; if (!v) return '';
       if (v.match(/^\d{4}-\d{2}-\d{2}$/)) { var pp=v.split('-'); return pp[0]+'年'+parseInt(pp[1])+'月'+parseInt(pp[2])+'日'; }
+      // Japanese name fields on page 2 — check both parents
+      var isJpF = (gv('father_citizen')||'').toLowerCase().indexOf('japanese') >= 0 ||
+                  (gv('father_citizen')||'').indexOf('日本') >= 0;
+      var isJpM = (gv('mother_citizen')||'').toLowerCase().indexOf('japanese') >= 0 ||
+                  (gv('mother_citizen')||'').indexOf('日本') >= 0;
+      if (isJpF && (id==='p2_pat_father' || id==='p2_del_father')) { var k=toKanjiName(v); if(k) return k; }
+      if (isJpM && (id==='p2_pat_mother' || id==='p2_del_mother')) { var k=toKanjiName(v); if(k) return k; }
+      if ((isJpF||isJpM) && (id==='p2_pat_child' || id==='p2_del_child')) {
+        var np=v.trim().split(/\s+/);
+        if (np.length>=3) {
+          var jpS=JP_SURNAME[np[np.length-1].toLowerCase()];
+          var jpG=JP_GIVEN[np[0].toLowerCase()];
+          var mid=np.slice(1,np.length-1).join('・');
+          if(jpS&&jpG) return jpS+'　'+jpG+'（'+mid+'）';
+          if(jpS) return jpS+'　'+np[0]+'（'+mid+'）';
+        }
+      }
       return COMMON[v] || v;
     }
     function gjp2v(id) { return gjp2(id) || gp2(id) || '—'; }
