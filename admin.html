@@ -662,6 +662,44 @@ async function doTranslate() {
     'Apostille': {
       'A. アポスティーユ情報 / APOSTILLE INFORMATION': ['apo_sn','apo_country','apo_signed_by','apo_capacity','apo_seal_of','apo_place','apo_date','apo_by','apo_number'],
       'B. 原文書情報 / UNDERLYING DOCUMENT': ['apo_underlying_doc','apo_ref_number','apo_keycode','purpose']
+    },
+    'Philippine Payslip': {
+      'A. 会社情報 / COMPANY INFORMATION': ['company_name','company_address','company_tel','company_tin','company_hr'],
+      'B. 従業員情報 / EMPLOYEE INFORMATION': ['emp_name','emp_id','emp_dept','emp_position','pay_period'],
+      'B. 支給 / EARNINGS': ['basic_pay','cost_of_living','rice_allowance','transport_allowance','clothing_allowance','overtime_pay','holiday_pay','other_earnings'],
+      'C. 控除 / DEDUCTIONS': ['sss','philhealth','pagibig','withholding_tax','sss_loan','pagibig_loan','other_deductions'],
+      'D. 支払合計 / TOTALS': ['gross_pay','total_deductions','net_pay','purpose']
+    },
+    'Japanese Payslip': {
+      'A. 会社情報 / COMPANY INFORMATION': ['company_name','company_address','company_tel','company_hojin_no','company_hr'],
+      'B. 従業員情報 / EMPLOYEE INFORMATION': ['emp_name','emp_id','emp_dept','emp_position','pay_period'],
+      'B. 支給 / EARNINGS': ['kihonkyu','yakushoku_teate','shokumu_teate','jikan_gai','kyujitsu_teate','tsukin_teate','juutaku_teate','other_teate'],
+      'C. 控除 / DEDUCTIONS': ['kenkou_hoken','kousei_nenkin','koyo_hoken','shotoku_zei','juumin_zei','other_koujo'],
+      'D. 支払合計 / TOTALS': ['shikyu_gokei','koujo_gokei','sashihiki_shikyu','purpose']
+    },
+    'Certificate of Employment': {
+      'A. 会社情報 / EMPLOYER INFORMATION': ['coe_company','coe_company_address','coe_company_tel','coe_company_tin','coe_signatory','coe_signatory_position'],
+      'B. 従業員情報 / EMPLOYEE INFORMATION': ['coe_emp_name','coe_emp_position','coe_emp_dept','coe_emp_status','coe_start_date','coe_end_date'],
+      'C. 給与情報 / COMPENSATION': ['coe_monthly_salary','coe_salary_currency','coe_allowances','coe_gross_monthly'],
+      'D. 証明内容 / CERTIFICATION DETAILS': ['coe_issue_date','coe_purpose','purpose']
+    },
+    'ITR / BIR Form 2316': {
+      'A. 従業員情報 / EMPLOYEE (PART I)': ['itr_emp_name','itr_emp_tin','itr_emp_address','itr_period_from','itr_period_to','itr_status'],
+      'B. 雇用者情報 / EMPLOYER (PART II)': ['itr_employer_name','itr_employer_tin','itr_employer_address','itr_employer_zip'],
+      'C. 給与所得 / COMPENSATION INCOME (PART IV)': ['itr_gross_comp','itr_taxable_comp','itr_non_taxable','itr_basic_salary','itr_13th_month','itr_other_benefits','itr_deminimis'],
+      'D. 源泉徴収税 / TAX WITHHELD (PART V)': ['itr_rdo_code','itr_tax_withheld_prev','itr_tax_withheld_curr','itr_total_tax','itr_tax_due','purpose']
+    },
+    'Bank Certificate': {
+      'A. 銀行情報 / BANK INFORMATION': ['bank_name','bank_branch','bank_address','bank_tel'],
+      'B. 口座情報 / ACCOUNT INFORMATION': ['bank_acct_name','bank_acct_number','bank_acct_type','bank_currency','bank_open_date'],
+      'C. 残高情報 / BALANCE INFORMATION': ['bank_balance','bank_balance_date','bank_adb','bank_adb_period'],
+      'D. 証明情報 / CERTIFICATION': ['bank_officer','bank_officer_position','bank_issue_date','purpose']
+    },
+    'Bank Statement': {
+      'A. 銀行情報 / BANK INFORMATION': ['bank_name','bank_branch','bank_address','bank_acct_name','bank_acct_number','bank_acct_type','bank_currency'],
+      'B. 期間 / STATEMENT PERIOD': ['bank_stmt_from','bank_stmt_to','bank_opening_bal','bank_closing_bal','bank_adb'],
+      'C. 取引履歴 / TRANSACTION SUMMARY': ['bank_total_deposits','bank_total_withdrawals','bank_remarks'],
+      'D. 証明情報 / CERTIFICATION': ['bank_officer','bank_officer_position','bank_issue_date','purpose']
     }
   };
 
@@ -703,7 +741,54 @@ async function doTranslate() {
     'apo_capacity':'署名者の資格・役職（第3項）','apo_seal_of':'印章・スタンプ（第4項）',
     'apo_place':'認証地（第5項）','apo_date':'認証日（第6項）','apo_by':'認証者（第7項）',
     'apo_number':'アポスティーユ番号（第8項）','apo_underlying_doc':'原文書の種類',
-    'apo_ref_number':'参照番号','apo_keycode':'キーコード'
+    'apo_ref_number':'参照番号','apo_keycode':'キーコード',
+    // Payslip — Company Info
+    'company_name':'会社名','company_address':'会社所在地','company_tel':'電話番号',
+    'company_tin':'TIN番号（税務識別番号）','company_hojin_no':'法人番号',
+    'company_hr':'人事・給与担当者',
+    // Philippine Payslip — Employee
+    'emp_name':'氏名','emp_id':'社員番号','emp_dept':'部署','emp_position':'役職',
+    'pay_period':'給与対象期間',
+    'basic_pay':'基本給','cost_of_living':'生活費手当','rice_allowance':'食費手当',
+    'transport_allowance':'交通費手当','clothing_allowance':'被服手当',
+    'overtime_pay':'残業代','holiday_pay':'休日手当','other_earnings':'その他支給',
+    'sss':'SSS（社会保険）','philhealth':'PhilHealth（医療保険）','pagibig':'Pag-IBIG（住宅積立）',
+    'withholding_tax':'源泉所得税','sss_loan':'SSSローン控除','pagibig_loan':'Pag-IGIBローン控除',
+    'other_deductions':'その他控除','gross_pay':'支給合計','total_deductions':'控除合計','net_pay':'差引支給額',
+    // Japanese Payslip
+    'kihonkyu':'基本給','yakushoku_teate':'役職手当','shokumu_teate':'職務手当',
+    'jikan_gai':'時間外手当（残業）','kyujitsu_teate':'休日手当','tsukin_teate':'通勤手当',
+    'juutaku_teate':'住宅手当','other_teate':'その他手当',
+    'kenkou_hoken':'健康保険','kousei_nenkin':'厚生年金','koyo_hoken':'雇用保険',
+    'shotoku_zei':'所得税','juumin_zei':'住民税','other_koujo':'その他控除',
+    'shikyu_gokei':'支給合計','koujo_gokei':'控除合計','sashihiki_shikyu':'差引支給額',
+    // COE
+    'coe_company':'会社名','coe_company_address':'会社所在地','coe_company_tel':'電話番号',
+    'coe_company_tin':'TIN番号','coe_signatory':'証明者氏名','coe_signatory_position':'証明者役職',
+    'coe_emp_name':'氏名','coe_emp_position':'役職','coe_emp_dept':'部署',
+    'coe_emp_status':'雇用形態','coe_start_date':'雇用開始日','coe_end_date':'雇用終了日（現在も在職中の場合は「現在」）',
+    'coe_monthly_salary':'月額基本給','coe_salary_currency':'通貨','coe_allowances':'各種手当','coe_gross_monthly':'月額総支給額',
+    'coe_issue_date':'証明書発行日','coe_purpose':'証明目的',
+    // ITR / BIR 2316
+    'itr_emp_name':'氏名（納税者）','itr_emp_tin':'TIN番号','itr_emp_address':'住所','itr_rdo_code':'RDO番号（税務署コード）','itr_rdo_code':'RDO番号（税務署コード）',
+    'itr_period_from':'対象期間（開始）','itr_period_to':'対象期間（終了）','itr_status':'婚姻状況',
+    'itr_employer_name':'雇用者名','itr_employer_tin':'雇用者TIN番号',
+    'itr_employer_address':'雇用者住所','itr_employer_zip':'郵便番号',
+    'itr_gross_comp':'給与総額','itr_taxable_comp':'課税対象給与額','itr_non_taxable':'非課税給与額',
+    'itr_basic_salary':'基本給（年間）','itr_13th_month':'13ヶ月給与・その他特典',
+    'itr_other_benefits':'その他福利厚生','itr_deminimis':'デミニミス給付',
+    'itr_tax_withheld_prev':'前雇用者源泉徴収税額','itr_tax_withheld_curr':'現雇用者源泉徴収税額',
+    'itr_total_tax':'源泉徴収税合計','itr_tax_due':'納付税額',
+    // Bank Certificate & Statement
+    'bank_name':'銀行名','bank_branch':'支店名','bank_address':'銀行所在地','bank_tel':'電話番号',
+    'bank_acct_name':'口座名義人','bank_acct_number':'口座番号','bank_acct_type':'口座種別',
+    'bank_currency':'通貨','bank_open_date':'口座開設日',
+    'bank_balance':'現在残高','bank_balance_date':'残高照会日','bank_adb':'平均日次残高（ADB）',
+    'bank_adb_period':'ADB対象期間','bank_officer':'証明担当者氏名','bank_officer_position':'証明担当者役職',
+    'bank_issue_date':'証明書発行日',
+    'bank_stmt_from':'明細書開始日','bank_stmt_to':'明細書終了日',
+    'bank_opening_bal':'期首残高','bank_closing_bal':'期末残高',
+    'bank_total_deposits':'入金合計','bank_total_withdrawals':'出金合計','bank_remarks':'備考'
   };
 
   var skipTranslation = {'reg_number':true,'ref_number':true,'reg_date':false};
@@ -787,7 +872,8 @@ async function doTranslate() {
     '- Apostille institution: Philippine Statistics Authority=フィリピン統計局, Department of Foreign Affairs=外務省, Philippines=フィリピン共和国\n' +
     '- Apostille city: Manila=マニラ市, Pasay=パサイ市, Makati=マカティ市\n' +
     '- Apostille underlying doc: Birth Certificate=出生証明書, Marriage Certificate=婚姻証明書, Death Certificate=死亡証明書, CENOMAR=未婚証明書\n' +
-    '- Serial numbers, apostille numbers, keycodes, reference numbers: output as-is — do NOT translate\n\n' +
+    '- Serial numbers, apostille numbers, keycodes, reference numbers: output as-is — do NOT translate\n' +
+    '- PAYSLIP RULES: Currency amounts (PHP, ¥, JPY) output as-is with original currency symbol. Pay period dates keep original format. Philippine payslip: translate all labels to Japanese, keep amounts as-is. Japanese payslip: translate all labels to English, keep amounts as-is. Company names: keep original, do not translate.\n\n' +
     'STRICT RULES:\n' +
     '- Output ONLY lines in FIELD_ID|Japanese format — no headers, no explanations, no extra text\n' +
     '- Every field listed above MUST have a translation line — never skip any field\n' +
@@ -1137,7 +1223,13 @@ function doDownloadPDF() {
     'Birth Certificate':'出生証明書','Marriage Certificate':'婚姻証明書',
     'Death Certificate':'死亡証明書','CENOMAR':'未婚証明書（CENOMAR）',
     'Advisory on Marriages':'婚姻記録照会書','Certificate of No Birth Record':'出生記録なし証明書',
-    'Apostille':'アポスティーユ証明書'
+    'Apostille':'アポスティーユ証明書',
+    'Philippine Payslip':'フィリピン給与明細書',
+    'Japanese Payslip':'日本給与明細書',
+    'Certificate of Employment':'在職証明書',
+    'ITR / BIR Form 2316':'給与所得源泉徴収票（BIR様式2316）',
+    'Bank Certificate':'残高証明書',
+    'Bank Statement':'銀行口座明細書'
   };
   var jpTitle = jpTitles[dt] || dt;
 
@@ -1228,6 +1320,13 @@ function doDownloadPDF() {
   }
 
   // ── FOOTER (shared) ──
+  // Generate translation serial number: ATS-YYYY-NNNN based on submission ID
+  function atsSerial() {
+    var yr = new Date().getFullYear();
+    var num = (s.id || 'UNK').replace(/[^0-9]/g,'').slice(-4).padStart(4,'0');
+    return 'ATS-' + yr + '-' + num;
+  }
+
   function certBlock(pageOf) {
     return `<div class="cert-block" style="margin-top:3px;border:1.5px solid #1a2744;border-radius:3px;overflow:hidden;page-break-inside:avoid">
       <div style="background:#1a2744;padding:3px 8px;display:flex;align-items:center;justify-content:space-between">
@@ -1282,8 +1381,23 @@ function doDownloadPDF() {
           </div>
         </div>
         <div style="margin-top:3px;padding-top:3px;border-top:0.5px solid #e5e0d8;display:flex;justify-content:space-between;align-items:center">
-          <div style="font-size:6px;color:#999">Valid for Japanese immigration, visa, and municipal office submissions. / 日本の入国管理・ビザ申請・役所への届出に有効。</div>
+          <div style="font-size:6px;color:#999">
+            Valid for Japanese immigration, visa, and municipal office submissions. / 日本の入国管理・ビザ申請・役所への届出に有効。
+            <strong style="color:#888"> · Valid for 6 months from date of translation / 翻訳日より6ヶ月間有効。</strong>
+          </div>
           <div style="font-size:6px;color:#c9a84c;font-weight:600">ARROYO TRANSLATION SERVICES</div>
+        </div>
+        <!-- Serial number + Certified True Translation stamp -->
+        <div style="margin-top:3px;padding-top:3px;border-top:0.5px solid #e5e0d8;display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:6px;color:#888">
+            Translation Serial No. / 翻訳整理番号: <strong style="color:#1a2744;font-size:7px">`+atsSerial()+`</strong>
+          </div>
+          <div style="border:1.5px solid #1a2744;padding:2px 8px;border-radius:2px;display:inline-flex;align-items:center;gap:4px">
+            <div style="font-size:6.5px;font-weight:bold;color:#1a2744;letter-spacing:0.5px;text-align:center">
+              ✦ CERTIFIED TRUE TRANSLATION<br>
+              <span style="font-size:6px;font-weight:normal;color:#555">正確な翻訳であることを証明します</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>`;
@@ -1781,6 +1895,641 @@ function doDownloadPDF() {
 
     certBlock() +
     '</div>';
+
+
+  // ════ PHILIPPINE PAYSLIP ════
+  } else if (dt === 'Philippine Payslip') {
+
+    function psRow(label_jp, label_en, val_jp, val_en, alt) {
+      var bg = alt ? 'background:#f0ece0' : 'background:#faf8f0';
+      return '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+        '<div class="fb s" style="'+bg+'"><div class="fl">'+label_jp+' / '+label_en+'</div></div>' +
+        '<div class="fb" style="'+bg+'"><div class="fj">'+val_jp+'</div><div class="fe">'+val_en+'</div></div>' +
+        '</div>';
+    }
+
+    function psAmt(label_jp, label_en, val, alt) {
+      var bg = alt ? 'background:#f0ece0' : 'background:#faf8f0';
+      return '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+        '<div class="fb" style="'+bg+'"><div class="fl">'+label_jp+' / '+label_en+'</div></div>' +
+        '<div class="fb s" style="'+bg+';text-align:right"><div class="fj">'+gjv(val)+'</div><div class="fe">'+gv(val)+'</div></div>' +
+        '</div>';
+    }
+
+    body = psaHdr('PAYSLIP','給与明細書', null, null) +
+    '<div class="meta"><span>会社 / Company: <b>'+gjv('emp_company')+'</b></span>' +
+    '<span>給与期間 / Pay Period: <b>'+gjv('pay_period')+'</b></span>' +
+    '<span>翻訳日 / Date: <b>'+today+'</b> · '+todayJP+'</span></div>' +
+
+    '<div class="sh">A.　従業員情報 / EMPLOYEE INFORMATION</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s"><div class="fl">氏名 / Employee Name</div><div class="fj">'+gjv('emp_name')+'</div><div class="fe">'+gv('emp_name')+'</div></div>' +
+      '<div class="fb"><div class="fl">社員番号 / Employee ID</div><div class="fj">'+gjv('emp_id')+'</div><div class="fe">'+gv('emp_id')+'</div></div>' +
+    '</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s"><div class="fl">部署 / Department</div><div class="fj">'+gjv('emp_dept')+'</div><div class="fe">'+gv('emp_dept')+'</div></div>' +
+      '<div class="fb"><div class="fl">役職 / Position</div><div class="fj">'+gjv('emp_position')+'</div><div class="fe">'+gv('emp_position')+'</div></div>' +
+    '</div>' +
+
+    '<div class="sh">B.　支給 / EARNINGS</div>' +
+    psAmt('基本給','Basic Pay','basic_pay',true) +
+    (gv('cost_of_living') ? psAmt('生活費手当','Cost of Living Allowance','cost_of_living',false) : '') +
+    (gv('rice_allowance') ? psAmt('食費手当','Rice Allowance','rice_allowance',true) : '') +
+    (gv('transport_allowance') ? psAmt('交通費手当','Transportation Allowance','transport_allowance',false) : '') +
+    (gv('clothing_allowance') ? psAmt('被服手当','Clothing Allowance','clothing_allowance',true) : '') +
+    (gv('overtime_pay') ? psAmt('残業代','Overtime Pay','overtime_pay',false) : '') +
+    (gv('holiday_pay') ? psAmt('休日手当','Holiday Pay','holiday_pay',true) : '') +
+    (gv('other_earnings') ? psAmt('その他支給','Other Earnings','other_earnings',false) : '') +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:2px solid #1a2744;background:#1a2744">' +
+      '<div class="fb" style="background:#1a2744"><div class="fl" style="color:#e8c97a;font-weight:bold">支給合計 / GROSS PAY</div></div>' +
+      '<div class="fb s" style="background:#1a2744;text-align:right"><div class="fj" style="color:#e8c97a;font-size:10px">'+gjv('gross_pay')+'</div><div class="fe" style="color:rgba(255,255,255,0.6)">'+gv('gross_pay')+'</div></div>' +
+    '</div>' +
+
+    '<div class="sh">C.　控除 / DEDUCTIONS</div>' +
+    (gv('sss') ? psAmt('SSS（社会保険）','SSS Contribution','sss',true) : '') +
+    (gv('philhealth') ? psAmt('PhilHealth（医療保険）','PhilHealth Contribution','philhealth',false) : '') +
+    (gv('pagibig') ? psAmt('Pag-IBIG（住宅積立）','Pag-IBIG Contribution','pagibig',true) : '') +
+    (gv('withholding_tax') ? psAmt('源泉所得税','Withholding Tax','withholding_tax',false) : '') +
+    (gv('sss_loan') ? psAmt('SSSローン控除','SSS Loan','sss_loan',true) : '') +
+    (gv('pagibig_loan') ? psAmt('Pag-IGIBローン控除','Pag-IBIG Loan','pagibig_loan',false) : '') +
+    (gv('other_deductions') ? psAmt('その他控除','Other Deductions','other_deductions',true) : '') +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:2px solid #dc2626;background:#fef2f2">' +
+      '<div class="fb" style="background:#fef2f2"><div class="fl" style="color:#dc2626;font-weight:bold">控除合計 / TOTAL DEDUCTIONS</div></div>' +
+      '<div class="fb s" style="background:#fef2f2;text-align:right"><div class="fj" style="color:#dc2626;font-size:10px">'+gjv('total_deductions')+'</div><div class="fe" style="color:#dc2626">'+gv('total_deductions')+'</div></div>' +
+    '</div>' +
+
+    '<div class="sh" style="background:#16a34a">D.　差引支給額 / NET PAY</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb;background:#f0fdf4">' +
+      '<div class="fb s" style="background:#f0fdf4"><div class="fl" style="color:#16a34a;font-weight:bold">差引支給額 / Net Pay (Take Home)</div></div>' +
+      '<div class="fb" style="background:#f0fdf4;text-align:right"><div class="fj" style="color:#16a34a;font-size:12px;font-weight:bold">'+gjv('net_pay')+'</div><div class="fe" style="color:#16a34a">'+gv('net_pay')+'</div></div>' +
+    '</div>' +
+
+    '<div class="sh">E.　翻訳目的 / PURPOSE</div>' +
+    '<div class="g1" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb"><div class="fl">翻訳目的 / Purpose of Translation</div><div class="fj">'+gjv('purpose')+'</div><div class="fe">'+gv('purpose')+'</div></div>' +
+    '</div>' +
+
+    '<div class="cbox" style="margin-top:4px"><b>【翻訳証明】</b>' +
+    '本翻訳はフィリピンの事業者が発行した給与明細書（'+gjv('emp_company')+'）を正確に日本語に翻訳したものです。翻訳者はその正確性を保証します。<br>' +
+    '<em>CERTIFICATION: This is a faithful Japanese translation of the original Philippine Payslip issued by '+gv('emp_company')+'. The translator certifies the accuracy of this translation.</em>' +
+    '</div>' +
+    certBlock() +
+    '</div>';
+
+  // ════ JAPANESE PAYSLIP ════
+  } else if (dt === 'Japanese Payslip') {
+
+    function jpAmt(label_jp, label_en, val, alt) {
+      var bg = alt ? 'background:#f0ece0' : 'background:#faf8f0';
+      return '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+        '<div class="fb" style="'+bg+'"><div class="fl">'+label_jp+' / '+label_en+'</div></div>' +
+        '<div class="fb s" style="'+bg+';text-align:right"><div class="fj">'+gjv(val)+'</div><div class="fe">'+gv(val)+'</div></div>' +
+        '</div>';
+    }
+
+    body = psaHdr('PAYSLIP / 給与明細書','給与明細書 — 英語翻訳', null, null) +
+    '<div class="meta"><span>会社 / Company: <b>'+gjv('emp_company')+'</b></span>' +
+    '<span>支給月 / Pay Period: <b>'+gjv('pay_period')+'</b></span>' +
+    '<span>翻訳日 / Date: <b>'+today+'</b> · '+todayJP+'</span></div>' +
+
+    '<div class="sh">A.　従業員情報 / EMPLOYEE INFORMATION</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s"><div class="fl">氏名 / Employee Name</div><div class="fj">'+gjv('emp_name')+'</div><div class="fe">'+gv('emp_name')+'</div></div>' +
+      '<div class="fb"><div class="fl">社員番号 / Employee ID</div><div class="fj">'+gjv('emp_id')+'</div><div class="fe">'+gv('emp_id')+'</div></div>' +
+    '</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s"><div class="fl">部署 / Department</div><div class="fj">'+gjv('emp_dept')+'</div><div class="fe">'+gv('emp_dept')+'</div></div>' +
+      '<div class="fb"><div class="fl">役職 / Position</div><div class="fj">'+gjv('emp_position')+'</div><div class="fe">'+gv('emp_position')+'</div></div>' +
+    '</div>' +
+
+    '<div class="sh">B.　支給 / EARNINGS</div>' +
+    jpAmt('基本給','Basic Salary','kihonkyu',true) +
+    (gv('yakushoku_teate') ? jpAmt('役職手当','Management Allowance','yakushoku_teate',false) : '') +
+    (gv('shokumu_teate') ? jpAmt('職務手当','Job Allowance','shokumu_teate',true) : '') +
+    (gv('jikan_gai') ? jpAmt('時間外手当','Overtime Pay','jikan_gai',false) : '') +
+    (gv('kyujitsu_teate') ? jpAmt('休日手当','Holiday Pay','kyujitsu_teate',true) : '') +
+    (gv('tsukin_teate') ? jpAmt('通勤手当','Commuting Allowance','tsukin_teate',false) : '') +
+    (gv('juutaku_teate') ? jpAmt('住宅手当','Housing Allowance','juutaku_teate',true) : '') +
+    (gv('other_teate') ? jpAmt('その他手当','Other Allowances','other_teate',false) : '') +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:2px solid #1a2744;background:#1a2744">' +
+      '<div class="fb" style="background:#1a2744"><div class="fl" style="color:#e8c97a;font-weight:bold">支給合計 / GROSS EARNINGS</div></div>' +
+      '<div class="fb s" style="background:#1a2744;text-align:right"><div class="fj" style="color:#e8c97a;font-size:10px">'+gjv('shikyu_gokei')+'</div><div class="fe" style="color:rgba(255,255,255,0.6)">'+gv('shikyu_gokei')+'</div></div>' +
+    '</div>' +
+
+    '<div class="sh">C.　控除 / DEDUCTIONS</div>' +
+    (gv('kenkou_hoken') ? jpAmt('健康保険','Health Insurance','kenkou_hoken',true) : '') +
+    (gv('kousei_nenkin') ? jpAmt('厚生年金','Employees Pension','kousei_nenkin',false) : '') +
+    (gv('koyo_hoken') ? jpAmt('雇用保険','Employment Insurance','koyo_hoken',true) : '') +
+    (gv('shotoku_zei') ? jpAmt('所得税','Income Tax','shotoku_zei',false) : '') +
+    (gv('juumin_zei') ? jpAmt('住民税','Resident Tax','juumin_zei',true) : '') +
+    (gv('other_koujo') ? jpAmt('その他控除','Other Deductions','other_koujo',false) : '') +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:2px solid #dc2626;background:#fef2f2">' +
+      '<div class="fb" style="background:#fef2f2"><div class="fl" style="color:#dc2626;font-weight:bold">控除合計 / TOTAL DEDUCTIONS</div></div>' +
+      '<div class="fb s" style="background:#fef2f2;text-align:right"><div class="fj" style="color:#dc2626;font-size:10px">'+gjv('koujo_gokei')+'</div><div class="fe" style="color:#dc2626">'+gv('koujo_gokei')+'</div></div>' +
+    '</div>' +
+
+    '<div class="sh" style="background:#16a34a">D.　差引支給額 / NET PAY</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb;background:#f0fdf4">' +
+      '<div class="fb s" style="background:#f0fdf4"><div class="fl" style="color:#16a34a;font-weight:bold">差引支給額 / Net Pay (Take Home)</div></div>' +
+      '<div class="fb" style="background:#f0fdf4;text-align:right"><div class="fj" style="color:#16a34a;font-size:12px;font-weight:bold">'+gjv('sashihiki_shikyu')+'</div><div class="fe" style="color:#16a34a">'+gv('sashihiki_shikyu')+'</div></div>' +
+    '</div>' +
+
+    '<div class="sh">E.　翻訳目的 / PURPOSE</div>' +
+    '<div class="g1" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb"><div class="fl">翻訳目的 / Purpose of Translation</div><div class="fj">'+gjv('purpose')+'</div><div class="fe">'+gv('purpose')+'</div></div>' +
+    '</div>' +
+
+    '<div class="cbox" style="margin-top:4px"><b>【翻訳証明】</b>' +
+    '本翻訳は日本の事業者が発行した給与明細書（'+gjv('emp_company')+'）を正確に英語に翻訳したものです。翻訳者はその正確性を保証します。<br>' +
+    '<em>CERTIFICATION: This is a faithful English translation of the original Japanese Payslip issued by '+gv('emp_company')+'. The translator certifies the accuracy of this translation.</em>' +
+    '</div>' +
+    certBlock() +
+    '</div>';
+
+
+  // ════ PHILIPPINE PAYSLIP ════
+  } else if (dt === 'Philippine Payslip') {
+
+    function psAmt(label_jp, label_en, val, alt) {
+      var bg = alt ? 'background:#f0ece0' : 'background:#faf8f0';
+      return (gv(val) ? '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+        '<div class="fb" style="'+bg+'"><div class="fl">'+label_jp+' / '+label_en+'</div></div>' +
+        '<div class="fb s" style="'+bg+';text-align:right"><div class="fj">'+gjv(val)+'</div><div class="fe">'+gv(val)+'</div></div>' +
+        '</div>' : '');
+    }
+
+    body = psaHdr('PAYSLIP — PHILIPPINE','フィリピン給与明細書', null, null) +
+    '<div class="meta"><span>会社 / Company: <b contenteditable="true">'+gv('company_name')+'</b></span><span>給与期間 / Period: <b contenteditable="true">'+gv('pay_period')+'</b></span><span>翻訳日 / Date: <b contenteditable="true">'+today+'</b> · <b contenteditable="true">'+todayJP+'</b></span></div>' +
+
+    '<div class="sh">A.　会社情報 / COMPANY INFORMATION</div>' +
+    '<div class="g1" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s"><div class="fl">会社名 / Company Name</div><div class="fj">'+gjv('company_name')+'</div><div class="fe">'+gv('company_name')+'</div></div>' +
+    '</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s" style="background:#f0ece0"><div class="fl">会社所在地 / Company Address</div><div class="fj">'+gjv('company_address')+'</div><div class="fe">'+gv('company_address')+'</div></div>' +
+      '<div class="fb" style="background:#f0ece0"><div class="fl">電話番号 / Contact No.</div><div class="fj">'+gjv('company_tel')+'</div><div class="fe">'+gv('company_tel')+'</div></div>' +
+    '</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s"><div class="fl">TIN番号 / Tax Identification No. (TIN)</div><div class="fj">'+gjv('company_tin')+'</div><div class="fe">'+gv('company_tin')+'</div></div>' +
+      '<div class="fb"><div class="fl">人事・給与担当者 / HR / Payroll Officer</div><div class="fj">'+gjv('company_hr')+'</div><div class="fe">'+gv('company_hr')+'</div></div>' +
+    '</div>' +
+
+    '<div class="sh">B.　従業員情報 / EMPLOYEE INFORMATION</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s"><div class="fl">氏名 / Employee Name</div><div class="fj">'+gjv('emp_name')+'</div><div class="fe">'+gv('emp_name')+'</div></div>' +
+      '<div class="fb"><div class="fl">社員番号 / Employee ID</div><div class="fj">'+gjv('emp_id')+'</div><div class="fe">'+gv('emp_id')+'</div></div>' +
+    '</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s" style="background:#f0ece0"><div class="fl">部署 / Department</div><div class="fj">'+gjv('emp_dept')+'</div><div class="fe">'+gv('emp_dept')+'</div></div>' +
+      '<div class="fb" style="background:#f0ece0"><div class="fl">役職 / Position</div><div class="fj">'+gjv('emp_position')+'</div><div class="fe">'+gv('emp_position')+'</div></div>' +
+    '</div>' +
+
+    '<div class="sh">B.　支給 / EARNINGS</div>' +
+    psAmt('基本給','Basic Pay','basic_pay',true) +
+    psAmt('生活費手当','Cost of Living Allowance','cost_of_living',false) +
+    psAmt('食費手当','Rice Allowance','rice_allowance',true) +
+    psAmt('交通費手当','Transportation Allowance','transport_allowance',false) +
+    psAmt('被服手当','Clothing Allowance','clothing_allowance',true) +
+    psAmt('残業代','Overtime Pay','overtime_pay',false) +
+    psAmt('休日手当','Holiday Pay','holiday_pay',true) +
+    psAmt('その他支給','Other Earnings','other_earnings',false) +
+    '<div class="g2" style="border-top:2px solid #1a2744;background:#1a2744">' +
+      '<div class="fb" style="background:#1a2744"><div class="fl" style="color:#e8c97a;font-weight:bold">支給合計 / GROSS PAY</div></div>' +
+      '<div class="fb s" style="background:#1a2744;text-align:right"><div class="fj" style="color:#e8c97a;font-size:11px;font-weight:bold">'+gjv('gross_pay')+'</div><div class="fe" style="color:rgba(255,255,255,0.7)">'+gv('gross_pay')+'</div></div>' +
+    '</div>' +
+
+    '<div class="sh">C.　控除 / DEDUCTIONS</div>' +
+    psAmt('SSS（社会保険）','SSS Contribution','sss',true) +
+    psAmt('PhilHealth（医療保険）','PhilHealth Contribution','philhealth',false) +
+    psAmt('Pag-IBIG（住宅積立）','Pag-IBIG Contribution','pagibig',true) +
+    psAmt('源泉所得税','Withholding Tax','withholding_tax',false) +
+    psAmt('SSSローン控除','SSS Loan','sss_loan',true) +
+    psAmt('Pag-IBIGローン控除','Pag-IBIG Loan','pagibig_loan',false) +
+    psAmt('その他控除','Other Deductions','other_deductions',true) +
+    '<div class="g2" style="border-top:2px solid #dc2626;background:#fef2f2">' +
+      '<div class="fb" style="background:#fef2f2"><div class="fl" style="color:#dc2626;font-weight:bold">控除合計 / TOTAL DEDUCTIONS</div></div>' +
+      '<div class="fb s" style="background:#fef2f2;text-align:right"><div class="fj" style="color:#dc2626;font-size:11px;font-weight:bold">'+gjv('total_deductions')+'</div><div class="fe" style="color:#dc2626">'+gv('total_deductions')+'</div></div>' +
+    '</div>' +
+
+    '<div class="sh" style="background:#16a34a">D.　差引支給額 / NET PAY</div>' +
+    '<div style="background:#f0fdf4;border:1.5px solid #86efac;padding:8px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">' +
+      '<div style="font-size:9px;font-weight:bold;color:#16a34a">差引支給額 / Net Pay (Take Home)</div>' +
+      '<div><div class="fj" style="color:#16a34a;font-size:14px;font-weight:bold;text-align:right">'+gjv('net_pay')+'</div><div class="fe" style="color:#16a34a;text-align:right">'+gv('net_pay')+'</div></div>' +
+    '</div>' +
+
+    '<div class="sh">E.　翻訳目的 / PURPOSE</div>' +
+    '<div class="g1" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb"><div class="fl">翻訳目的 / Purpose of Translation</div><div class="fj">'+gjv('purpose')+'</div><div class="fe">'+gv('purpose')+'</div></div>' +
+    '</div>' +
+
+    '<div class="cbox"><b>【翻訳証明】</b>本翻訳はフィリピンの事業者（'+gv('emp_company')+'）が発行した給与明細書を正確に日本語に翻訳したものです。翻訳者はその正確性を保証します。<br>' +
+    '<em>CERTIFICATION: This is a faithful Japanese translation of the original Philippine Payslip issued by '+gv('emp_company')+'. The translator certifies the accuracy of this translation.</em></div>' +
+    certBlock() + '</div>';
+
+  // ════ JAPANESE PAYSLIP ════
+  } else if (dt === 'Japanese Payslip') {
+
+    function jpAmt(label_jp, label_en, val, alt) {
+      var bg = alt ? 'background:#f0ece0' : 'background:#faf8f0';
+      return (gv(val) ? '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+        '<div class="fb" style="'+bg+'"><div class="fl">'+label_jp+' / '+label_en+'</div></div>' +
+        '<div class="fb s" style="'+bg+';text-align:right"><div class="fj">'+gjv(val)+'</div><div class="fe">'+gv(val)+'</div></div>' +
+        '</div>' : '');
+    }
+
+    body = psaHdr('PAYSLIP — JAPANESE / 給与明細書','給与明細書 — 英語翻訳', null, null) +
+    '<div class="meta"><span>会社 / Company: <b contenteditable="true">'+gv('company_name')+'</b></span><span>支給月 / Period: <b contenteditable="true">'+gv('pay_period')+'</b></span><span>翻訳日 / Date: <b contenteditable="true">'+today+'</b> · <b contenteditable="true">'+todayJP+'</b></span></div>' +
+
+    '<div class="sh">A.　会社情報 / COMPANY INFORMATION</div>' +
+    '<div class="g1" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s"><div class="fl">会社名 / Company Name</div><div class="fj">'+gjv('company_name')+'</div><div class="fe">'+gv('company_name')+'</div></div>' +
+    '</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s" style="background:#f0ece0"><div class="fl">会社所在地 / Company Address</div><div class="fj">'+gjv('company_address')+'</div><div class="fe">'+gv('company_address')+'</div></div>' +
+      '<div class="fb" style="background:#f0ece0"><div class="fl">電話番号 / Contact No.</div><div class="fj">'+gjv('company_tel')+'</div><div class="fe">'+gv('company_tel')+'</div></div>' +
+    '</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s"><div class="fl">法人番号 / Corporate Registration No.</div><div class="fj">'+gjv('company_hojin_no')+'</div><div class="fe">'+gv('company_hojin_no')+'</div></div>' +
+      '<div class="fb"><div class="fl">給与担当者 / HR / Payroll Officer</div><div class="fj">'+gjv('company_hr')+'</div><div class="fe">'+gv('company_hr')+'</div></div>' +
+    '</div>' +
+
+    '<div class="sh">B.　従業員情報 / EMPLOYEE INFORMATION</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s"><div class="fl">氏名 / Employee Name</div><div class="fj">'+gjv('emp_name')+'</div><div class="fe">'+gv('emp_name')+'</div></div>' +
+      '<div class="fb"><div class="fl">社員番号 / Employee ID</div><div class="fj">'+gjv('emp_id')+'</div><div class="fe">'+gv('emp_id')+'</div></div>' +
+    '</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s" style="background:#f0ece0"><div class="fl">部署 / Department</div><div class="fj">'+gjv('emp_dept')+'</div><div class="fe">'+gv('emp_dept')+'</div></div>' +
+      '<div class="fb" style="background:#f0ece0"><div class="fl">役職 / Position</div><div class="fj">'+gjv('emp_position')+'</div><div class="fe">'+gv('emp_position')+'</div></div>' +
+    '</div>' +
+
+    '<div class="sh">B.　支給 / EARNINGS</div>' +
+    jpAmt('基本給','Basic Salary','kihonkyu',true) +
+    jpAmt('役職手当','Management Allowance','yakushoku_teate',false) +
+    jpAmt('職務手当','Job Allowance','shokumu_teate',true) +
+    jpAmt('時間外手当','Overtime Pay','jikan_gai',false) +
+    jpAmt('休日手当','Holiday Pay','kyujitsu_teate',true) +
+    jpAmt('通勤手当','Commuting Allowance','tsukin_teate',false) +
+    jpAmt('住宅手当','Housing Allowance','juutaku_teate',true) +
+    jpAmt('その他手当','Other Allowances','other_teate',false) +
+    '<div class="g2" style="border-top:2px solid #1a2744;background:#1a2744">' +
+      '<div class="fb" style="background:#1a2744"><div class="fl" style="color:#e8c97a;font-weight:bold">支給合計 / GROSS EARNINGS</div></div>' +
+      '<div class="fb s" style="background:#1a2744;text-align:right"><div class="fj" style="color:#e8c97a;font-size:11px;font-weight:bold">'+gjv('shikyu_gokei')+'</div><div class="fe" style="color:rgba(255,255,255,0.7)">'+gv('shikyu_gokei')+'</div></div>' +
+    '</div>' +
+
+    '<div class="sh">C.　控除 / DEDUCTIONS</div>' +
+    jpAmt('健康保険','Health Insurance','kenkou_hoken',true) +
+    jpAmt('厚生年金','Employees Pension Insurance','kousei_nenkin',false) +
+    jpAmt('雇用保険','Employment Insurance','koyo_hoken',true) +
+    jpAmt('所得税','Income Tax','shotoku_zei',false) +
+    jpAmt('住民税','Resident Tax','juumin_zei',true) +
+    jpAmt('その他控除','Other Deductions','other_koujo',false) +
+    '<div class="g2" style="border-top:2px solid #dc2626;background:#fef2f2">' +
+      '<div class="fb" style="background:#fef2f2"><div class="fl" style="color:#dc2626;font-weight:bold">控除合計 / TOTAL DEDUCTIONS</div></div>' +
+      '<div class="fb s" style="background:#fef2f2;text-align:right"><div class="fj" style="color:#dc2626;font-size:11px;font-weight:bold">'+gjv('koujo_gokei')+'</div><div class="fe" style="color:#dc2626">'+gv('koujo_gokei')+'</div></div>' +
+    '</div>' +
+
+    '<div class="sh" style="background:#16a34a">D.　差引支給額 / NET PAY</div>' +
+    '<div style="background:#f0fdf4;border:1.5px solid #86efac;padding:8px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">' +
+      '<div style="font-size:9px;font-weight:bold;color:#16a34a">差引支給額 / Net Pay (Take Home)</div>' +
+      '<div><div class="fj" style="color:#16a34a;font-size:14px;font-weight:bold;text-align:right">'+gjv('sashihiki_shikyu')+'</div><div class="fe" style="color:#16a34a;text-align:right">'+gv('sashihiki_shikyu')+'</div></div>' +
+    '</div>' +
+
+    '<div class="sh">E.　翻訳目的 / PURPOSE</div>' +
+    '<div class="g1" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb"><div class="fl">翻訳目的 / Purpose of Translation</div><div class="fj">'+gjv('purpose')+'</div><div class="fe">'+gv('purpose')+'</div></div>' +
+    '</div>' +
+
+    '<div class="cbox"><b>【翻訳証明】</b>本翻訳は日本の事業者（'+gv('emp_company')+'）が発行した給与明細書を正確に英語に翻訳したものです。翻訳者はその正確性を保証します。<br>' +
+    '<em>CERTIFICATION: This is a faithful English translation of the original Japanese Payslip issued by '+gv('emp_company')+'. The translator certifies the accuracy of this translation.</em></div>' +
+    certBlock() + '</div>';
+
+
+  // ════ CERTIFICATE OF EMPLOYMENT ════
+  } else if (dt === 'Certificate of Employment') {
+
+    function coeRow(lj, le, val, alt) {
+      var bg = alt ? 'background:#f0ece0' : 'background:#faf8f0';
+      return '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+        '<div class="fb s" style="'+bg+'"><div class="fl">'+lj+' / '+le+'</div></div>' +
+        '<div class="fb" style="'+bg+'"><div class="fj">'+gjv(val)+'</div><div class="fe">'+gv(val)+'</div></div>' +
+      '</div>';
+    }
+
+    body = psaHdr('CERTIFICATE OF EMPLOYMENT','在職証明書', null, null) +
+    '<div class="meta"><span>発行日 / Issue Date: <b contenteditable="true">'+gjv('coe_issue_date')+'</b></span>' +
+    '<span>翻訳日 / Date: <b contenteditable="true">'+today+'</b> · <b contenteditable="true">'+todayJP+'</b></span></div>' +
+
+    // Japan embassy note
+    '<div style="background:#eff6ff;border:1px solid #bfdbfe;padding:6px 10px;margin-bottom:4px;font-size:7px;color:#1e3a8a">' +
+    '【日本大使館提出用翻訳 / For Japan Embassy Submission】　在職証明書（Employment Certificate）の日本語翻訳　— 就労ビザ・収入証明用' +
+    '</div>' +
+
+    '<div class="sh">A.　雇用者情報 / EMPLOYER INFORMATION</div>' +
+    '<div class="g1" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s"><div class="fl">会社名 / Company / Employer Name</div><div class="fj">'+gjv('coe_company')+'</div><div class="fe">'+gv('coe_company')+'</div></div>' +
+    '</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s" style="background:#f0ece0"><div class="fl">会社所在地 / Company Address</div><div class="fj">'+gjv('coe_company_address')+'</div><div class="fe">'+gv('coe_company_address')+'</div></div>' +
+      '<div class="fb" style="background:#f0ece0"><div class="fl">電話番号 / Telephone</div><div class="fj">'+gjv('coe_company_tel')+'</div><div class="fe">'+gv('coe_company_tel')+'</div></div>' +
+    '</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s"><div class="fl">TIN番号 / Company TIN</div><div class="fj">'+gv('coe_company_tin')+'</div><div class="fe">'+gv('coe_company_tin')+'</div></div>' +
+      (gv('coe_signatory') ? '<div class="fb"><div class="fl">証明者 / Authorized Signatory</div><div class="fj">'+gjv('coe_signatory')+'</div><div class="fe">'+gv('coe_signatory')+'</div></div>' : '') +
+    '</div>' +
+
+    '<div class="sh">B.　従業員情報 / EMPLOYEE INFORMATION</div>' +
+    '<div class="g1" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s"><div class="fl">氏名 / Employee Name</div><div class="fj">'+gjv('coe_emp_name')+'</div><div class="fe">'+gv('coe_emp_name')+'</div></div>' +
+    '</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s" style="background:#f0ece0"><div class="fl">役職 / Position / Designation</div><div class="fj">'+gjv('coe_emp_position')+'</div><div class="fe">'+gv('coe_emp_position')+'</div></div>' +
+      '<div class="fb" style="background:#f0ece0"><div class="fl">部署 / Department</div><div class="fj">'+gjv('coe_emp_dept')+'</div><div class="fe">'+gv('coe_emp_dept')+'</div></div>' +
+    '</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s"><div class="fl">雇用形態 / Employment Status</div><div class="fj">'+gjv('coe_emp_status')+'</div><div class="fe">'+gv('coe_emp_status')+'</div></div>' +
+      '<div class="fb"><div class="fl">在籍期間 / Employment Period</div>' +
+        '<div class="fj">'+gjv('coe_start_date')+' 〜 '+gjv('coe_end_date')+'</div>' +
+        '<div class="fe">'+gv('coe_start_date')+' to '+gv('coe_end_date')+'</div>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="sh">C.　給与情報 / COMPENSATION</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s" style="background:#f0ece0"><div class="fl">月額基本給 / Monthly Basic Salary</div><div class="fj">'+gjv('coe_monthly_salary')+'</div><div class="fe">'+gv('coe_monthly_salary')+'</div></div>' +
+      '<div class="fb" style="background:#f0ece0"><div class="fl">通貨 / Currency</div><div class="fj">'+gjv('coe_salary_currency')+'</div><div class="fe">'+gv('coe_salary_currency')+'</div></div>' +
+    '</div>' +
+    (gv('coe_allowances') ? '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s"><div class="fl">各種手当 / Allowances</div><div class="fj">'+gjv('coe_allowances')+'</div><div class="fe">'+gv('coe_allowances')+'</div></div>' +
+      '<div class="fb"><div class="fl">月額総支給額 / Gross Monthly Compensation</div><div class="fj">'+gjv('coe_gross_monthly')+'</div><div class="fe">'+gv('coe_gross_monthly')+'</div></div>' +
+    '</div>' : '') +
+
+    '<div class="sh">D.　証明・目的 / CERTIFICATION & PURPOSE</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s" style="background:#f0ece0"><div class="fl">証明書発行日 / Date Issued</div><div class="fj">'+gjv('coe_issue_date')+'</div><div class="fe">'+gv('coe_issue_date')+'</div></div>' +
+      '<div class="fb" style="background:#f0ece0"><div class="fl">翻訳目的 / Purpose</div><div class="fj">'+gjv('purpose')+'</div><div class="fe">'+gv('purpose')+'</div></div>' +
+    '</div>' +
+
+    // Signature / seal block — Japan embassy requirement
+    '<div style="margin-top:6px;border:0.5px solid #bbb;padding:8px 12px;background:#faf8f0">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start">' +
+        '<div style="flex:1">' +
+          '<div style="font-size:7px;color:#666;margin-bottom:2px">証明者署名 / Authorized Signatory Signature</div>' +
+          '<div style="height:16mm;border-bottom:1px solid #1a2744;margin-bottom:2px;width:70mm"></div>' +
+          '<div style="font-size:7.5px;font-weight:bold;color:#1a2744">'+gv('coe_signatory')+'</div>' +
+          '<div style="font-size:6.5px;color:#666">'+gv('coe_signatory_position')+' · '+gv('coe_company')+'</div>' +
+        '</div>' +
+        '<div style="width:24mm;height:24mm;border:1px solid #bbb;display:flex;align-items:center;justify-content:center;margin-left:10mm">' +
+          '<div style="font-size:6px;color:#aaa;text-align:center">会社印<br>Company Seal</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="cbox"><b>【翻訳証明】</b>本翻訳はフィリピンの事業者（'+gv('coe_company')+'）が発行した在職証明書を正確に日本語に翻訳したものです。翻訳者はその正確性を保証します。<br>' +
+    '<em>CERTIFICATION: This is a faithful Japanese translation of the original Certificate of Employment issued by '+gv('coe_company')+'. The translator certifies the accuracy of this translation.</em></div>' +
+    certBlock() + '</div>';
+
+  // ════ ITR / BIR FORM 2316 ════
+  } else if (dt === 'ITR / BIR Form 2316') {
+
+    function itrAmt(lj, le, val, alt) {
+      var bg = alt ? 'background:#f0ece0' : 'background:#faf8f0';
+      return '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+        '<div class="fb" style="'+bg+'"><div class="fl">'+lj+' / '+le+'</div></div>' +
+        '<div class="fb s" style="'+bg+';text-align:right"><div class="fj">'+gjv(val)+'</div><div class="fe">'+gv(val)+'</div></div>' +
+      '</div>';
+    }
+
+    body = psaHdr('BIR FORM 2316 — CERTIFICATE OF COMPENSATION PAYMENT / TAX WITHHELD','給与所得・源泉徴収票（BIR様式2316）', null, null) +
+    '<div class="meta"><span>対象期間 / Period: <b contenteditable="true">'+gv('itr_period_from')+'</b> 〜 <b contenteditable="true">'+gv('itr_period_to')+'</b></span>' +
+    '<span>翻訳日 / Date: <b contenteditable="true">'+today+'</b> · <b contenteditable="true">'+todayJP+'</b></span></div>' +
+
+    '<div style="background:#fefce8;border:1px solid #fde047;padding:6px 10px;margin-bottom:4px;font-size:7px;color:#854d0e">' +
+    '【日本大使館提出用翻訳 / For Japan Embassy Submission】　BIR様式2316 — 給与所得・源泉徴収票の日本語翻訳 — 日本の源泉徴収票（給与所得の源泉徴収票）に準じた形式' +
+    '</div>' +
+
+    '<div class="sh">A.　納税者情報 / EMPLOYEE / TAXPAYER (PART I)</div>' +
+    '<div class="g1" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s"><div class="fl">氏名（納税者）/ Employee Name (Taxpayer)</div><div class="fj">'+gjv('itr_emp_name')+'</div><div class="fe">'+gv('itr_emp_name')+'</div></div>' +
+    '</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s" style="background:#f0ece0"><div class="fl">TIN番号 / TIN</div><div class="fj">'+gv('itr_emp_tin')+'</div><div class="fe">'+gv('itr_emp_tin')+'</div></div>' +
+      '<div class="fb" style="background:#f0ece0"><div class="fl">婚姻状況 / Civil Status</div><div class="fj">'+gjv('itr_status')+'</div><div class="fe">'+gv('itr_status')+'</div></div>' +
+    '</div>' +
+    '<div class="g1" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb"><div class="fl">住所 / Address</div><div class="fj">'+gjv('itr_emp_address')+'</div><div class="fe">'+gv('itr_emp_address')+'</div></div>' +
+    '</div>' +
+
+    '<div class="sh">B.　雇用者情報 / EMPLOYER (PART II)</div>' +
+    '<div class="g1" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s"><div class="fl">雇用者名 / Employer Name</div><div class="fj">'+gjv('itr_employer_name')+'</div><div class="fe">'+gv('itr_employer_name')+'</div></div>' +
+    '</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s" style="background:#f0ece0"><div class="fl">雇用者TIN / Employer TIN</div><div class="fj">'+gv('itr_employer_tin')+'</div><div class="fe">'+gv('itr_employer_tin')+'</div></div>' +
+      '<div class="fb" style="background:#f0ece0"><div class="fl">郵便番号 / ZIP Code</div><div class="fj">'+gv('itr_employer_zip')+'</div><div class="fe">'+gv('itr_employer_zip')+'</div></div>' +
+    '</div>' +
+    '<div class="g1" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb"><div class="fl">雇用者住所 / Employer Address</div><div class="fj">'+gjv('itr_employer_address')+'</div><div class="fe">'+gv('itr_employer_address')+'</div></div>' +
+    '</div>' +
+
+    '<div class="sh">C.　給与所得 / COMPENSATION INCOME (PART IV)</div>' +
+    itrAmt('給与総額','Gross Compensation Income','itr_gross_comp',true) +
+    itrAmt('非課税給与','Non-Taxable Compensation','itr_non_taxable',false) +
+    itrAmt('課税対象給与額','Taxable Compensation Income','itr_taxable_comp',true) +
+    itrAmt('基本給（年間）','Basic Salary (Annual)','itr_basic_salary',false) +
+    (gv('itr_13th_month') ? itrAmt('13ヶ月給与・その他特典','13th Month Pay & Other Benefits','itr_13th_month',true) : '') +
+    (gv('itr_other_benefits') ? itrAmt('その他福利厚生','Other Benefits','itr_other_benefits',false) : '') +
+    (gv('itr_deminimis') ? itrAmt('デミニミス給付','De Minimis Benefits','itr_deminimis',true) : '') +
+
+    '<div class="sh">D.　源泉徴収税 / TAX WITHHELD (PART V)</div>' +
+    (gv('itr_rdo_code') ? '<div class="g1" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb"><div class="fb s"><div class="fl">RDO番号 / Revenue District Office Code</div><div class="fj">'+gv('itr_rdo_code')+'</div><div class="fe">'+gv('itr_rdo_code')+'</div></div></div>' : '') + +
+    (gv('itr_rdo_code') ? '<div class="g1" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s"><div class="fl">RDO番号 / Revenue District Office (RDO) Code</div><div class="fj">'+gv('itr_rdo_code')+'</div><div class="fe">'+gv('itr_rdo_code')+'</div></div>' +
+    '</div>' : '') +
+    '<div style="display:none">placeholder</div>' + +
+    (gv('itr_tax_withheld_prev') ? itrAmt('前雇用者源泉徴収税','Tax Withheld by Previous Employer','itr_tax_withheld_prev',true) : '') +
+    itrAmt('現雇用者源泉徴収税','Tax Withheld by Current Employer','itr_tax_withheld_curr',false) +
+    '<div class="g2" style="border-top:2px solid #1a2744;background:#1a2744">' +
+      '<div class="fb" style="background:#1a2744"><div class="fl" style="color:#e8c97a;font-weight:bold">源泉徴収税合計 / TOTAL TAX WITHHELD</div></div>' +
+      '<div class="fb s" style="background:#1a2744;text-align:right"><div class="fj" style="color:#e8c97a;font-size:11px;font-weight:bold">'+gjv('itr_total_tax')+'</div><div class="fe" style="color:rgba(255,255,255,0.7)">'+gv('itr_total_tax')+'</div></div>' +
+    '</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb"><div class="fl">納付税額 / Tax Due</div><div class="fj">'+gjv('itr_tax_due')+'</div><div class="fe">'+gv('itr_tax_due')+'</div></div>' +
+      '<div class="fb s"><div class="fl">翻訳目的 / Purpose</div><div class="fj">'+gjv('purpose')+'</div><div class="fe">'+gv('purpose')+'</div></div>' +
+    '</div>' +
+
+    '<div class="cbox"><b>【翻訳証明】</b>本翻訳はフィリピン内国歳入庁（BIR）の様式2316（給与所得・源泉徴収票）を正確に日本語に翻訳したものです。翻訳者はその正確性を保証します。<br>' +
+    '<em>CERTIFICATION: This is a faithful Japanese translation of the original BIR Form 2316 (Certificate of Compensation Payment/Tax Withheld). The translator certifies the accuracy of this translation.</em></div>' +
+    certBlock() + '</div>';
+
+  // ════ BANK CERTIFICATE ════
+  } else if (dt === 'Bank Certificate') {
+
+    body = psaHdr('BANK CERTIFICATE — CERTIFICATE OF DEPOSIT / BALANCE','残高証明書', null, null) +
+    '<div class="meta"><span>銀行名 / Bank: <b contenteditable="true">'+gv('bank_name')+'</b></span>' +
+    '<span>発行日 / Issue Date: <b contenteditable="true">'+gjv('bank_issue_date')+'</b></span>' +
+    '<span>翻訳日 / Date: <b contenteditable="true">'+today+'</b> · <b contenteditable="true">'+todayJP+'</b></span></div>' +
+
+    '<div style="background:#f0fdf4;border:1px solid #86efac;padding:6px 10px;margin-bottom:4px;font-size:7px;color:#14532d">' +
+    '【日本大使館提出用翻訳 / For Japan Embassy Submission】　残高証明書（Bank Certificate）の日本語翻訳 — ビザ申請財政証明用' +
+    '</div>' +
+
+    '<div class="sh">A.　銀行情報 / BANK INFORMATION</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s"><div class="fl">銀行名 / Bank Name</div><div class="fj">'+gjv('bank_name')+'</div><div class="fe">'+gv('bank_name')+'</div></div>' +
+      '<div class="fb"><div class="fl">支店名 / Branch</div><div class="fj">'+gjv('bank_branch')+'</div><div class="fe">'+gv('bank_branch')+'</div></div>' +
+    '</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s" style="background:#f0ece0"><div class="fl">銀行所在地 / Bank Address</div><div class="fj">'+gjv('bank_address')+'</div><div class="fe">'+gv('bank_address')+'</div></div>' +
+      '<div class="fb" style="background:#f0ece0"><div class="fl">電話番号 / Telephone</div><div class="fj">'+gjv('bank_tel')+'</div><div class="fe">'+gv('bank_tel')+'</div></div>' +
+    '</div>' +
+
+    '<div class="sh">B.　口座情報 / ACCOUNT INFORMATION</div>' +
+    '<div class="g1" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s"><div class="fl">口座名義人 / Account Name</div><div class="fj">'+gjv('bank_acct_name')+'</div><div class="fe">'+gv('bank_acct_name')+'</div></div>' +
+    '</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s" style="background:#f0ece0"><div class="fl">口座番号 / Account Number</div><div class="fj">'+gv('bank_acct_number')+'</div><div class="fe">'+gv('bank_acct_number')+'</div></div>' +
+      '<div class="fb" style="background:#f0ece0"><div class="fl">口座種別 / Account Type</div><div class="fj">'+gjv('bank_acct_type')+'</div><div class="fe">'+gv('bank_acct_type')+'</div></div>' +
+    '</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s"><div class="fl">通貨 / Currency</div><div class="fj">'+gjv('bank_currency')+'</div><div class="fe">'+gv('bank_currency')+'</div></div>' +
+      '<div class="fb"><div class="fl">口座開設日 / Date Opened</div><div class="fj">'+gjv('bank_open_date')+'</div><div class="fe">'+gv('bank_open_date')+'</div></div>' +
+    '</div>' +
+
+    '<div class="sh">C.　残高情報 / BALANCE INFORMATION</div>' +
+    '<div class="g2" style="border-top:2px solid #16a34a;background:#f0fdf4">' +
+      '<div class="fb s" style="background:#f0fdf4"><div class="fl" style="color:#16a34a;font-weight:bold">現在残高 / Current Balance</div><div style="font-size:6px;color:#16a34a">残高照会日 / As of: '+gjv('bank_balance_date')+'</div></div>' +
+      '<div class="fb" style="background:#f0fdf4;text-align:right"><div class="fj" style="color:#16a34a;font-size:13px;font-weight:bold">'+gjv('bank_balance')+'</div><div class="fe" style="color:#16a34a">'+gv('bank_balance')+'</div></div>' +
+    '</div>' +
+    (gv('bank_adb') ? '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s" style="background:#f0ece0"><div class="fl">平均日次残高（ADB）/ Average Daily Balance</div><div style="font-size:6px;color:#666">対象期間: '+gv('bank_adb_period')+'</div></div>' +
+      '<div class="fb" style="background:#f0ece0;text-align:right"><div class="fj" style="font-weight:bold">'+gjv('bank_adb')+'</div><div class="fe">'+gv('bank_adb')+'</div></div>' +
+    '</div>' : '') +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s"><div class="fl">口座状況 / Account Status</div><div class="fj" style="color:#16a34a;font-weight:bold">良好 / In Good Standing</div><div class="fe">Account is active and in good standing</div></div>' +
+      '<div class="fb"><div class="fl">参考日本円換算 / JPY Equivalent (Reference Only)</div><div class="fj" style="font-size:7px;color:#888">※ 翻訳日レートによる参考換算。公式為替レートでご確認ください。</div><div class="fe" style="font-size:6.5px;color:#aaa">Reference only. Verify with official rate.</div></div>' +
+    '</div>' +
+    // Account status + JPY equivalent note
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s"><div class="fl">口座状況 / Account Status</div><div class="fj" style="color:#16a34a;font-weight:bold">良好 / In Good Standing</div><div class="fe">Account is active and in good standing</div></div>' +
+      '<div class="fb"><div class="fl">参考日本円換算 / JPY Equivalent (Reference)</div>' +
+        '<div class="fj" style="font-size:7px;color:#1a2744">※ 翻訳日レートによる参考換算。詳細は公式為替レートをご確認ください。</div>' +
+        '<div class="fe" style="font-size:6.5px;color:#888">Reference only. Verify with official exchange rate.</div>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="sh">D.　証明情報 / CERTIFICATION</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s" style="background:#f0ece0"><div class="fl">証明担当者 / Bank Officer</div><div class="fj">'+gjv('bank_officer')+'</div><div class="fe">'+gv('bank_officer')+'</div></div>' +
+      '<div class="fb" style="background:#f0ece0"><div class="fl">担当者役職 / Position</div><div class="fj">'+gjv('bank_officer_position')+'</div><div class="fe">'+gv('bank_officer_position')+'</div></div>' +
+    '</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s"><div class="fl">証明書発行日 / Date Issued</div><div class="fj">'+gjv('bank_issue_date')+'</div><div class="fe">'+gv('bank_issue_date')+'</div></div>' +
+      '<div class="fb"><div class="fl">翻訳目的 / Purpose</div><div class="fj">'+gjv('purpose')+'</div><div class="fe">'+gv('purpose')+'</div></div>' +
+    '</div>' +
+
+    // Bank officer signature + bank seal
+    '<div style="margin-top:6px;border:0.5px solid #bbb;padding:8px 12px;background:#faf8f0">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start">' +
+        '<div style="flex:1">' +
+          '<div style="font-size:7px;color:#666;margin-bottom:2px">担当者署名 / Bank Officer Signature</div>' +
+          '<div style="height:16mm;border-bottom:1px solid #1a2744;margin-bottom:2px;width:70mm"></div>' +
+          '<div style="font-size:7.5px;font-weight:bold;color:#1a2744">'+gv('bank_officer')+'</div>' +
+          '<div style="font-size:6.5px;color:#666">'+gv('bank_officer_position')+' · '+gv('bank_name')+' — '+gv('bank_branch')+'</div>' +
+        '</div>' +
+        '<div style="width:24mm;height:24mm;border:1px solid #bbb;display:flex;align-items:center;justify-content:center;margin-left:10mm">' +
+          '<div style="font-size:6px;color:#aaa;text-align:center">銀行印<br>Bank Seal</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="cbox"><b>【翻訳証明】</b>本翻訳は'+gv('bank_name')+'（'+gv('bank_branch')+'）が発行した残高証明書を正確に日本語に翻訳したものです。翻訳者はその正確性を保証します。<br>' +
+    '<em>CERTIFICATION: This is a faithful Japanese translation of the original Bank Certificate issued by '+gv('bank_name')+', '+gv('bank_branch')+'. The translator certifies the accuracy of this translation.</em></div>' +
+    certBlock() + '</div>';
+
+  // ════ BANK STATEMENT ════
+  } else if (dt === 'Bank Statement') {
+
+    body = psaHdr('BANK STATEMENT','銀行口座明細書', null, null) +
+    '<div class="meta"><span>銀行名 / Bank: <b contenteditable="true">'+gv('bank_name')+'</b></span>' +
+    '<span>明細期間 / Period: <b contenteditable="true">'+gjv('bank_stmt_from')+'</b> 〜 <b contenteditable="true">'+gjv('bank_stmt_to')+'</b></span>' +
+    '<span>翻訳日 / Date: <b contenteditable="true">'+today+'</b> · <b contenteditable="true">'+todayJP+'</b></span></div>' +
+
+    '<div style="background:#f0fdf4;border:1px solid #86efac;padding:6px 10px;margin-bottom:4px;font-size:7px;color:#14532d">' +
+    '【日本大使館提出用翻訳 / For Japan Embassy Submission】　銀行口座明細書の日本語翻訳 — ビザ申請財政証明用（6ヶ月分推奨）' +
+    '</div>' +
+
+    '<div class="sh">A.　銀行・口座情報 / BANK & ACCOUNT INFORMATION</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s"><div class="fl">銀行名 / Bank Name</div><div class="fj">'+gjv('bank_name')+'</div><div class="fe">'+gv('bank_name')+'</div></div>' +
+      '<div class="fb"><div class="fl">支店名 / Branch</div><div class="fj">'+gjv('bank_branch')+'</div><div class="fe">'+gv('bank_branch')+'</div></div>' +
+    '</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s" style="background:#f0ece0"><div class="fl">口座名義人 / Account Name</div><div class="fj">'+gjv('bank_acct_name')+'</div><div class="fe">'+gv('bank_acct_name')+'</div></div>' +
+      '<div class="fb" style="background:#f0ece0"><div class="fl">口座番号 / Account Number</div><div class="fj">'+gv('bank_acct_number')+'</div><div class="fe">'+gv('bank_acct_number')+'</div></div>' +
+    '</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s"><div class="fl">口座種別 / Account Type</div><div class="fj">'+gjv('bank_acct_type')+'</div><div class="fe">'+gv('bank_acct_type')+'</div></div>' +
+      '<div class="fb"><div class="fl">通貨 / Currency</div><div class="fj">'+gjv('bank_currency')+'</div><div class="fe">'+gv('bank_currency')+'</div></div>' +
+    '</div>' +
+
+    '<div class="sh">B.　明細期間・残高 / STATEMENT PERIOD & BALANCE</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s" style="background:#f0ece0"><div class="fl">明細書開始日 / Statement From</div><div class="fj">'+gjv('bank_stmt_from')+'</div><div class="fe">'+gv('bank_stmt_from')+'</div></div>' +
+      '<div class="fb" style="background:#f0ece0"><div class="fl">明細書終了日 / Statement To</div><div class="fj">'+gjv('bank_stmt_to')+'</div><div class="fe">'+gv('bank_stmt_to')+'</div></div>' +
+    '</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s"><div class="fl">期首残高 / Opening Balance</div><div class="fj" style="font-weight:bold">'+gjv('bank_opening_bal')+'</div><div class="fe">'+gv('bank_opening_bal')+'</div></div>' +
+      '<div class="fb"><div class="fl">期末残高 / Closing Balance</div><div class="fj" style="font-weight:bold;color:#16a34a">'+gjv('bank_closing_bal')+'</div><div class="fe" style="color:#16a34a">'+gv('bank_closing_bal')+'</div></div>' +
+    '</div>' +
+    (gv('bank_adb') ? '<div class="g1" style="border-top:2px solid #16a34a;background:#f0fdf4">' +
+      '<div class="fb" style="background:#f0fdf4"><div class="fl" style="color:#16a34a;font-weight:bold">平均日次残高（ADB）/ Average Daily Balance — 対象期間: '+gv('bank_adb_period')+'</div>' +
+      '<div class="fj" style="color:#16a34a;font-size:12px;font-weight:bold;text-align:right">'+gjv('bank_adb')+'</div><div class="fe" style="color:#16a34a;text-align:right">'+gv('bank_adb')+'</div></div>' +
+    '</div>' : '') +
+
+    '<div class="sh">C.　取引概要 / TRANSACTION SUMMARY</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s" style="background:#f0ece0"><div class="fl">入金合計 / Total Deposits (Credits)</div><div class="fj" style="color:#1a2744;font-weight:bold">'+gjv('bank_total_deposits')+'</div><div class="fe">'+gv('bank_total_deposits')+'</div></div>' +
+      '<div class="fb" style="background:#f0ece0"><div class="fl">出金合計 / Total Withdrawals (Debits)</div><div class="fj" style="color:#dc2626;font-weight:bold">'+gjv('bank_total_withdrawals')+'</div><div class="fe" style="color:#dc2626">'+gv('bank_total_withdrawals')+'</div></div>' +
+    '</div>' +
+    (gv('bank_remarks') ? '<div class="g1" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb"><div class="fl">備考 / Remarks</div><div class="fj">'+gjv('bank_remarks')+'</div><div class="fe">'+gv('bank_remarks')+'</div></div>' +
+    '</div>' : '') +
+    '<div class="g1" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s"><div class="fl">口座状況 / Account Status</div><div class="fj" style="color:#16a34a;font-weight:bold">良好 / In Good Standing</div><div class="fe">Account is active and in good standing</div></div>' +
+    '</div>' +
+    '<div class="g1" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s"><div class="fl">口座状況 / Account Status</div><div class="fj" style="color:#16a34a;font-weight:bold">良好 / In Good Standing</div><div class="fe">Account is active and in good standing</div></div>' +
+    '</div>' +
+
+    '<div class="sh">D.　証明情報 / CERTIFICATION</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s" style="background:#f0ece0"><div class="fl">証明担当者 / Bank Officer</div><div class="fj">'+gjv('bank_officer')+'</div><div class="fe">'+gv('bank_officer')+'</div></div>' +
+      '<div class="fb" style="background:#f0ece0"><div class="fl">担当者役職 / Position</div><div class="fj">'+gjv('bank_officer_position')+'</div><div class="fe">'+gv('bank_officer_position')+'</div></div>' +
+    '</div>' +
+    '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+      '<div class="fb s"><div class="fl">発行日 / Date Issued</div><div class="fj">'+gjv('bank_issue_date')+'</div><div class="fe">'+gv('bank_issue_date')+'</div></div>' +
+      '<div class="fb"><div class="fl">翻訳目的 / Purpose</div><div class="fj">'+gjv('purpose')+'</div><div class="fe">'+gv('purpose')+'</div></div>' +
+    '</div>' +
+
+    '<div style="margin-top:6px;border:0.5px solid #bbb;padding:8px 12px;background:#faf8f0">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start">' +
+        '<div style="flex:1">' +
+          '<div style="font-size:7px;color:#666;margin-bottom:2px">担当者署名 / Bank Officer Signature</div>' +
+          '<div style="height:16mm;border-bottom:1px solid #1a2744;margin-bottom:2px;width:70mm"></div>' +
+          '<div style="font-size:7.5px;font-weight:bold;color:#1a2744">'+gv('bank_officer')+'</div>' +
+          '<div style="font-size:6.5px;color:#666">'+gv('bank_officer_position')+' · '+gv('bank_name')+' — '+gv('bank_branch')+'</div>' +
+        '</div>' +
+        '<div style="width:24mm;height:24mm;border:1px solid #bbb;display:flex;align-items:center;justify-content:center;margin-left:10mm">' +
+          '<div style="font-size:6px;color:#aaa;text-align:center">銀行印<br>Bank Seal</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="cbox"><b>【翻訳証明】</b>本翻訳は'+gv('bank_name')+'（'+gv('bank_branch')+'）が発行した銀行口座明細書を正確に日本語に翻訳したものです。翻訳者はその正確性を保証します。<br>' +
+    '<em>CERTIFICATION: This is a faithful Japanese translation of the original Bank Statement issued by '+gv('bank_name')+', '+gv('bank_branch')+'. The translator certifies the accuracy of this translation.</em></div>' +
+    certBlock() + '</div>';
 
   } else {
     body = '<div style="padding:20px;color:#888">Unknown document type.</div>';
