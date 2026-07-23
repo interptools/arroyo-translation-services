@@ -2524,11 +2524,22 @@ function doDownloadPDF() {
 
   // Make all .fj (Japanese) and .fe (English) values contenteditable
   function makeEditable(html) {
+    var CE = ' contenteditable="true" spellcheck="false" title="Click to edit"';
     return html
-      .replace(/<div class="fj">/g,
-        '<div class="fj" contenteditable="true" spellcheck="false" title="Click to edit">')
-      .replace(/<div class="fe">/g,
-        '<div class="fe" contenteditable="true" spellcheck="false" title="Click to edit">');
+      // Grid-format docs: plain .fj / .fe divs
+      .replace(/<div class="fj">/g, '<div class="fj"' + CE + '>')
+      // .fj with inline style (apostille variant)
+      .replace(/<div class="fj" style="([^"]*)">/g, '<div class="fj" style="$1"' + CE + '>')
+      // .fe plain
+      .replace(/<div class="fe">/g, '<div class="fe"' + CE + '>')
+      // .fe with inline style
+      .replace(/<div class="fe" style="([^"]*)">/g, '<div class="fe" style="$1"' + CE + '>')
+      // Letter-format docs: CENOMAR, Advisory, No Birth Record use .fill spans
+      .replace(/<span class="fill">/g, '<span class="fill"' + CE + '>')
+      .replace(/<span class="fill fill-lg">/g, '<span class="fill fill-lg"' + CE + '>')
+      .replace(/<span class="fill-lg">/g, '<span class="fill-lg"' + CE + '>')
+      // Reference number value cells in letter-format docs
+      .replace(/<span class="dval">/g, '<span class="dval"' + CE + '>');
   }
 
   var editableBody  = makeEditable(body);
@@ -2553,8 +2564,11 @@ function doDownloadPDF() {
 
   var EDIT_CSS = [
     '[contenteditable="true"]{outline:none;cursor:text;border-radius:2px;transition:background .15s}',
-    '[contenteditable="true"]:hover{background:rgba(201,168,76,0.15)!important}',
-    '[contenteditable="true"]:focus{background:rgba(201,168,76,0.25)!important;box-shadow:0 0 0 1.5px #c9a84c;outline:none}',
+    '[contenteditable="true"]:hover{background:rgba(201,168,76,0.18)!important}',
+    '[contenteditable="true"]:focus{background:rgba(201,168,76,0.28)!important;box-shadow:0 0 0 1.5px #c9a84c;outline:none}',
+    // .fill spans are inline — need display:inline-block so background/box-shadow shows
+    'span.fill[contenteditable="true"],span.fill-lg[contenteditable="true"]{display:inline-block;min-width:40px}',
+    'span.dval[contenteditable="true"]{display:inline-block;min-width:40px}',
     '@media print{.no-print{display:none!important}[contenteditable]{background:transparent!important;box-shadow:none!important;cursor:default}}'
   ].join('');
 
