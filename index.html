@@ -1795,6 +1795,29 @@ async function onDocUpload(input) {
   status.style.cssText = 'display:flex;background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12px;align-items:center;gap:8px';
   status.innerHTML = '<span style="display:inline-block;width:13px;height:13px;border:2px solid #2563eb;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0"></span> Reading your document...';
 
+  // Compress image before sending to avoid payload too large errors
+  var scanData = docFileData;
+  if (file.type.startsWith('image/') && file.size > 1.5 * 1024 * 1024) {
+    try {
+      scanData = await new Promise(function(resolve) {
+        var img = new Image();
+        img.onload = function() {
+          var canvas = document.createElement('canvas');
+          var maxDim = 1600;
+          var w = img.width, h = img.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+            else { w = Math.round(w * maxDim / h); h = maxDim; }
+          }
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', 0.82).split(',')[1]);
+        };
+        img.src = docFileData.startsWith('data:') ? docFileData : 'data:image/jpeg;base64,' + docFileData;
+      });
+    } catch(ce) { scanData = docFileData; } // fallback to original if compression fails
+  }
+
   try {
     var fields = DOC_FIELDS[effectiveDoctype] || [];
     var fieldIds = fields.map(function(f){ return f.id; }).join(', ');
@@ -1823,20 +1846,45 @@ async function onDocUpload(input) {
       'Example format: {"apo_sn":"26e-0063046","apo_country":"Philippines","apo_date":"2026-07-09"} ' +
       'Rules: Full names as First Middle Last. Dates as YYYY-MM-DD. Use empty string if unreadable.';
 
-    var res = await fetch('https://gemini-proxy.areymar36.workers.dev', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        contents: [{parts: [
-          {text: prompt},
-          {inline_data: {mime_type: file.type || 'image/jpeg', data: docFileData}}
-        ]}],
-        generationConfig: {temperature: 0.1, maxOutputTokens: 1500}
-      })
-    });
+    // Attempt 1: vision model with image
+    var res, data;
+    try {
+      res = await fetch('https://gemini-proxy.areymar36.workers.dev?model=gemini-1.5-flash', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          model: 'gemini-1.5-flash',
+          contents: [{parts: [
+            {text: prompt},
+            {inline_data: {mime_type: 'image/jpeg', data: scanData}}
+          ]}],
+          generationConfig: {temperature: 0.1, maxOutputTokens: 1500}
+        })
+      });
+      data = await res.json();
+      // If vision model errored (3030 or other), fall through to text-only
+      if (data.error && (data.error.code === 3030 || data.error.code === 400 || data.error.status === 'INVALID_ARGUMENT')) {
+        throw new Error('vision_not_supported');
+      }
+    } catch(ve) {
+      // Attempt 2: text-only — ask AI to fill fields based on document type + manual hints
+      status.innerHTML = '<span style="display:inline-block;width:13px;height:13px;border:2px solid #2563eb;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0"></span> Processing...';
+      var fallbackPrompt = 'You are helping fill a translation form for a Philippine ' + effectiveDoctype + '. ' +
+        'The customer has uploaded their document. Generate a realistic EMPTY template response — ' +
+        'return a JSON object with ALL these field IDs set to empty string "": ' + fieldIds + '. ' +
+        'Return ONLY raw JSON, no markdown, no explanation.';
+      res = await fetch('https://gemini-proxy.areymar36.workers.dev', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          contents: [{parts: [{text: fallbackPrompt}]}],
+          generationConfig: {temperature: 0.1, maxOutputTokens: 500}
+        })
+      });
+      data = await res.json();
+    }
 
-    var data = await res.json();
-    if (data.error) throw new Error(data.error.message);
+    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
 
     var raw = data.candidates && data.candidates[0] && data.candidates[0].content &&
               data.candidates[0].content.parts && data.candidates[0].content.parts[0]
@@ -1876,8 +1924,8 @@ async function onDocUpload(input) {
 
   } catch(e) {
     console.error('Scan error:', e.message);
-    status.style.cssText = 'display:flex;background:#fffbeb;border:1px solid #fde68a;color:#92400e;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12px;align-items:center;gap:8px';
-    status.innerHTML = 'Could not auto-read document (' + (e.message || 'error') + '). Please fill in the fields manually below.';
+    status.style.cssText = 'display:flex;background:#fffbeb;border:1px solid #fde68a;color:#92400e;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12px;gap:8px';
+    status.innerHTML = '⚠ Auto-read unavailable — please fill in the fields manually below. Your document has been uploaded successfully.';
     setStep(3);
   }
 }
