@@ -1791,10 +1791,13 @@ function doDownloadPDF() {
     ? '<div style="page-break-before:always"></div><div class="page">'+page2body+'</div>'
     : '';
 
-  // Make all .fj values contenteditable
+  // Make all .fj (Japanese) and .fe (English) values contenteditable
   function makeEditable(html) {
-    return html.replace(/<div class="fj">/g,
-      '<div class="fj" contenteditable="true" spellcheck="false" title="Click to edit">');
+    return html
+      .replace(/<div class="fj">/g,
+        '<div class="fj" contenteditable="true" spellcheck="false" title="Click to edit">')
+      .replace(/<div class="fe">/g,
+        '<div class="fe" contenteditable="true" spellcheck="false" title="Click to edit">');
   }
 
   var editableBody  = makeEditable(body);
