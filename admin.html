@@ -239,6 +239,7 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
         <button class="abtn abtn-reject" id="b-reject" onclick="doReject()">✕ Reject</button>
         <button class="abtn abtn-translate" id="b-translate" onclick="doTranslate()">⚡ Translate (AI)</button>
         <button class="abtn abtn-pdf" id="b-pdf" onclick="doDownloadPDF()">↓ Download PDF</button>
+        <button class="abtn" id="b-correction" onclick="toggleCorrectionPanel()" style="background:#d1fae5;color:#065f46">↩ Add Correction Annotation</button>
         <button class="abtn" id="b-affidavit" onclick="doGenerateAffidavit()" style="background:#fef3c7;color:#92400e">📜 Generate Affidavit</button>
         <button class="abtn abtn-email" id="b-email" onclick="doEmail()">✉ Email Customer</button>
         <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#555;cursor:pointer;margin-left:4px">
@@ -271,6 +272,48 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
         <div class="edit-save-row">
           <button class="edit-save-btn" onclick="saveEdit()">Save Changes</button>
           <button class="edit-cancel-btn" onclick="toggleEdit()">Cancel</button>
+        </div>
+      </div>
+
+      <!-- CORRECTION ANNOTATION PANEL -->
+      <div id="correction-panel" style="display:none;background:#f0fdf4;border:1.5px solid #86efac;border-radius:8px;padding:14px;margin-top:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#065f46;text-transform:uppercase;letter-spacing:1px">↩ Correction Annotation (Rotated 90°)</div>
+            <div style="font-size:10px;color:#6b7280;margin-top:2px">Only fills if original document has a rotated correction text on the right margin.</div>
+          </div>
+          <button onclick="toggleCorrectionPanel()" style="background:none;border:none;font-size:16px;cursor:pointer;color:#6b7280">×</button>
+        </div>
+
+        <div style="margin-bottom:8px">
+          <label style="font-size:11px;font-weight:600;color:#1a2744;display:block;margin-bottom:4px">Original English Text (copy from document)</label>
+          <textarea id="corr-en" rows="3" placeholder="e.g. PURSUANT TO THE DECISION RENDERED BY CCR LEO ANTHONY R. BRACEROS DATED SEPTEMBER 16, 2025 AND AFFIRMED BY ORG UNDER OCRG NO. 25-2848533, THE CHILD'S DATE OF BIRTH IS HEREBY CORRECTED TO '25 FEBRUARY 16, 2019'."
+            style="width:100%;padding:8px 10px;border:1px solid #bbf7d0;border-radius:6px;font-size:12px;font-family:Inter,sans-serif;background:#fff;color:#1a2744;resize:vertical;line-height:1.5"></textarea>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <button onclick="translateCorrection()" id="corr-translate-btn"
+            style="padding:8px 16px;background:#1a2744;color:#e8c97a;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
+            ⚡ Translate to Japanese (AI)
+          </button>
+          <button onclick="clearCorrection()"
+            style="padding:8px 14px;background:#f0ede8;color:#6b7280;border:none;border-radius:6px;font-size:11px;cursor:pointer;font-family:Inter,sans-serif">
+            Clear
+          </button>
+        </div>
+
+        <div style="margin-bottom:10px">
+          <label style="font-size:11px;font-weight:600;color:#1a2744;display:block;margin-bottom:4px">Japanese Translation <span style="font-weight:400;color:#6b7280">(auto-filled by AI, or type manually)</span></label>
+          <textarea id="corr-jp" rows="2" placeholder="例：民事登録局長代行ブラセロス氏（2025年9月16日付決定、OCRG番号25-2848533承認）に基づき、子の出生日付を「2019年2月25日」に訂正する。"
+            style="width:100%;padding:8px 10px;border:1px solid #bbf7d0;border-radius:6px;font-size:12px;font-family:Inter,sans-serif;background:#fff;color:#1a2744;resize:vertical;line-height:1.5"></textarea>
+        </div>
+
+        <div style="display:flex;gap:8px">
+          <button onclick="saveCorrectionAnnotation()"
+            style="padding:8px 18px;background:#16a34a;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
+            ✓ Save &amp; Apply to PDF
+          </button>
+          <div id="corr-status" style="font-size:11px;color:#16a34a;display:flex;align-items:center;gap:4px"></div>
         </div>
       </div>
     </div>
@@ -507,6 +550,11 @@ function openModal(id) {
   // Reset edit panel whenever modal opens/refreshes
   document.getElementById('edit-panel').style.display = 'none';
   document.getElementById('edit-fields-grid').innerHTML = '';
+  document.getElementById('correction-panel').style.display = 'none';
+  // Pre-fill correction fields if saved
+  document.getElementById('corr-en').value = s.correctionEn || '';
+  document.getElementById('corr-jp').value = s.correctionJp || '';
+  document.getElementById('corr-status').textContent = s.correctionEn ? '✓ Annotation saved' : '';
 
   // Show modal
   document.getElementById('overlay').style.display = 'flex';
@@ -773,6 +821,80 @@ async function doTranslate() {
   btn.innerHTML = 'Translate (AI)';
 }
 
+// ── CORRECTION ANNOTATION FUNCTIONS ──────────────────────────────
+
+function toggleCorrectionPanel() {
+  var p = document.getElementById('correction-panel');
+  if (p.style.display === 'none') {
+    p.style.display = 'block';
+    // Pre-fill if already saved on this submission
+    var s = subs.find(function(x) { return x.id === activeId; });
+    if (s && s.correctionEn) document.getElementById('corr-en').value = s.correctionEn;
+    if (s && s.correctionJp) document.getElementById('corr-jp').value = s.correctionJp;
+  } else {
+    p.style.display = 'none';
+  }
+}
+
+async function translateCorrection() {
+  var en = document.getElementById('corr-en').value.trim();
+  if (!en) { alert('Please enter the English correction text first.'); return; }
+  var btn = document.getElementById('corr-translate-btn');
+  btn.disabled = true;
+  btn.textContent = 'Translating...';
+  document.getElementById('corr-status').textContent = '';
+  try {
+    var r = await fetch(WORKER, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        contents: [{parts: [{text:
+          'Translate this Philippine civil registry correction notice to formal Japanese. ' +
+          'Output ONLY the Japanese translation, nothing else. Keep legal terms accurate. ' +
+          'Use 民事登録局長代行 for CCR, OCRG番号 for OCRG No., 訂正する for corrected. ' +
+          'English text: ' + en
+        }]}],
+        generationConfig: {temperature: 0.1, maxOutputTokens: 300}
+      })
+    });
+    var d = await r.json();
+    var jp = d.candidates && d.candidates[0] && d.candidates[0].content &&
+             d.candidates[0].content.parts && d.candidates[0].content.parts[0]
+             ? d.candidates[0].content.parts[0].text.trim() : '';
+    if (jp) {
+      document.getElementById('corr-jp').value = jp;
+      document.getElementById('corr-status').textContent = '✓ Translated';
+    } else {
+      document.getElementById('corr-status').textContent = 'Translation empty — type manually.';
+    }
+  } catch(e) {
+    document.getElementById('corr-status').textContent = 'Error — type Japanese manually.';
+  }
+  btn.disabled = false;
+  btn.textContent = '⚡ Translate to Japanese (AI)';
+}
+
+async function saveCorrectionAnnotation() {
+  var en = document.getElementById('corr-en').value.trim();
+  var jp = document.getElementById('corr-jp').value.trim();
+  if (!en || !jp) { alert('Please fill in both English and Japanese fields.'); return; }
+  var s = subs.find(function(x) { return x.id === activeId; });
+  if (!s) return;
+  s.correctionEn = en;
+  s.correctionJp = jp;
+  await saveSubs();
+  document.getElementById('corr-status').innerHTML = '<span style="color:#16a34a;font-weight:600">✓ Saved! Click Download PDF to generate with annotation.</span>';
+  toast('Correction annotation saved.');
+}
+
+function clearCorrection() {
+  document.getElementById('corr-en').value = '';
+  document.getElementById('corr-jp').value = '';
+  document.getElementById('corr-status').textContent = '';
+  var s = subs.find(function(x) { return x.id === activeId; });
+  if (s) { delete s.correctionEn; delete s.correctionJp; saveSubs(); }
+}
+
 function doDownloadPDF() {
   var s = subs.find(function(x) { return x.id === activeId; });
   if (!s) return;
@@ -1017,8 +1139,10 @@ function doDownloadPDF() {
     '.page{position:relative;margin:0;padding:3mm 7mm 3mm 3mm;width:210mm;min-height:297mm;max-height:297mm}',
     '}',
     // Rotated right-margin annotation
-    '.rot-wrap{position:absolute;top:0;right:0;height:100%;width:14mm;display:flex;align-items:center;justify-content:center;pointer-events:none}',
-    '.rot-ann{writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);background:#e8f5e9;border-left:1px solid #a5d6a7;padding:4px 2px;font-size:5px;color:#1b5e20;line-height:1.4;max-height:200mm;overflow:hidden;white-space:nowrap;font-family:"Noto Sans JP",sans-serif}'
+    '.rot-wrap{position:absolute;top:0;right:0;height:100%;width:12mm;display:flex;align-items:center;justify-content:center;pointer-events:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}',
+    '.rot-ann{writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);background:#c8e6c9;border-left:2px solid #388e3c;border-right:2px solid #388e3c;padding:6px 2px;color:#1b5e20;line-height:1.5;max-height:220mm;font-family:"Noto Sans JP",sans-serif}',
+    '.rot-en{font-size:5.5px;font-weight:bold;display:block;margin-bottom:2px}',
+    '.rot-jp{font-size:6px;font-weight:bold;display:block}'
   ].join('');
 
   // ── PSA HEADER (shared) ──
@@ -1166,10 +1290,10 @@ function doDownloadPDF() {
     '</div>' +
     footer(jpTitle, dt, p1Label) +
     // Rotated right-margin correction annotation — only if remarks_birth has correction text
-    (gv('remarks_birth') && /ocrg|corrected|訂正|correction/i.test(gv('remarks_birth'))
+    (s.correctionEn && s.correctionJp
       ? '<div class="rot-wrap"><div class="rot-ann">' +
-          '<span style="font-size:5.5px;font-weight:bold">' + gv('remarks_birth') + '</span>' +
-          '<br><span style="font-size:5px;color:#2e7d32;margin-top:2px;display:block">' + gjv('remarks_birth') + '</span>' +
+          '<span class="rot-en">' + s.correctionEn + '</span>' +
+          '<span class="rot-jp">' + s.correctionJp + '</span>' +
         '</div></div>'
       : '');
 
