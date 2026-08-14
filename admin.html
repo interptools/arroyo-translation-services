@@ -102,6 +102,24 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
   .edit-cancel-btn{padding:8px 18px;background:#f0ede8;color:#6b7280;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif}
 .abtn:disabled{opacity:0.5;cursor:not-allowed}
 .t-out{background:#f8fafc;border:1px solid #e5e0d8;border-radius:8px;padding:12px;font-size:12px;color:#1a2744;white-space:pre-wrap;max-height:200px;overflow-y:auto;display:none;margin-top:10px;line-height:1.6}
+/* ── Inline preview for the Custom Translation panel ── */
+#cus-preview{display:none;background:#faf8f0;border:1.5px solid #c4b5fd;border-radius:6px;padding:0;margin-top:8px;max-height:340px;overflow-y:auto;font-family:'Noto Sans JP',sans-serif}
+#cus-preview .cp-hdr{text-align:center;padding:6px;border-bottom:1.5px solid #999;background:#faf8f0}
+#cus-preview .cp-doctit{font-size:12px;font-weight:bold;color:#111}
+#cus-preview .cp-jptit{font-size:11px;font-weight:bold;color:#1a2744}
+#cus-preview .cp-iss{font-size:8px;color:#555}
+#cus-preview .sh{background:#1a2744;color:#e8c97a;font-size:9px;font-weight:bold;padding:2px 7px;letter-spacing:0.3px}
+#cus-preview .g1{display:grid;grid-template-columns:1fr;border-left:1px solid #bbb;border-top:1px solid #bbb}
+#cus-preview .g2{display:grid;grid-template-columns:1fr 1fr;border-left:1px solid #bbb;border-top:1px solid #bbb}
+#cus-preview .fb{border-right:1px solid #bbb;border-bottom:1px solid #bbb;padding:2px 6px;min-height:26px;background:#faf8f0}
+#cus-preview .fb.s{background:#f0ece0}
+#cus-preview .fl{font-size:8px;color:#777;line-height:1.2}
+#cus-preview .fj{font-size:11px;font-weight:bold;color:#1a2744;line-height:1.3}
+#cus-preview .fe{font-size:8.5px;color:#aaa;font-style:italic;line-height:1.2}
+#cus-preview .cp-empty{color:#dc2626;font-weight:bold}
+.cus-tool{padding:4px 9px;background:#fff;color:#5b21b6;border:1px solid #c4b5fd;border-radius:5px;font-size:10.5px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif}
+.cus-tool:hover{background:#ede9fe}
+.cus-fit{font-size:10px;font-weight:600;padding:3px 8px;border-radius:5px}
 .toast{position:fixed;bottom:20px;right:20px;background:#1a2744;color:#e8c97a;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:500;opacity:0;transition:opacity .3s;z-index:99999;pointer-events:none}
 .toast.show{opacity:1}
 .spinner{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,0.3);border-top-color:#e8c97a;border-radius:50%;animation:spin .6s linear infinite}
@@ -248,6 +266,7 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
         </label>
         <button class="abtn abtn-edit" id="b-edit" onclick="toggleEdit()">✏ Edit Details</button>
         <button class="abtn" id="b-edit-trans" onclick="toggleTranslationEditor()" style="background:#e0f2fe;color:#0369a1">✏ Edit Translation</button>
+        <button class="abtn" id="b-custom" onclick="toggleCustomPanel()" style="background:#ede9fe;color:#5b21b6">📝 Custom Translation</button>
         <button class="abtn" id="b-delete" onclick="doDelete()" style="background:#fee2e2;color:#dc2626;margin-left:auto">🗑 Delete</button>
       </div>
 
@@ -314,6 +333,147 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
             ✓ Save &amp; Apply to PDF
           </button>
           <div id="corr-status" style="font-size:11px;color:#16a34a;display:flex;align-items:center;gap:4px"></div>
+        </div>
+      </div>
+
+      <!-- ══ CUSTOM (MANUAL) TRANSLATION PANEL ══ -->
+      <div id="custom-panel" style="display:none;background:#f5f3ff;border:1.5px solid #c4b5fd;border-radius:8px;padding:14px;margin-top:12px">
+        <div style="font-size:12px;font-weight:700;color:#5b21b6;margin-bottom:4px">📝 Custom Translation — type it yourself</div>
+        <div style="font-size:10.5px;color:#6d28d9;margin-bottom:10px;line-height:1.5">
+          For any document with no built-in template. Whatever you enter here is used <b>instead of</b> the template,
+          and the certified footer + signature block are attached automatically.
+        </div>
+
+        <!-- Presets: fill the whole form from a known document type -->
+        <div style="background:#fff;border:1px solid #c4b5fd;border-radius:6px;padding:9px 11px;margin-bottom:10px">
+          <div style="display:flex;gap:6px;align-items:end;flex-wrap:wrap">
+            <div style="flex:1;min-width:200px">
+              <label style="font-size:10px;font-weight:600;color:#5b21b6;display:block;margin-bottom:3px">Start from a document type</label>
+              <select id="cus-preset" style="width:100%;padding:7px 9px;border:1px solid #c4b5fd;border-radius:6px;font-size:11px;font-family:Inter,sans-serif">
+                <option value="">— Blank (type everything myself) —</option>
+              </select>
+            </div>
+            <button class="cus-tool" onclick="loadCustomPreset()" style="padding:7px 14px">↳ Load skeleton</button>
+          </div>
+          <div style="display:flex;gap:6px;align-items:end;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px dashed #ddd6fe">
+            <div style="flex:1;min-width:150px">
+              <label style="font-size:10px;font-weight:600;color:#5b21b6;display:block;margin-bottom:3px">My saved templates</label>
+              <select id="cus-tpl-list" style="width:100%;padding:7px 9px;border:1px solid #c4b5fd;border-radius:6px;font-size:11px;font-family:Inter,sans-serif">
+                <option value="">— none saved yet —</option>
+              </select>
+            </div>
+            <button class="cus-tool" onclick="loadCustomTemplate()">↳ Load</button>
+            <button class="cus-tool" onclick="deleteCustomTemplate()" style="color:#dc2626;border-color:#fecaca">🗑 Delete</button>
+            <input id="cus-tpl-name" placeholder="Save current as…"
+              style="width:150px;padding:6px 9px;border:1px solid #c4b5fd;border-radius:6px;font-size:10.5px;font-family:Inter,sans-serif">
+            <button class="cus-tool" onclick="saveCustomTemplate()">💾 Save</button>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div>
+            <label style="font-size:10px;font-weight:600;color:#5b21b6;display:block;margin-bottom:3px">Document Title — English</label>
+            <input id="cus-title-en" oninput="cusRenderPreview()" placeholder="e.g. CERTIFICATE OF RESIDENCY"
+              style="width:100%;padding:7px 9px;border:1px solid #c4b5fd;border-radius:6px;font-size:11px;font-family:Inter,sans-serif">
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:600;color:#5b21b6;display:block;margin-bottom:3px">Document Title — 日本語</label>
+            <input id="cus-title-jp" oninput="cusRenderPreview()" placeholder="例：居住証明書"
+              style="width:100%;padding:7px 9px;border:1px solid #c4b5fd;border-radius:6px;font-size:11px;font-family:'Noto Sans JP',sans-serif">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div>
+            <label style="font-size:10px;font-weight:600;color:#5b21b6;display:block;margin-bottom:3px">Issuing Authority — English</label>
+            <input id="cus-issuer-en" oninput="cusRenderPreview()" placeholder="e.g. Office of the Barangay Captain"
+              style="width:100%;padding:7px 9px;border:1px solid #c4b5fd;border-radius:6px;font-size:11px;font-family:Inter,sans-serif">
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:600;color:#5b21b6;display:block;margin-bottom:3px">Issuing Authority — 日本語</label>
+            <input id="cus-issuer-jp" oninput="cusRenderPreview()" placeholder="例：バランガイ長事務所"
+              style="width:100%;padding:7px 9px;border:1px solid #c4b5fd;border-radius:6px;font-size:11px;font-family:'Noto Sans JP',sans-serif">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div>
+            <label style="font-size:10px;font-weight:600;color:#5b21b6;display:block;margin-bottom:3px">Top header line (change for non-PH documents)</label>
+            <input id="cus-country" oninput="cusRenderPreview()" placeholder="Republic of the Philippines · フィリピン共和国"
+              style="width:100%;padding:7px 9px;border:1px solid #c4b5fd;border-radius:6px;font-size:11px;font-family:'Noto Sans JP',sans-serif">
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:600;color:#5b21b6;display:block;margin-bottom:3px">翻訳目的 / Purpose of Translation</label>
+            <input id="cus-purpose" oninput="cusRenderPreview()" placeholder="例：日本ビザ申請 / Japanese visa application"
+              style="width:100%;padding:7px 9px;border:1px solid #c4b5fd;border-radius:6px;font-size:11px;font-family:'Noto Sans JP',sans-serif">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-bottom:10px">
+          <div>
+            <label style="font-size:10px;font-weight:600;color:#5b21b6;display:block;margin-bottom:3px">Document / Registry No.</label>
+            <input id="cus-docno" oninput="cusRenderPreview()" placeholder="e.g. 2026-01234"
+              style="width:100%;padding:7px 9px;border:1px solid #c4b5fd;border-radius:6px;font-size:11px;font-family:Inter,sans-serif">
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:600;color:#5b21b6;display:block;margin-bottom:3px">Layout</label>
+            <select id="cus-cols" onchange="cusRenderPreview()" style="width:100%;padding:7px 9px;border:1px solid #c4b5fd;border-radius:6px;font-size:11px;font-family:Inter,sans-serif">
+              <option value="2">2 columns (compact)</option>
+              <option value="1">1 column (wide)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:end;margin-bottom:3px;flex-wrap:wrap;gap:6px">
+          <label style="font-size:10px;font-weight:600;color:#5b21b6">Translation body — one entry per line</label>
+          <div style="display:flex;gap:4px;flex-wrap:wrap">
+            <button class="cus-tool" onclick="cusInsert('## ')" title="Insert a section header line">＋ Section</button>
+            <button class="cus-tool" onclick="cusInsert('&gt; ')" title="Insert a full-width paragraph line">＋ Paragraph</button>
+            <button class="cus-tool" onclick="cusInsert(' |  | ')" title="Insert the field separators">＋ Field</button>
+            <button class="cus-tool" onclick="cusInsertSeal()" title="Note that the original bears a seal, signature or photo">＋ Seal note</button>
+            <button class="cus-tool" onclick="cusAutoFormat()" title="Turn pasted 'Label: value' or tab-separated text into field lines">🔤 Format pasted text</button>
+          </div>
+        </div>
+        <textarea id="cus-body" rows="12" spellcheck="false" oninput="cusRenderPreview()"
+          placeholder="## 申請者情報 / APPLICANT INFORMATION&#10;氏名 / Full Name | ヒラハラ・マリア・サントス | HIRAHARA, MARIA SANTOS&#10;生年月日 / Date of Birth | 1990年5月14日 | May 14, 1990&#10;住所 / Address | セブ州ラプラプ市パハク | Pajac, Lapu-Lapu City, Cebu&#10;&#10;## 証明事項 / CERTIFICATION DETAILS&#10;&gt; 上記の者は2015年1月より現在まで当バランガイに居住していることを証明する。&#10;発行日 / Date Issued | 2026年8月10日 | August 10, 2026"
+          style="width:100%;padding:10px;border:1px solid #c4b5fd;border-radius:8px;font-size:11px;font-family:'Noto Sans JP',monospace;color:#1a2744;background:#fff;resize:vertical;line-height:1.7"></textarea>
+
+        <div style="background:#fff;border:1px dashed #c4b5fd;border-radius:6px;padding:9px 11px;margin-top:8px;font-size:10px;color:#5b21b6;line-height:1.7">
+          <b>Line formats</b><br>
+          <code>Label | Japanese | English</code> — a normal field (English is optional)<br>
+          <code>## Section title</code> — navy section bar<br>
+          <code>&gt; Sentence</code> — full-width paragraph, for narrative text or remarks<br>
+          Blank lines are ignored. Use <code>&lt;br&gt;</code> inside a value for a line break.
+        </div>
+
+        <!-- Live preview + A4 fit gauge -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;flex-wrap:wrap;gap:6px">
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <span id="cus-stats" style="font-size:10.5px;color:#6d28d9;font-weight:600"></span>
+            <span id="cus-fit" class="cus-fit"></span>
+          </div>
+          <button class="cus-tool" onclick="cusTogglePreview()" id="cus-prev-btn">👁 Hide preview</button>
+        </div>
+        <div id="cus-preview"></div>
+
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:center;flex-wrap:wrap">
+          <button onclick="saveCustomTranslation()"
+            style="padding:8px 18px;background:#7c3aed;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
+            ✓ Save Custom Translation
+          </button>
+          <button onclick="doDownloadPDF()"
+            style="padding:8px 18px;background:#1a2744;color:#e8c97a;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
+            👁 Open &amp; Print PDF
+          </button>
+          <button onclick="doDownloadCustomFile()"
+            style="padding:8px 18px;background:#0369a1;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
+            ⬇ Save as file
+          </button>
+          <button onclick="clearCustomTranslation()"
+            style="padding:8px 14px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
+            Clear &amp; use template
+          </button>
+          <div id="cus-status" style="font-size:11px;color:#7c3aed;display:flex;align-items:center;gap:4px"></div>
         </div>
       </div>
     </div>
@@ -546,6 +706,8 @@ function openModal(id) {
   // Button states
   document.getElementById('b-approve').disabled = s.status === 'approved' || s.status === 'translated';
   document.getElementById('b-reject').disabled = s.status === 'rejected';
+  document.getElementById('b-translate').innerHTML =
+    (s.translation && s.translation.trim()) ? '⚡ Re-translate (AI)' : '⚡ Translate (AI)';
 
   // Reset edit panel whenever modal opens/refreshes
   document.getElementById('edit-panel').style.display = 'none';
@@ -555,6 +717,22 @@ function openModal(id) {
   document.getElementById('corr-en').value = s.correctionEn || '';
   document.getElementById('corr-jp').value = s.correctionJp || '';
   document.getElementById('corr-status').textContent = s.correctionEn ? '✓ Annotation saved' : '';
+
+  // Reset + pre-fill custom translation panel
+  document.getElementById('custom-panel').style.display = 'none';
+  document.getElementById('cus-title-en').value  = s.customTitleEn  || '';
+  document.getElementById('cus-title-jp').value  = s.customTitleJp  || '';
+  document.getElementById('cus-issuer-en').value = s.customIssuerEn || '';
+  document.getElementById('cus-issuer-jp').value = s.customIssuerJp || '';
+  document.getElementById('cus-docno').value     = s.customDocNo    || '';
+  document.getElementById('cus-country').value   = s.customCountry   || '';
+  document.getElementById('cus-purpose').value   = s.customPurpose   || (s.purpose || '');
+  document.getElementById('cus-cols').value      = s.customCols     || '2';
+  document.getElementById('cus-body').value      = s.customBody     || '';
+  document.getElementById('cus-status').textContent =
+    (s.customBody && s.customBody.trim()) ? '✓ Custom translation active — overrides the template' : '';
+  document.getElementById('b-custom').textContent =
+    (s.customBody && s.customBody.trim()) ? '📝 Custom Translation ●' : '📝 Custom Translation';
 
   // Show modal
   document.getElementById('overlay').style.display = 'flex';
@@ -611,16 +789,48 @@ async function doDelete() {
   toast('Deleted: ' + s.name);
 }
 
+// ── TRANSLATION HELPERS ──────────────────────────────────────────
+// Parse "FIELD_ID|Japanese" lines into an object. Ignores anything else.
+function parseTranslationLines(txt) {
+  var map = {};
+  String(txt || '').split('\n').forEach(function(line) {
+    line = line.trim(); if (!line) return;
+    var pipe = line.indexOf('|');
+    if (pipe <= 0) return;
+    var fid = line.slice(0, pipe).trim();
+    var val = line.slice(pipe + 1).trim();
+    if (fid && val && /^[a-z0-9_]+$/i.test(fid)) map[fid] = val;
+  });
+  return map;
+}
+
+// Rebuild the pipe-format text from a map, following document field order.
+function serializeTranslationLines(map, order) {
+  var out = [], seen = {};
+  (order || []).forEach(function(id) {
+    if (map[id]) { out.push(id + '|' + map[id]); seen[id] = true; }
+  });
+  Object.keys(map).forEach(function(id) {
+    if (!seen[id]) out.push(id + '|' + map[id]);
+  });
+  return out.join('\n');
+}
+
+// Does the string contain any hiragana, katakana, or kanji?
+function hasJapanese(str) {
+  return /[\u3040-\u309f\u30a0-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uff66-\uff9f]/.test(String(str || ''));
+}
+
+// Fields that are legitimately NOT Japanese (numbers, codes, amounts, company names)
+function jpNotRequired(id) {
+  return /(_no$|number|serial|keycode|_ctc$|amount|_bal$|deposits|withdrawals|_adb$|company|acct)/i.test(id);
+}
+
 async function doTranslate() {
   var s = subs.find(function(x) { return x.id === activeId; });
   if (!s) return;
   var btn = document.getElementById('b-translate');
   var tout = document.getElementById('t-out');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Translating...';
-  tout.style.display = 'block';
-  tout.textContent = 'Generating Japanese translation...';
-
   var fields = s.fields || {};
 
   // Build section-based field list matching PSA document structure
@@ -793,33 +1003,81 @@ async function doTranslate() {
 
   var skipTranslation = {'reg_number':true,'ref_number':true,'reg_date':false};
   var sections = docSections[s.doctype] || {};
-  var sectionText = '';
+
+  // ── Build an ordered plan of every field that needs a Japanese line ──
+  var plan = [];   // [{sec, id, src}]
   Object.entries(sections).forEach(function(sec) {
-    sectionText += '\n' + sec[0] + '\n';
     sec[1].forEach(function(fid) {
-      if (fields[fid] && !skipTranslation[fid]) {
-        sectionText += '  ' + fid + ' (' + (jpLabels[fid] || fid) + '): ' + fields[fid] + '\n';
-      }
+      if (fields[fid] && !skipTranslation[fid]) plan.push({sec: sec[0], id: fid, src: fields[fid]});
     });
   });
 
-  // Append Page 2 affidavit fields if present
+  // Page 2 affidavit fields
   if (s.hasPage2 && s.page2Fields) {
-    var hasPaternity = Object.keys(s.page2Fields).filter(function(k){ return k.startsWith('p2_pat_') && s.page2Fields[k]; }).length > 0;
-    var hasDelayed = Object.keys(s.page2Fields).filter(function(k){ return k.startsWith('p2_del_') && s.page2Fields[k]; }).length > 0;
+    var p2 = s.page2Fields;
+    var hasPaternity = Object.keys(p2).filter(function(k){ return k.startsWith('p2_pat_') && p2[k]; }).length > 0;
+    var hasDelayed   = Object.keys(p2).filter(function(k){ return k.startsWith('p2_del_') && p2[k]; }).length > 0;
     if (hasPaternity) {
-      sectionText += '\nP2-A. 認知宣誓供述書 / AFFIDAVIT OF ACKNOWLEDGMENT/ADMISSION OF PATERNITY\n';
       ['p2_pat_father','p2_pat_mother','p2_pat_child','p2_pat_child_dob','p2_pat_city','p2_pat_date_sworn','p2_pat_notary','p2_pat_ctc','p2_pat_ctc_place','p2_pat_ctc_date'].forEach(function(fid) {
-        if (s.page2Fields[fid]) sectionText += '  ' + fid + ' (' + (jpLabels[fid] || fid) + '): ' + s.page2Fields[fid] + '\n';
+        if (p2[fid]) plan.push({sec: 'P2-A. 認知宣誓供述書 / AFFIDAVIT OF ACKNOWLEDGMENT/ADMISSION OF PATERNITY', id: fid, src: p2[fid]});
       });
     }
     if (hasDelayed) {
-      sectionText += '\nP2-B. 出生遅延登録宣誓供述書 / AFFIDAVIT FOR DELAYED REGISTRATION OF BIRTH\n';
       ['p2_del_affiant','p2_del_civil','p2_del_affiant_addr','p2_del_child','p2_del_child_dob','p2_del_child_pob','p2_del_attendant','p2_del_attendant_addr','p2_del_citizen','p2_del_father','p2_del_mother','p2_del_married','p2_del_marriage_date','p2_del_marriage_place','p2_del_reason','p2_del_exec_city','p2_del_exec_date','p2_del_notary','p2_del_date_sworn','p2_del_remarks'].forEach(function(fid) {
-        if (s.page2Fields[fid]) sectionText += '  ' + fid + ' (' + (jpLabels[fid] || fid) + '): ' + s.page2Fields[fid] + '\n';
+        if (p2[fid]) plan.push({sec: 'P2-B. 出生遅延登録宣誓供述書 / AFFIDAVIT FOR DELAYED REGISTRATION OF BIRTH', id: fid, src: p2[fid]});
       });
     }
   }
+
+  var requiredIds = plan.map(function(x) { return x.id; });
+  if (!requiredIds.length) { toast('No fields to translate on this submission.'); return; }
+
+  // ── What do we already have, and what still needs work? ──
+  var existing = parseTranslationLines(s.translation);
+  var alreadyTranslated = Object.keys(existing).length > 0;
+  var needIds = requiredIds.filter(function(id) {
+    return !existing[id] || (!hasJapanese(existing[id]) && !jpNotRequired(id));
+  });
+
+  var mode = 'full';   // 'full' = regenerate everything, 'fill' = only the gaps
+  if (alreadyTranslated) {
+    if (needIds.length) {
+      var preview = needIds.slice(0, 8).join(', ') + (needIds.length > 8 ? ', …' : '');
+      if (!confirm(
+        'This submission is already translated.\n\n' +
+        needIds.length + ' of ' + requiredIds.length + ' field(s) still have no Japanese:\n' + preview + '\n\n' +
+        'OK\t= translate ONLY those fields and keep the rest of your wording untouched\n' +
+        'Cancel\t= leave it alone (use "Edit Translation" to fix by hand)'
+      )) return;
+      mode = 'fill';
+    } else {
+      if (!confirm(
+        'This submission is already fully translated — every field has Japanese.\n\n' +
+        'Re-running the AI will produce DIFFERENT wording, especially for names and place names.\n\n' +
+        'OK\t= discard the current translation and generate a new one\n' +
+        'Cancel\t= keep what you have'
+      )) return;
+    }
+  }
+
+  var targetIds = (mode === 'fill') ? needIds : requiredIds;
+  var targetSet = {};
+  targetIds.forEach(function(id) { targetSet[id] = true; });
+
+  // ── Prompt text covers only the target fields, grouped by section ──
+  var sectionText = '', lastSec = null;
+  plan.forEach(function(x) {
+    if (!targetSet[x.id]) return;
+    if (x.sec !== lastSec) { sectionText += '\n' + x.sec + '\n'; lastSec = x.sec; }
+    sectionText += '  ' + x.id + ' (' + (jpLabels[x.id] || x.id) + '): ' + x.src + '\n';
+  });
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Translating...';
+  tout.style.display = 'block';
+  tout.textContent = (mode === 'fill')
+    ? 'Filling ' + targetIds.length + ' missing field(s)...'
+    : 'Generating Japanese translation...';
 
   var prompt = 'You are a professional Japanese translator for Philippine government documents.\n\n' +
     'DOCUMENT TYPE: ' + s.doctype + '\n' +
@@ -876,9 +1134,17 @@ async function doTranslate() {
     '- PAYSLIP RULES: Currency amounts (PHP, ¥, JPY) output as-is with original currency symbol. Pay period dates keep original format. Philippine payslip: translate all labels to Japanese, keep amounts as-is. Japanese payslip: translate all labels to English, keep amounts as-is. Company names: keep original, do not translate.\n\n' +
     'STRICT RULES:\n' +
     '- Output ONLY lines in FIELD_ID|Japanese format — no headers, no explanations, no extra text\n' +
-    '- Every field listed above MUST have a translation line — never skip any field\n' +
+    '- Output a line for EVERY field listed above and for NO other field — ' + targetIds.length + ' lines exactly\n' +
     '- Never leave the Japanese value blank\n' +
-    '- Do NOT translate field IDs — keep them exactly as shown (e.g. child_name, mother_occ)\n\n' +
+    '- Do NOT translate field IDs — keep them exactly as shown (e.g. child_name, mother_occ)\n' +
+    '- NEVER echo the English source text as the Japanese value. Except for numbers, currency amounts, ' +
+      'registry/serial/reference codes and company names, every value MUST be written in Japanese script ' +
+      '(kanji, hiragana or katakana). If unsure of a translation, transliterate into katakana — never leave it in English.\n' +
+    '- Be deterministic: for a given input always produce the same Japanese wording.\n\n' +
+    (mode === 'fill'
+      ? 'NOTE: This is a partial re-run. Only the fields listed above are missing their Japanese. ' +
+        'Do not output lines for any other field.\n\n'
+      : '') +
     '【翻訳証明】本翻訳はフィリピン政府機関（PSA／DFA）発行の原文書を正確に日本語に翻訳したものです。\n' +
     'CERTIFICATION: This is a faithful Japanese translation of the original document issued by the Philippine government (PSA/DFA).';
 
@@ -889,7 +1155,14 @@ async function doTranslate() {
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         contents: [{parts: [{text: prompt}]}],
-        generationConfig: {temperature: 0.2, maxOutputTokens: 3500}
+        // Greedy decoding — same input must give the same output every time
+        generationConfig: {
+          temperature: 0,
+          topK: 1,
+          topP: 1,
+          candidateCount: 1,
+          maxOutputTokens: 3500
+        }
       })
     });
 
@@ -897,24 +1170,65 @@ async function doTranslate() {
     var d = await r.json();
     if (d.error) throw new Error(d.error.message);
 
-    var raw = d.candidates && d.candidates[0] && d.candidates[0].content &&
-              d.candidates[0].content.parts && d.candidates[0].content.parts[0]
-              ? d.candidates[0].content.parts[0].text : '';
+    var cand = d.candidates && d.candidates[0];
+    var raw = cand && cand.content && cand.content.parts && cand.content.parts[0]
+              ? cand.content.parts[0].text : '';
     if (typeof raw !== 'string') raw = JSON.stringify(raw);
     if (!raw) throw new Error('Empty response from AI');
+    if (cand.finishReason && cand.finishReason !== 'STOP') {
+      throw new Error('AI stopped early (' + cand.finishReason + ') — output would be incomplete');
+    }
 
-    s.translation = raw;
+    // ── Merge, never blindly overwrite ──
+    var incoming = parseTranslationLines(raw);
+    var merged = (mode === 'fill') ? Object.assign({}, existing) : {};
+    Object.keys(incoming).forEach(function(id) {
+      // In fill mode, ignore any field we did not ask about — stops the AI
+      // from quietly rewording lines you already reviewed.
+      if (mode === 'fill' && !targetSet[id]) return;
+      merged[id] = incoming[id];
+    });
+
+    var got = requiredIds.filter(function(id) { return merged[id]; }).length;
+    if (!got) throw new Error('AI returned no usable FIELD_ID|Japanese lines');
+
+    s.translation = serializeTranslationLines(merged, requiredIds);
     s.status = 'translated';
-    tout.textContent = raw;
     await saveSubs();
+
+    // ── Flag anything still sitting in English ──
+    var stillEnglish = requiredIds.filter(function(id) {
+      return merged[id] && !hasJapanese(merged[id]) && /[A-Za-z]{3}/.test(merged[id]) && !jpNotRequired(id);
+    });
+    var stillMissing = requiredIds.filter(function(id) { return !merged[id]; });
+
+    var warn = '';
+    if (stillMissing.length) {
+      warn += '⚠ NO TRANSLATION RETURNED (' + stillMissing.length + ') — the PDF will show the English text here:\n  ' +
+              stillMissing.join(', ') + '\n';
+    }
+    if (stillEnglish.length) {
+      warn += '⚠ STILL IN ENGLISH (' + stillEnglish.length + ') — fix these with "Edit Translation":\n  ' +
+              stillEnglish.join(', ') + '\n';
+    }
+    if (warn) warn += '\n──────────────\n';
+
+    tout.textContent = warn + s.translation;
     render(); updateStats();
-    toast('Translation complete: ' + s.name);
+
+    if (stillMissing.length || stillEnglish.length) {
+      toast('Translated with ' + (stillMissing.length + stillEnglish.length) + ' field(s) needing review');
+    } else if (mode === 'fill') {
+      toast('Filled ' + targetIds.length + ' field(s) — existing wording kept');
+    } else {
+      toast('Translation complete: ' + s.name);
+    }
   } catch(e) {
-    tout.textContent = 'Translation error: ' + e.message + '\n\nPlease try again.';
+    tout.textContent = 'Translation error: ' + e.message + '\n\nYour previous translation was NOT changed.';
     toast('Translation failed: ' + e.message);
   }
   btn.disabled = false;
-  btn.innerHTML = 'Translate (AI)';
+  btn.innerHTML = (s.translation && s.translation.trim()) ? '⚡ Re-translate (AI)' : '⚡ Translate (AI)';
 }
 
 // ── CORRECTION ANNOTATION FUNCTIONS ──────────────────────────────
@@ -994,7 +1308,14 @@ function clearCorrection() {
 function doDownloadPDF() {
   var s = subs.find(function(x) { return x.id === activeId; });
   if (!s) return;
-  if (!s.translation) { alert('Please translate the document first.'); return; }
+  var saveAsFile = forceDownloadFile;   // set by "⬇ Save as file"
+  forceDownloadFile = false;
+
+  var hasCustom = !!(s.customBody && s.customBody.trim());
+  if (!s.translation && !hasCustom) {
+    alert('Please translate the document first — or use "Custom Translation" to type it in yourself.');
+    return;
+  }
 
   var f = s.fields || {};
   var today = new Date().toLocaleDateString('en-PH', {year:'numeric',month:'long',day:'numeric'});
@@ -1002,6 +1323,7 @@ function doDownloadPDF() {
 
   // Build jpMap from FIELD_ID|Japanese lines
   var jpMap = {};
+  var untranslatedCount = 0;
   if (s.translation) {
     s.translation.split('\n').forEach(function(line) {
       line = line.trim(); if (!line) return;
@@ -1214,7 +1536,23 @@ function doDownloadPDF() {
         if (jpSurname) return jpSurname + '　' + nameParts[0] + '（' + middle + '）';
       }
     }
-    return COMMON[en] || en;
+    return COMMON[en] || untranslated(id, en);
+  }
+
+  // ── UNTRANSLATED MARKER ──
+  // A missing Japanese value must never print as English: a Japanese municipal
+  // office would reject the document, and English *looks* finished so the gap
+  // slips past unnoticed. Numbers, codes and amounts are legitimately kept.
+  function keepSourceAsIs(id, en) {
+    if (!/[A-Za-z]{2}/.test(en)) return true;   // digits, dates, currency symbols, punctuation
+    return /(_no$|number|serial|keycode|_ctc$|company|acct|amount|_bal$|deposits|withdrawals|_adb$|currency|_ref$|email)/i.test(id);
+  }
+
+  function untranslated(id, en) {
+    if (keepSourceAsIs(id, en)) return en;
+    untranslatedCount++;
+    return '<span class="untr">【未翻訳】</span>' +
+           '<span class="untr-en" title="Source text — replace with Japanese before printing">' + en + '</span>';
   }
   function gjv(id) { return gj(id) || gv(id) || '—'; }
 
@@ -1261,6 +1599,9 @@ function doDownloadPDF() {
     '.fn{font-size:5.5px;color:#aaa;line-height:1.1}',
     '.fl{font-size:5.5px;color:#777;line-height:1.1;margin-bottom:1px}',
     '.fj{font-size:8px;font-weight:bold;color:#1a2744;line-height:1.2}',
+    // Untranslated marker — must stay obvious on screen AND on paper
+    '.untr{display:inline-block;background:#dc2626;color:#fff;font-size:7px;font-weight:bold;padding:0 3px;border-radius:2px;letter-spacing:0.3px;-webkit-print-color-adjust:exact;print-color-adjust:exact}',
+    '.untr-en{display:inline-block;color:#dc2626;font-size:7px;font-weight:normal;font-style:italic;margin-left:3px;text-decoration:underline wavy #dc2626}',
     '.fe{font-size:6.5px;color:#aaa;font-style:italic;line-height:1.1;margin-top:0}',
     // Nested grids
     '.ng2{display:grid;grid-template-columns:1fr 1fr}',
@@ -1412,11 +1753,106 @@ function doDownloadPDF() {
     certBlock(pageOf);
   }
 
+  // ══ CUSTOM (MANUAL) TRANSLATION BUILDERS ══
+  function esc(v) {
+    return String(v == null ? '' : v)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/&lt;br\s*\/?&gt;/gi, '<br>');   // allow an explicit line break
+  }
+
+  function customHdr(titEn, titJp, issEn, issJp) {
+    var ctry = (s.customCountry || '').trim() || 'Republic of the Philippines · フィリピン共和国';
+    return '<div class="psa-hdr">' +
+      '<div class="psa-rep">' + esc(ctry) + '</div>' +
+      ((issEn || issJp)
+        ? '<div class="psa-off">' + esc(issEn || issJp) + (issJp && issEn ? ' · ' + esc(issJp) : '') + '</div>'
+        : '') +
+      '<div class="psa-doctit">' + esc(titEn) + '</div>' +
+      '<div class="psa-jptit">' + esc(titJp) + '　— 日本語翻訳</div>' +
+    '</div>';
+  }
+
+  // Parses the free-text body into PSA-style field boxes.
+  //   "Label | Japanese | English"  → field box
+  //   "## Section"                  → navy section bar
+  //   "> Sentence"                  → full-width paragraph
+  function customRows(text, cols) {
+    var wrap = (cols === 1) ? 'g1' : 'g2';
+    var out = '', buf = [], shade = true;
+
+    function flush() {
+      if (!buf.length) return;
+      if (cols === 2 && buf.length % 2 === 1) buf.push('<div class="fb"></div>');
+      out += '<div class="' + wrap + '">' + buf.join('') + '</div>';
+      buf = [];
+    }
+
+    String(text || '').split('\n').forEach(function(raw) {
+      var line = raw.trim();
+      if (!line) return;
+
+      if (line.slice(0, 2) === '##') {
+        flush(); shade = true;
+        out += '<div class="sh">' + esc(line.slice(2).trim()) + '</div>';
+        return;
+      }
+      if (line.charAt(0) === '>') {
+        flush(); shade = true;
+        out += '<div class="g1"><div class="fb" style="padding:4px 7px">' +
+                 '<div class="fj" style="font-weight:500;line-height:1.6">' + esc(line.slice(1).trim()) + '</div>' +
+               '</div></div>';
+        return;
+      }
+
+      var p     = line.split('|');
+      var label = (p[0] || '').trim();
+      var jp    = (p[1] || '').trim();
+      var en    = (p[2] || '').trim();
+
+      buf.push('<div class="fb' + (shade ? ' s' : '') + '">' +
+        (label ? '<div class="fl">' + esc(label) + '</div>' : '') +
+        '<div class="fj">' + (jp ? esc(jp) : '—') + '</div>' +
+        (en ? '<div class="fe">' + esc(en) + '</div>' : '') +
+      '</div>');
+      shade = !shade;
+    });
+
+    flush();
+    return out;
+  }
+
+  function customFooter(titEn, titJp, issEn, issJp) {
+    var jpAuth = issJp || issEn || '発行機関';
+    var enAuth = issEn || issJp || 'the issuing authority';
+    return '<div class="cbox"><b>【翻訳証明】</b>' +
+      '本翻訳は' + esc(jpAuth) + '発行の原文書（' + esc(titJp) + '）を正確に日本語に翻訳したものです。翻訳者はその正確性を保証します。<br>' +
+      '<em>CERTIFICATION: This is a faithful Japanese translation of the original ' + esc(titEn) +
+      ' issued by ' + esc(enAuth) + '. The translator certifies the accuracy of this translation.</em>' +
+      '</div>' + certBlock();
+  }
+
   var body = '';
   var page2body = '';
 
+  // ════ CUSTOM TRANSLATION — takes priority over every template ════
+  if (hasCustom) {
+    var cTitEn = s.customTitleEn || (dt || 'DOCUMENT').toUpperCase();
+    var cTitJp = s.customTitleJp || jpTitle || cTitEn;
+
+    body = customHdr(cTitEn, cTitJp, s.customIssuerEn, s.customIssuerJp) +
+      '<div class="meta">' +
+        '<span>書類番号 / Document No.: <b contenteditable="true" spellcheck="false" title="Click to edit" style="min-width:60px;display:inline-block">' +
+          esc(s.customDocNo || '—') + '</b></span>' +
+        '<span>翻訳目的 / Purpose: <b contenteditable="true" spellcheck="false" title="Click to edit" style="min-width:60px;display:inline-block">' +
+          esc(s.customPurpose || '—') + '</b></span>' +
+        '<span>翻訳日 / Date: <b contenteditable="true" spellcheck="false" title="Click to edit">' + today +
+          '</b> · <b contenteditable="true" spellcheck="false" title="Click to edit">' + todayJP + '</b></span>' +
+      '</div>' +
+      customRows(s.customBody, parseInt(s.customCols || '2', 10)) +
+      customFooter(cTitEn, cTitJp, s.customIssuerEn, s.customIssuerJp);
+
   // ════ BIRTH CERTIFICATE ════
-  if (dt === 'Birth Certificate') {
+  } else if (dt === 'Birth Certificate') {
     var totalPages = s.hasPage2 ? 2 : 1;
     var p1Label = 'PAGE 1 OF ' + totalPages + ' · 第1ページ（全' + totalPages + 'ページ）';
     body = psaHdr('CERTIFICATE OF LIVE BIRTH','出生証明書', null, p1Label) +
@@ -1471,20 +1907,13 @@ function doDownloadPDF() {
       '<div class="fb s"><div class="fl">発行機関 / Issuing Authority</div><div class="fj">フィリピン統計局（PSA）</div><div class="fe">Philippine Statistics Authority (PSA)</div></div>'+
       '<div class="fb"><div class="fl">翻訳目的 / Purpose</div><div class="fj">'+gjv('purpose')+'</div><div class="fe">'+gv('purpose')+'</div></div>'+
     '</div>' +
-    footer(jpTitle, dt, p1Label) +
-    // Rotated right-margin correction annotation — only if remarks_birth has correction text
-    (s.correctionEn && s.correctionJp
-      ? '<div class="rot-wrap"><div class="rot-ann">' +
-          '<span class="rot-en">' + s.correctionEn + '</span>' +
-          '<span class="rot-jp">' + s.correctionJp + '</span>' +
-        '</div></div>'
-      : '');
+    footer(jpTitle, dt, p1Label);
 
   // ════ BIRTH CERTIFICATE PAGE 2 ════
   if (s.hasPage2 && s.page2Fields) {
     var p2f = s.page2Fields || {};
-    function gp2(id) { return jpMap[id] || p2f[id] || ''; }
-    function gjp2(id) {
+    var gp2 = function(id) { return jpMap[id] || p2f[id] || ''; };
+    var gjp2 = function(id) {
       if (jpMap[id]) return jpMap[id];
       var v = p2f[id] || ''; if (!v) return '';
       if (v.match(/^\d{4}-\d{2}-\d{2}$/)) { var pp=v.split('-'); return pp[0]+'年'+parseInt(pp[1])+'月'+parseInt(pp[2])+'日'; }
@@ -1505,9 +1934,9 @@ function doDownloadPDF() {
           if(jpS) return jpS+'　'+np[0]+'（'+mid+'）';
         }
       }
-      return COMMON[v] || v;
-    }
-    function gjp2v(id) { return gjp2(id) || gp2(id) || '—'; }
+      return COMMON[v] || untranslated(id, v);
+    };
+    var gjp2v = function(id) { return gjp2(id) || gp2(id) || '—'; };
     var p2Label = 'PAGE 2 OF 2 · 第2ページ（全2ページ）';
     var page2body = psaHdr('CERTIFICATE OF LIVE BIRTH — PAGE 2 / AFFIDAVITS','出生証明書 第2ページ — 宣誓供述書', null, p2Label) +
     '<div class="meta"><span>登録番号 / Registry No.: <b contenteditable="true" spellcheck="false" title="Click to edit" style="min-width:60px;display:inline-block">'+gv('reg_number')+'</b></span><span>翻訳日 / Date: <b contenteditable="true" spellcheck="false" title="Click to edit" style="min-width:80px;display:inline-block">'+today+'</b> · <b contenteditable="true" spellcheck="false" title="Click to edit" style="min-width:80px;display:inline-block">'+todayJP+'</b></span></div>' +
@@ -1899,6 +2328,17 @@ function doDownloadPDF() {
 
   // ════ PHILIPPINE PAYSLIP ════
   } else if (dt === 'Philippine Payslip') {
+    // Amount row helper: label on the left, JP value + English original right-aligned.
+    // (Both payslip templates called this without it ever being defined, so
+    // generating either payslip threw a ReferenceError and produced nothing.)
+    var psAmt = function(lj, le, id, alt) {
+      var bg = alt ? 'background:#f0ece0' : 'background:#faf8f0';
+      return '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+        '<div class="fb" style="'+bg+'"><div class="fl">'+lj+' / '+le+'</div></div>' +
+        '<div class="fb s" style="'+bg+';text-align:right"><div class="fj">'+gjv(id)+'</div><div class="fe">'+gv(id)+'</div></div>' +
+      '</div>';
+    };
+
 
 
 
@@ -1972,6 +2412,17 @@ function doDownloadPDF() {
 
   // ════ JAPANESE PAYSLIP ════
   } else if (dt === 'Japanese Payslip') {
+    // Amount row helper: label on the left, JP value + English original right-aligned.
+    // (Both payslip templates called this without it ever being defined, so
+    // generating either payslip threw a ReferenceError and produced nothing.)
+    var jpAmt = function(lj, le, id, alt) {
+      var bg = alt ? 'background:#f0ece0' : 'background:#faf8f0';
+      return '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
+        '<div class="fb" style="'+bg+'"><div class="fl">'+lj+' / '+le+'</div></div>' +
+        '<div class="fb s" style="'+bg+';text-align:right"><div class="fj">'+gjv(id)+'</div><div class="fe">'+gv(id)+'</div></div>' +
+      '</div>';
+    };
+
 
 
 
@@ -2279,9 +2730,6 @@ function doDownloadPDF() {
     '<div class="g1" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
       '<div class="fb s"><div class="fl">口座状況 / Account Status</div><div class="fj" style="color:#16a34a;font-weight:bold">良好 / In Good Standing</div><div class="fe">Account is active and in good standing</div></div>' +
     '</div>' +
-    '<div class="g1" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
-      '<div class="fb s"><div class="fl">口座状況 / Account Status</div><div class="fj" style="color:#16a34a;font-weight:bold">良好 / In Good Standing</div><div class="fe">Account is active and in good standing</div></div>' +
-    '</div>' +
 
     '<div class="sh">D.　証明情報 / CERTIFICATION</div>' +
     '<div class="g2" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
@@ -2309,10 +2757,22 @@ function doDownloadPDF() {
 
     '<div class="cbox"><b>【翻訳証明】</b>本翻訳は'+gv('bank_name')+'（'+gv('bank_branch')+'）が発行した銀行口座明細書を正確に日本語に翻訳したものです。翻訳者はその正確性を保証します。<br>' +
     '<em>CERTIFICATION: This is a faithful Japanese translation of the original Bank Statement issued by '+gv('bank_name')+', '+gv('bank_branch')+'. The translator certifies the accuracy of this translation.</em></div>' +
-    certBlock() + '</div>';
+    certBlock();
 
   } else {
-    body = '<div style="padding:20px;color:#888">Unknown document type.</div>';
+    body = '<div style="padding:24px;color:#666;font-size:11px;line-height:1.8">' +
+      '<b style="font-size:13px;color:#1a2744">No built-in template for &ldquo;' + (dt || 'this document') + '&rdquo;</b><br>' +
+      'Close this tab, then use the <b>📝 Custom Translation</b> button on the submission to type the translation in yourself. ' +
+      'The certified footer and signature block will be attached automatically.' +
+      '</div>';
+  }
+
+  // ── Rotated right-margin correction annotation — applies to EVERY doc type ──
+  if (s.correctionEn && s.correctionJp) {
+    body += '<div class="rot-wrap"><div class="rot-ann">' +
+              '<span class="rot-en">' + s.correctionEn + '</span>' +
+              '<span class="rot-jp">' + s.correctionJp + '</span>' +
+            '</div></div>';
   }
 
   // Build page 2 HTML block (Birth Certificate only)
@@ -2345,7 +2805,12 @@ function doDownloadPDF() {
       'border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Arial,sans-serif;">' +
       '🖨&nbsp; Print / Save as PDF' +
     '</button>' +
-    '<span style="font-size:11px;color:rgba(255,255,255,0.55);">Click any Japanese field value to edit before printing</span>' +
+    (untranslatedCount
+      ? '<span style="font-size:12px;font-weight:700;color:#fff;background:#dc2626;padding:5px 12px;border-radius:6px;">' +
+        '⚠ ' + untranslatedCount + ' field(s) NOT translated — find the red 【未翻訳】 marks and type the Japanese before printing' +
+        '</span>'
+      : '<span style="font-size:11px;color:rgba(255,255,255,0.55);">Click any Japanese field value to edit before printing</span>') +
+    '<span id="ovf-warn" style="display:none;font-size:12px;font-weight:700;color:#1a2744;background:#fbbf24;padding:5px 12px;border-radius:6px;"></span>' +
     '</div>' +
     '<div style="height:46px" class="no-print"></div>';
 
@@ -2374,14 +2839,46 @@ function doDownloadPDF() {
     'el.setAttribute(\'contenteditable\',\'true\');' +
     'el.setAttribute(\'spellcheck\',\'false\');' +
     'el.setAttribute(\'title\',\'Click to edit\');});});' +
+    // .page is max-height:297mm with overflow:hidden, so anything too long is
+    // silently cut off. Detect it and say so instead of printing a truncated doc.
+    'function ovf(){var n=0;document.querySelectorAll(\'.page\').forEach(function(p,i){' +
+    'if(p.scrollHeight>p.clientHeight+2){n++;p.style.outline=\'2px solid #f59e0b\';}});' +
+    'var w=document.getElementById(\'ovf-warn\');' +
+    'if(n&&w){w.style.display=\'inline-block\';' +
+    'w.textContent=\'⚠ Content overflows the A4 page on \'+n+\' page(s) — text is being cut off\';}}' +
+    'ovf();setInterval(ovf,1500);' +
+    // Last line of defence before paper
+    'window.addEventListener(\'beforeprint\',function(){' +
+    'if(document.querySelectorAll(\'.untr\').length){' +
+    'console.warn(\'Untranslated fields still present\');}});' +
     '});<\/script>'+
     '</body></html>';
 
   var blob = new Blob([docHtml], {type:'text/html'});
   var url = URL.createObjectURL(blob);
+
+  // Build a readable filename: ATS-<id>-<Customer>-<Doc>-JP.html
+  var safe = function(v) { return String(v||'').replace(/[^A-Za-z0-9\u3040-\u30ff\u4e00-\u9fff]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40); };
+  var fname = 'ATS-' + safe(s.id) + '-' + safe(s.name) + '-' + safe(hasCustom ? (s.customTitleEn || dt) : dt) + '-JP.html';
+
+  if (saveAsFile) {
+    var a = document.createElement('a');
+    a.href = url; a.download = fname;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+    toast(untranslatedCount
+      ? '⚠ Saved ' + fname + ' — but ' + untranslatedCount + ' field(s) are untranslated'
+      : 'Saved ' + fname + ' — open it, then Print → Save as PDF');
+    return;
+  }
+
   var win = window.open(url,'_blank');
-  if (!win) { var a=document.createElement('a'); a.href=url; a.download=s.id+'-JP-'+dt.replace(/\s+/g,'-')+'.html'; a.click(); }
-  toast('PDF ready — click any field to edit, then Print → Save as PDF');
+  if (!win) { var a2=document.createElement('a'); a2.href=url; a2.download=fname; a2.click(); }
+  if (untranslatedCount) {
+    toast('⚠ ' + untranslatedCount + ' field(s) untranslated — marked 【未翻訳】 in red');
+  } else {
+    toast('PDF ready — click any field to edit, then Print → Save as PDF');
+  }
 }
 
 
@@ -2545,7 +3042,7 @@ function doGenerateAffidavit() {
 async function doEmail() {
   var s = subs.find(function(x) { return x.id === activeId; });
   if (!s) return;
-  if (!s.translation) {
+  if (!s.translation && !(s.customBody && s.customBody.trim())) {
     toast('Please translate the document first before emailing the customer.');
     return;
   }
@@ -3086,6 +3583,747 @@ async function saveEdit() {
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = 'Save Changes'; }
   }
+}
+
+// ══ CUSTOM TRANSLATION — PRESET SKELETONS ══════════════════════════
+// Each preset pre-fills the titles, issuer and a labelled skeleton so
+// only the Japanese values are left to type.
+var CUSTOM_PRESETS = {
+  'barangay': {
+    label: 'Barangay Clearance / Certificate',
+    titleEn: 'BARANGAY CLEARANCE', titleJp: 'バランガイ証明書',
+    issuerEn: 'Office of the Barangay Captain', issuerJp: 'バランガイ長事務所', cols: '2',
+    body: [
+      '## A.\u3000発行機関 / ISSUING OFFICE',
+      'バランガイ名 / Barangay |  | ',
+      '市・町 / City / Municipality |  | ',
+      '州 / Province |  | ',
+      '',
+      '## B.\u3000申請者情報 / APPLICANT INFORMATION',
+      '氏名 / Full Name |  | ',
+      '生年月日 / Date of Birth |  | ',
+      '年齢 / Age |  | ',
+      '性別 / Sex |  | ',
+      '国籍 / Citizenship |  | ',
+      '婚姻状況 / Civil Status |  | ',
+      '住所 / Address |  | ',
+      '居住期間 / Length of Residency |  | ',
+      '',
+      '## C.\u3000証明事項 / CERTIFICATION',
+      '> \u4e0a\u8a18\u306e\u8005\u306f\u5f53\u30d0\u30e9\u30f3\u30ac\u30a4\u306e\u4f4f\u6c11\u3067\u3042\u308a\u3001\u5584\u826f\u306a\u54c1\u884c\u3092\u6709\u3057\u3001\u5f53\u30d0\u30e9\u30f3\u30ac\u30a4\u306b\u304a\u3044\u3066\u4fc2\u5c5e\u4e2d\u306e\u4e8b\u4ef6\u304a\u3088\u3073\u4e0d\u5229\u306a\u8a18\u9332\u304c\u306a\u3044\u3053\u3068\u3092\u8a3c\u660e\u3059\u308b\u3002',
+      '証明目的 / Purpose |  | ',
+      '',
+      '## D.\u3000発行情報 / ISSUANCE',
+      '発行日 / Date Issued |  | ',
+      '発行地 / Place Issued |  | ',
+      'バランガイ長 / Barangay Captain |  | ',
+      '住民税証明番号 / CTC No. |  | ',
+      '領収番号 / OR No. |  | ',
+      '手数料 / Fee Paid |  | ',
+      '',
+      '> \u3014\u539f\u672c\u306b\u306f\u767a\u884c\u6a5f\u95a2\u306e\u516c\u5370\u304a\u3088\u3073\u767a\u884c\u8cac\u4efb\u8005\u306e\u7f72\u540d\u304c\u4ed8\u3055\u308c\u3066\u3044\u308b\u3002\u3015'
+    ].join('\n')
+  },
+  'nbi': {
+    label: 'NBI Clearance',
+    titleEn: 'NBI CLEARANCE', titleJp: 'NBI\uff08\u56fd\u5bb6\u635c\u67fb\u5c40\uff09\u8a3c\u660e\u66f8',
+    issuerEn: 'National Bureau of Investigation', issuerJp: '\u30d5\u30a3\u30ea\u30d4\u30f3\u56fd\u5bb6\u635c\u67fb\u5c40\uff08NBI\uff09', cols: '2',
+    body: [
+      '## A.\u3000申請者情報 / APPLICANT INFORMATION',
+      '氏名 / Full Name |  | ',
+      '生年月日 / Date of Birth |  | ',
+      '出生地 / Place of Birth |  | ',
+      '年齢 / Age |  | ',
+      '性別 / Sex |  | ',
+      '婚姻状況 / Civil Status |  | ',
+      '国籍 / Nationality |  | ',
+      '身長 / Height |  | ',
+      '体重 / Weight |  | ',
+      '住所 / Address |  | ',
+      '',
+      '## B.\u3000照会結果 / SEARCH RESULT',
+      '備考・照会結果 / Remarks |  | ',
+      '> \u672c\u8a3c\u660e\u66f8\u767a\u884c\u65e5\u73fe\u5728\u3001\u4e0a\u8a18\u306e\u8005\u306b\u3064\u3044\u3066\u5f53\u5c40\u306e\u8a18\u9332\u306b\u72af\u7f6a\u6b74\u306f\u5b58\u5728\u3057\u306a\u3044\u3002',
+      '申請目的 / Purpose |  | ',
+      '',
+      '## C.\u3000発行情報 / ISSUANCE',
+      'NBI番号 / NBI ID No. |  | ',
+      '照会番号 / Reference No. |  | ',
+      '発行日 / Date Issued |  | ',
+      '有効期限 / Valid Until |  | ',
+      '発行地 / Place Issued |  | ',
+      '発行担当官 / Issuing Officer |  | ',
+      '',
+      '> \u3014\u539f\u672c\u306b\u306f\u7533\u8acb\u8005\u306e\u9854\u5199\u771f\u3001\u53f3\u62c7\u5370\u3001\u7f72\u540d\u3001\u30d0\u30fc\u30b3\u30fc\u30c9\u304a\u3088\u3073NBI\u306e\u516c\u5370\u304c\u4ed8\u3055\u308c\u3066\u3044\u308b\u3002\u3015'
+    ].join('\n')
+  },
+  'police': {
+    label: 'Police Clearance',
+    titleEn: 'POLICE CLEARANCE', titleJp: '\u8b66\u5bdf\u8a3c\u660e\u66f8',
+    issuerEn: 'Philippine National Police', issuerJp: '\u30d5\u30a3\u30ea\u30d4\u30f3\u56fd\u5bb6\u8b66\u5bdf\uff08PNP\uff09', cols: '2',
+    body: [
+      '## A.\u3000申請者情報 / APPLICANT INFORMATION',
+      '氏名 / Full Name |  | ',
+      '生年月日 / Date of Birth |  | ',
+      '出生地 / Place of Birth |  | ',
+      '年齢 / Age |  | ',
+      '性別 / Sex |  | ',
+      '婚姻状況 / Civil Status |  | ',
+      '国籍 / Citizenship |  | ',
+      '職業 / Occupation |  | ',
+      '身長 / Height |  | ',
+      '体重 / Weight |  | ',
+      '住所 / Address |  | ',
+      '',
+      '## B.\u3000照会結果 / RESULT OF VERIFICATION',
+      '照会結果 / Findings |  | ',
+      '> \u4e0a\u8a18\u306e\u8005\u306f\u5f53\u7ba1\u8f44\u533a\u57df\u306b\u304a\u3044\u3066\u72af\u7f6a\u8a18\u9332\u3092\u6709\u3057\u306a\u3044\u3053\u3068\u3092\u8a3c\u660e\u3059\u308b\u3002',
+      '申請目的 / Purpose |  | ',
+      '',
+      '## C.\u3000発行情報 / ISSUANCE',
+      '証明書番号 / Clearance No. |  | ',
+      '発行警察署 / Issuing Station |  | ',
+      '発行日 / Date Issued |  | ',
+      '有効期限 / Valid Until |  | ',
+      '領収番号 / OR No. |  | ',
+      '署長 / Chief of Police |  | ',
+      '',
+      '> \u3014\u539f\u672c\u306b\u306f\u7533\u8acb\u8005\u306e\u9854\u5199\u771f\u3001\u62c7\u5370\u304a\u3088\u3073\u767a\u884c\u7f72\u306e\u516c\u5370\u304c\u4ed8\u3055\u308c\u3066\u3044\u308b\u3002\u3015'
+    ].join('\n')
+  },
+  'residency': {
+    label: 'Certificate of Residency',
+    titleEn: 'CERTIFICATE OF RESIDENCY', titleJp: '\u5c45\u4f4f\u8a3c\u660e\u66f8',
+    issuerEn: 'Office of the Barangay Captain', issuerJp: '\u30d0\u30e9\u30f3\u30ac\u30a4\u9577\u4e8b\u52d9\u6240', cols: '2',
+    body: [
+      '## A.\u3000発行機関 / ISSUING OFFICE',
+      'バランガイ名 / Barangay |  | ',
+      '市・町 / City / Municipality |  | ',
+      '州 / Province |  | ',
+      '',
+      '## B.\u3000居住者情報 / RESIDENT INFORMATION',
+      '氏名 / Full Name |  | ',
+      '生年月日 / Date of Birth |  | ',
+      '年齢 / Age |  | ',
+      '性別 / Sex |  | ',
+      '婚姻状況 / Civil Status |  | ',
+      '国籍 / Citizenship |  | ',
+      '現住所 / Present Address |  | ',
+      '',
+      '## C.\u3000証明事項 / CERTIFICATION',
+      '居住開始日 / Residing Since |  | ',
+      '> \u4e0a\u8a18\u306e\u8005\u306f\u4e0a\u8a18\u4f4f\u6240\u306b\u7d99\u7d9a\u3057\u3066\u5c45\u4f4f\u3057\u3066\u3044\u308b\u3053\u3068\u3092\u8a3c\u660e\u3059\u308b\u3002',
+      '証明目的 / Purpose |  | ',
+      '',
+      '## D.\u3000発行情報 / ISSUANCE',
+      '発行日 / Date Issued |  | ',
+      '証明者氏名 / Certified By |  | ',
+      '役職 / Position |  | ',
+      '領収番号 / OR No. |  | ',
+      '',
+      '> \u3014\u539f\u672c\u306b\u306f\u767a\u884c\u6a5f\u95a2\u306e\u516c\u5370\u304a\u3088\u3073\u7f72\u540d\u304c\u4ed8\u3055\u308c\u3066\u3044\u308b\u3002\u3015'
+    ].join('\n')
+  },
+  'medical': {
+    label: 'Medical Certificate',
+    titleEn: 'MEDICAL CERTIFICATE', titleJp: '\u5065\u5eb7\u8a3a\u65ad\u66f8',
+    issuerEn: '', issuerJp: '', cols: '2',
+    body: [
+      '## A.\u3000医療機関 / MEDICAL FACILITY',
+      '医療機関名 / Clinic / Hospital |  | ',
+      '所在地 / Address |  | ',
+      '電話番号 / Contact No. |  | ',
+      '',
+      '## B.\u3000患者情報 / PATIENT INFORMATION',
+      '氏名 / Full Name |  | ',
+      '生年月日 / Date of Birth |  | ',
+      '年齢 / Age |  | ',
+      '性別 / Sex |  | ',
+      '住所 / Address |  | ',
+      '',
+      '## C.\u3000診断結果 / EXAMINATION FINDINGS',
+      '受診日 / Date of Examination |  | ',
+      '身長 / Height |  | ',
+      '体重 / Weight |  | ',
+      '血圧 / Blood Pressure |  | ',
+      '視力 / Vision |  | ',
+      '胸部X線 / Chest X-Ray |  | ',
+      '臨床検査 / Laboratory Results |  | ',
+      '診断 / Diagnosis |  | ',
+      '所見 / Findings |  | ',
+      '> \u4e0a\u8a18\u306e\u8005\u3092\u8a3a\u5bdf\u3057\u305f\u7d50\u679c\u3001\u5065\u5eb7\u72b6\u614b\u306f\u826f\u597d\u3067\u3042\u308a\u3001\u5c31\u52b4\u30fb\u5c31\u5b66\u306b\u652f\u969c\u306f\u306a\u3044\u3068\u8a8d\u3081\u308b\u3002',
+      '',
+      '## D.\u3000医師情報 / PHYSICIAN',
+      '医師氏名 / Physician |  | ',
+      'PRC免許番号 / PRC License No. |  | ',
+      '専門分野 / Specialization |  | ',
+      '発行日 / Date Issued |  | ',
+      '',
+      '> \u3014\u539f\u672c\u306b\u306f\u8a3a\u5bdf\u533b\u306e\u7f72\u540d\u304a\u3088\u3073\u533b\u7642\u6a5f\u95a2\u306e\u516c\u5370\u304c\u4ed8\u3055\u308c\u3066\u3044\u308b\u3002\u3015'
+    ].join('\n')
+  },
+  'tor': {
+    label: 'Transcript of Records (TOR)',
+    titleEn: 'TRANSCRIPT OF RECORDS', titleJp: '\u6210\u7e3e\u8a3c\u660e\u66f8',
+    issuerEn: '', issuerJp: '', cols: '1',
+    body: [
+      '## A.\u3000学校情報 / SCHOOL INFORMATION',
+      '学校名 / Name of School |  | ',
+      '所在地 / School Address |  | ',
+      '',
+      '## B.\u3000学生情報 / STUDENT INFORMATION',
+      '氏名 / Full Name |  | ',
+      '生年月日 / Date of Birth |  | ',
+      '出生地 / Place of Birth |  | ',
+      '学籍番号 / Student No. |  | ',
+      '学部・学科 / Course / Major |  | ',
+      '',
+      '## C.\u3000修学記録 / ACADEMIC RECORD',
+      '在学期間 / Period of Attendance |  | ',
+      '取得単位数 / Total Units Earned |  | ',
+      '成績評価 / General Average |  | ',
+      '卒業日 / Date of Graduation |  | ',
+      '学位 / Degree Conferred |  | ',
+      '',
+      '## D.\u3000履修科目 / SUBJECTS AND GRADES',
+      '> \u5c65\u4fee\u79d1\u76ee\u306f\u4e0b\u8a18\u306e\u3068\u304a\u308a\uff08\u79d1\u76ee\u540d\u30fb\u5358\u4f4d\u6570\u30fb\u8a55\u4fa1\u306e\u9806\uff09\u3002\u203b\u79d1\u76ee\u6570\u304c\u591a\u3044\u5834\u5408\u306f\u5225\u7d19\u306b\u5206\u5272\u3057\u3066\u304f\u3060\u3055\u3044\u3002',
+      '科目名 / Subject |  | ',
+      '科目名 / Subject |  | ',
+      '科目名 / Subject |  | ',
+      '',
+      '## E.\u3000発行情報 / ISSUANCE',
+      '登録官 / Registrar |  | ',
+      '発行日 / Date Issued |  | ',
+      '備考 / Remarks |  | ',
+      '',
+      '> \u3014\u539f\u672c\u306b\u306f\u767b\u9332\u5b98\u306e\u7f72\u540d\u3001\u5b66\u6821\u306e\u6d6e\u304d\u51fa\u3057\u516c\u5370\u304a\u3088\u3073\u300cNOT VALID WITHOUT SCHOOL SEAL\u300d\u306e\u8a18\u8f09\u304c\u3042\u308b\u3002\u3015'
+    ].join('\n')
+  },
+  'diploma': {
+    label: 'Diploma / Certificate of Graduation',
+    titleEn: 'DIPLOMA', titleJp: '\u5352\u696d\u8a3c\u66f8',
+    issuerEn: '', issuerJp: '', cols: '1',
+    body: [
+      '## A.\u3000学校情報 / SCHOOL INFORMATION',
+      '学校名 / Name of School |  | ',
+      '所在地 / School Address |  | ',
+      '',
+      '## B.\u3000卒業者情報 / GRADUATE INFORMATION',
+      '氏名 / Full Name |  | ',
+      '生年月日 / Date of Birth |  | ',
+      '',
+      '## C.\u3000授与内容 / CONFERMENT',
+      '> \u672c\u5b66\u306f\u4e0a\u8a18\u306e\u8005\u304c\u6240\u5b9a\u306e\u8ab8\u7a0b\u3092\u4fee\u4e86\u3057\u305f\u3053\u3068\u3092\u8a8d\u3081\u3001\u4e0b\u8a18\u306e\u5b66\u4f4d\u3092\u6388\u4e0e\u3059\u308b\u3002',
+      '学位・称号 / Degree Conferred |  | ',
+      '専攻 / Major |  | ',
+      '卒業日 / Date of Graduation |  | ',
+      '授与地 / Place Conferred |  | ',
+      '',
+      '## D.\u3000署名者 / SIGNATORIES',
+      '学長 / President |  | ',
+      '学部長 / Dean |  | ',
+      '登録官 / Registrar |  | ',
+      '',
+      '> \u3014\u539f\u672c\u306b\u306f\u5b66\u6821\u306e\u6d6e\u304d\u51fa\u3057\u516c\u5370\u304a\u3088\u3073\u4e0a\u8a18\u7f72\u540d\u8005\u306e\u7f72\u540d\u304c\u4ed8\u3055\u308c\u3066\u3044\u308b\u3002\u3015'
+    ].join('\n')
+  },
+  'permit': {
+    label: "Business / Mayor's Permit",
+    titleEn: "MAYOR'S PERMIT (BUSINESS PERMIT)", titleJp: '\u55b6\u696d\u8a31\u53ef\u8a3c\uff08\u5e02\u9577\u8a31\u53ef\uff09',
+    issuerEn: 'Office of the City Mayor', issuerJp: '\u5e02\u9577\u4e8b\u52d9\u6240', cols: '2',
+    body: [
+      '## A.\u3000事業者情報 / BUSINESS INFORMATION',
+      '事業所名 / Business Name |  | ',
+      '商号 / Trade Name |  | ',
+      '所有者氏名 / Owner |  | ',
+      '組織形態 / Type of Organization |  | ',
+      '事業所所在地 / Business Address |  | ',
+      '事業内容 / Line of Business |  | ',
+      '',
+      '## B.\u3000許可情報 / PERMIT DETAILS',
+      '許可番号 / Permit No. |  | ',
+      '許可年度 / Permit Year |  | ',
+      '発行日 / Date Issued |  | ',
+      '有効期限 / Valid Until |  | ',
+      '',
+      '## C.\u3000納税情報 / TAX AND FEES',
+      '資本金 / Capitalization |  | ',
+      '前年度売上高 / Gross Sales |  | ',
+      '納付税額 / Business Tax Paid |  | ',
+      '領収番号 / OR No. |  | ',
+      '',
+      '## D.\u3000発行情報 / ISSUANCE',
+      '市長 / City Mayor |  | ',
+      '発行地 / Place Issued |  | ',
+      '',
+      '> \u3014\u539f\u672c\u306b\u306f\u5e02\u9577\u306e\u7f72\u540d\u304a\u3088\u3073\u5e02\u306e\u516c\u5370\u304c\u4ed8\u3055\u308c\u3066\u3044\u308b\u3002\u3015'
+    ].join('\n')
+  },
+  'affidavit': {
+    label: 'Affidavit of Support / Guarantee',
+    titleEn: 'AFFIDAVIT OF SUPPORT AND GUARANTEE', titleJp: '\u8eab\u5143\u4fdd\u8a3c\u66f8',
+    issuerEn: '', issuerJp: '', cols: '2',
+    body: [
+      '## A.\u3000保証人情報 / GUARANTOR (AFFIANT)',
+      '氏名 / Full Name |  | ',
+      '生年月日 / Date of Birth |  | ',
+      '国籍 / Citizenship |  | ',
+      '住所 / Address |  | ',
+      '旅券番号 / Passport No. |  | ',
+      '職業 / Occupation |  | ',
+      '勤務先 / Employer |  | ',
+      '年収 / Annual Income |  | ',
+      '',
+      '## B.\u3000被保証人情報 / BENEFICIARY',
+      '氏名 / Full Name |  | ',
+      '続柄 / Relationship |  | ',
+      '生年月日 / Date of Birth |  | ',
+      '旅券番号 / Passport No. |  | ',
+      '',
+      '## C.\u3000渡航情報 / TRAVEL DETAILS',
+      '渡航目的 / Purpose of Travel |  | ',
+      '滞在期間 / Duration of Stay |  | ',
+      '滞在先 / Address in Japan |  | ',
+      '',
+      '## D.\u3000宣誓事項 / DECLARATION',
+      '> \u79c1\u306f\u4e0a\u8a18\u306e\u8005\u306e\u6e21\u822a\u304a\u3088\u3073\u6ede\u5728\u4e2d\u306e\u4e00\u5207\u306e\u8cbb\u7528\u3092\u8ca0\u62c5\u3057\u3001\u5e30\u56fd\u3092\u4fdd\u8a3c\u3057\u3001\u8eab\u5143\u3092\u4fdd\u8a3c\u3059\u308b\u3053\u3068\u3092\u5ba3\u8a93\u3059\u308b\u3002',
+      '',
+      '## E.\u3000公証情報 / NOTARIZATION',
+      '宣誓日 / Date Sworn |  | ',
+      '公証地 / Place |  | ',
+      '公証人 / Notary Public |  | ',
+      '住民税証明番号 / CTC No. |  | ',
+      '文書番号 / Doc. No. |  | ',
+      '頁番号 / Page No. |  | ',
+      '簿冊番号 / Book No. |  | ',
+      '年度 / Series of |  | ',
+      '',
+      '> \u3014\u539f\u672c\u306b\u306f\u5ba3\u8a93\u8005\u306e\u7f72\u540d\u304a\u3088\u3073\u516c\u8a3c\u4eba\u306e\u7f72\u540d\u30fb\u516c\u5370\u304c\u4ed8\u3055\u308c\u3066\u3044\u308b\u3002\u3015'
+    ].join('\n')
+  },
+  'license': {
+    label: "Driver's License",
+    titleEn: "DRIVER'S LICENSE", titleJp: '\u904b\u8ee2\u514d\u8a31\u8a3c',
+    issuerEn: 'Land Transportation Office', issuerJp: '\u9678\u904b\u5c40\uff08LTO\uff09', cols: '2',
+    body: [
+      '## A.\u3000免許保有者情報 / LICENSE HOLDER',
+      '氏名 / Full Name |  | ',
+      '生年月日 / Date of Birth |  | ',
+      '性別 / Sex |  | ',
+      '国籍 / Nationality |  | ',
+      '住所 / Address |  | ',
+      '身長 / Height |  | ',
+      '体重 / Weight |  | ',
+      '血液型 / Blood Type |  | ',
+      '眼の色 / Eyes Color |  | ',
+      '',
+      '## B.\u3000免許情報 / LICENSE DETAILS',
+      '免許番号 / License No. |  | ',
+      '免許種別 / License Type |  | ',
+      '運転可能車種 / DL Codes |  | ',
+      '条件 / Conditions |  | ',
+      '制限事項 / Restrictions |  | ',
+      '交付日 / Date Issued |  | ',
+      '有効期限 / Expiration Date |  | ',
+      '発行機関コード / Agency Code |  | ',
+      '発行機関 / Issuing Agency |  | ',
+      '',
+      '> \u3014\u539f\u672c\u306f\u30ab\u30fc\u30c9\u5f0f\u3067\u3001\u4fdd\u6709\u8005\u306e\u9854\u5199\u771f\u3001\u7f72\u540d\u304a\u3088\u3073LTO\u306e\u30db\u30ed\u30b0\u30e9\u30e0\u304c\u4ed8\u3055\u308c\u3066\u3044\u308b\u3002\u3015'
+    ].join('\n')
+  },
+  'landtitle': {
+    label: 'Land Title (TCT / OCT)',
+    titleEn: 'TRANSFER CERTIFICATE OF TITLE', titleJp: '\u571f\u5730\u6a29\u5229\u79fb\u8ee2\u8a3c\u66f8',
+    issuerEn: 'Registry of Deeds', issuerJp: '\u767b\u8a18\u6240', cols: '1',
+    body: [
+      '## A.\u3000登記所情報 / REGISTRY',
+      '登記所所在地 / Registry of Deeds for |  | ',
+      '権利証番号 / Title No. |  | ',
+      '従前権利証番号 / Previous Title No. |  | ',
+      '',
+      '## B.\u3000登記名義人 / REGISTERED OWNER',
+      '氏名 / Registered Owner |  | ',
+      '婚姻状況 / Civil Status |  | ',
+      '配偶者氏名 / Name of Spouse |  | ',
+      '国籍 / Citizenship |  | ',
+      '住所 / Address |  | ',
+      '',
+      '## C.\u3000不動産の表示 / PROPERTY DESCRIPTION',
+      '地番 / Lot No. |  | ',
+      '区画番号 / Block No. |  | ',
+      '測量図番号 / Survey Plan No. |  | ',
+      '所在地 / Location |  | ',
+      '地積 / Area |  | ',
+      '地目 / Classification |  | ',
+      '> \u3014\u539f\u672c\u306b\u306f\u5883\u754c\u70b9\u30fb\u65b9\u4f4d\u30fb\u8ddd\u96e2\u3092\u8a18\u8f09\u3057\u305f\u6280\u8853\u7684\u63cf\u8ff0\uff08Technical Description\uff09\u304c\u542b\u307e\u308c\u308b\u3002\u5fc5\u8981\u306b\u5fdc\u3058\u3066\u5225\u7d19\u306b\u7ffb\u8a33\u3059\u308b\u3053\u3068\u3002\u3015',
+      '',
+      '## D.\u3000登記情報 / REGISTRATION',
+      '受付番号 / Entry No. |  | ',
+      '登記日時 / Date and Time Registered |  | ',
+      '登記官 / Register of Deeds |  | ',
+      '備考・負担 / Encumbrances / Annotations |  | ',
+      '',
+      '> \u3014\u539f\u672c\u306b\u306f\u767b\u8a18\u5b98\u306e\u7f72\u540d\u304a\u3088\u3073\u767b\u8a18\u6240\u306e\u516c\u5370\u304c\u4ed8\u3055\u308c\u3066\u3044\u308b\u3002\u3015'
+    ].join('\n')
+  }
+};
+
+function cusPopulatePresets() {
+  var sel = document.getElementById('cus-preset');
+  if (!sel || sel.options.length > 1) return;   // already built
+  Object.keys(CUSTOM_PRESETS).forEach(function(k) {
+    var o = document.createElement('option');
+    o.value = k; o.textContent = CUSTOM_PRESETS[k].label;
+    sel.appendChild(o);
+  });
+}
+
+function loadCustomPreset() {
+  var key = document.getElementById('cus-preset').value;
+  if (!key || !CUSTOM_PRESETS[key]) { toast('Pick a document type first.'); return; }
+  var body = document.getElementById('cus-body').value.trim();
+  if (body && !confirm('Replace what you have typed with the "' + CUSTOM_PRESETS[key].label + '" skeleton?')) return;
+
+  var p = CUSTOM_PRESETS[key];
+  document.getElementById('cus-title-en').value  = p.titleEn;
+  document.getElementById('cus-title-jp').value  = p.titleJp;
+  document.getElementById('cus-issuer-en').value = p.issuerEn;
+  document.getElementById('cus-issuer-jp').value = p.issuerJp;
+  document.getElementById('cus-cols').value      = p.cols;
+  document.getElementById('cus-body').value      = p.body;
+  document.getElementById('cus-country').value   = '';
+  cusRenderPreview();
+  toast('Loaded skeleton — now fill in the Japanese column');
+}
+
+// ── EDITOR TOOLS ─────────────────────────────────────────────────
+function cusInsert(txt) {
+  var ta = document.getElementById('cus-body');
+  var s = ta.selectionStart, e = ta.selectionEnd, v = ta.value;
+  var atLineStart = (s === 0 || v.charAt(s - 1) === '\n');
+  var ins = (atLineStart ? '' : '\n') + txt;
+  ta.value = v.slice(0, s) + ins + v.slice(e);
+  ta.selectionStart = ta.selectionEnd = s + ins.length;
+  ta.focus();
+  cusRenderPreview();
+}
+
+function cusInsertSeal() {
+  cusInsert('> 〔原本には発行機関の公印および発行責任者の署名が付されている。〕');
+}
+
+// Turns pasted "Label: value" or tab-separated text into "Label |  | value"
+// lines, so only the Japanese middle column is left to type.
+function cusAutoFormat() {
+  var ta = document.getElementById('cus-body');
+  var changed = 0;
+  var out = ta.value.split('\n').map(function(raw) {
+    var line = raw.replace(/\s+$/, '');
+    var t = line.trim();
+    if (!t) return '';
+    if (t.slice(0, 2) === '##' || t.charAt(0) === '>' || line.indexOf('|') > -1) return line;
+
+    var tabs = line.split('\t').map(function(x) { return x.trim(); }).filter(function(x) { return x !== ''; });
+    if (tabs.length >= 2) { changed++; return tabs[0] + ' |  | ' + tabs.slice(1).join(' '); }
+
+    var m = t.match(/^([^:：]{1,60})[:：]\s*(.*)$/);
+    if (m) { changed++; return m[1].trim() + ' |  | ' + m[2].trim(); }
+
+    changed++;
+    return t + ' |  | ';
+  }).join('\n');
+
+  ta.value = out;
+  cusRenderPreview();
+  toast(changed ? 'Formatted ' + changed + ' line(s) — now add the Japanese' : 'Nothing needed reformatting');
+}
+
+// ── LIVE PREVIEW + A4 FIT GAUGE ──────────────────────────────────
+function cusEsc(v) {
+  return String(v == null ? '' : v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/&lt;br\s*\/?&gt;/gi, '<br>');
+}
+
+function cusRenderPreview() {
+  var prev = document.getElementById('cus-preview');
+  if (!prev) return;
+  var text = document.getElementById('cus-body').value;
+  var cols = parseInt(document.getElementById('cus-cols').value || '2', 10);
+  var titEn = document.getElementById('cus-title-en').value.trim() || 'DOCUMENT TITLE';
+  var titJp = document.getElementById('cus-title-jp').value.trim() || '（日本語タイトル未入力）';
+  var issEn = document.getElementById('cus-issuer-en').value.trim();
+  var issJp = document.getElementById('cus-issuer-jp').value.trim();
+
+  var wrap = (cols === 1) ? 'g1' : 'g2';
+  var html = '', buf = [], shade = true;
+  var nFields = 0, nSections = 0, nParas = 0, nMissingJp = 0;
+  var fieldPx = [], paraPx = 0;
+  // Measured from the print CSS: .fl 5.5px/1.1 +1 margin, .fj 8px/1.2,
+  // .fe 6.5px/1.1, .fb padding 1+1.5 and 0.5 border.
+  var PX_LABEL = 5.5 * 1.1 + 1, PX_JP = 8 * 1.2, PX_EN = 6.5 * 1.1, PX_PAD = 3;
+  var CHARS_PER_LINE = 94;   // 200mm content width at 8px Japanese glyphs
+
+  function flush() {
+    if (!buf.length) return;
+    if (cols === 2 && buf.length % 2 === 1) buf.push('<div class="fb"></div>');
+    html += '<div class="' + wrap + '">' + buf.join('') + '</div>';
+    buf = [];
+  }
+
+  String(text || '').split('\n').forEach(function(raw) {
+    var line = raw.trim();
+    if (!line) return;
+    if (line.slice(0, 2) === '##') {
+      flush(); shade = true; nSections++;
+      html += '<div class="sh">' + cusEsc(line.slice(2).trim()) + '</div>';
+      return;
+    }
+    if (line.charAt(0) === '>') {
+      flush(); shade = true; nParas++;
+      var ptxt = line.slice(1).trim();
+      var plines = Math.max(1, Math.ceil(ptxt.length / CHARS_PER_LINE));
+      paraPx += 8 + (plines * 8 * 1.6) + 0.5;
+      html += '<div class="g1"><div class="fb"><div class="fj" style="font-weight:500">' +
+              cusEsc(ptxt) + '</div></div></div>';
+      return;
+    }
+    var p = line.split('|');
+    var label = (p[0] || '').trim(), jp = (p[1] || '').trim(), en = (p[2] || '').trim();
+    nFields++;
+    if (!jp) nMissingJp++;
+    // Height this row will occupy once printed. English is counted even when
+    // still blank, so the gauge does not turn red only after you fill it in.
+    fieldPx.push(PX_PAD + (label ? PX_LABEL : 0) + PX_JP + PX_EN);
+    buf.push('<div class="fb' + (shade ? ' s' : '') + '">' +
+      (label ? '<div class="fl">' + cusEsc(label) + '</div>' : '') +
+      '<div class="fj' + (jp ? '' : ' cp-empty') + '">' + (jp ? cusEsc(jp) : '【未入力】') + '</div>' +
+      (en ? '<div class="fe">' + cusEsc(en) + '</div>' : '') +
+    '</div>');
+    shade = !shade;
+  });
+  flush();
+
+  var ctry = document.getElementById('cus-country').value.trim() || 'Republic of the Philippines · フィリピン共和国';
+  var purp = document.getElementById('cus-purpose').value.trim();
+  prev.innerHTML =
+    '<div class="cp-hdr">' +
+      '<div class="cp-iss">' + cusEsc(ctry) + '</div>' +
+      ((issEn || issJp) ? '<div class="cp-iss"><b>' + cusEsc(issEn || issJp) + (issJp && issEn ? ' · ' + cusEsc(issJp) : '') + '</b></div>' : '') +
+      '<div class="cp-doctit">' + cusEsc(titEn) + '</div>' +
+      '<div class="cp-jptit">' + cusEsc(titJp) + '　— 日本語翻訳</div>' +
+      (purp ? '<div class="cp-iss">翻訳目的 / Purpose: ' + cusEsc(purp) + '</div>' : '') +
+    '</div>' + (html || '<div style="padding:14px;color:#999;font-size:11px">Nothing to preview yet.</div>');
+
+  // Stats
+  var st = document.getElementById('cus-stats');
+  if (st) {
+    st.textContent = nFields + ' field(s) · ' + nSections + ' section(s) · ' + nParas + ' paragraph(s)' +
+                     (nMissingJp ? ' · ⚠ ' + nMissingJp + ' missing Japanese' : ' · ✓ all have Japanese');
+    st.style.color = nMissingJp ? '#dc2626' : '#16a34a';
+  }
+
+  // ── A4 fit: calibrated against the real print CSS ──
+  // A4 = 1123px tall at 96dpi; 3mm top + 3mm bottom print padding leaves
+  // 1100px. The PSA header + meta row costs ~66px and the stamp +
+  // certification box + signature block ~246px, leaving ~789px for rows.
+  // Row heights come from the actual .fb/.fl/.fj/.fe font and padding rules.
+  var fit = document.getElementById('cus-fit');
+  if (fit) {
+    var rowsPx = 0;
+    if (cols === 2) {
+      for (var i = 0; i < fieldPx.length; i += 2) {
+        rowsPx += Math.max(fieldPx[i], fieldPx[i + 1] || 0);
+      }
+    } else {
+      fieldPx.forEach(function(h) { rowsPx += h; });
+    }
+    var used = rowsPx + (nSections * 10.8) + paraPx;
+    var pct  = Math.round((used / 789) * 100);
+
+    fit.textContent = 'A4 fill ≈ ' + pct + '%';
+    if (pct > 100) {
+      fit.style.background = '#fee2e2'; fit.style.color = '#dc2626';
+      fit.textContent += ' — WILL BE CUT OFF, remove ' + Math.ceil((used - 789) / 27) + ' row(s)';
+    } else if (pct > 90) {
+      fit.style.background = '#fef3c7'; fit.style.color = '#92400e';
+      fit.textContent += ' — nearly full, no room for longer values';
+    } else {
+      fit.style.background = '#dcfce7'; fit.style.color = '#166534';
+      fit.textContent += ' — fits A4';
+    }
+  }
+}
+
+function cusTogglePreview() {
+  var prev = document.getElementById('cus-preview');
+  var btn  = document.getElementById('cus-prev-btn');
+  var open = prev.style.display === 'block';
+  prev.style.display = open ? 'none' : 'block';
+  btn.textContent = open ? '👁 Show preview' : '👁 Hide preview';
+  if (!open) cusRenderPreview();
+}
+
+// ── REUSABLE TEMPLATES (this browser only) ───────────────────────
+var CUS_TPL_KEY = 'ats_custom_templates';
+
+function cusTemplates() {
+  try { return JSON.parse(localStorage.getItem(CUS_TPL_KEY) || '{}'); } catch (e) { return {}; }
+}
+
+function cusRefreshTemplateList() {
+  var sel = document.getElementById('cus-tpl-list');
+  if (!sel) return;
+  var tpls = cusTemplates(), names = Object.keys(tpls).sort();
+  sel.innerHTML = names.length
+    ? '<option value="">— select a template —</option>'
+    : '<option value="">— none saved yet —</option>';
+  names.forEach(function(n) {
+    var o = document.createElement('option');
+    o.value = n; o.textContent = n;
+    sel.appendChild(o);
+  });
+}
+
+function saveCustomTemplate() {
+  var nameEl = document.getElementById('cus-tpl-name');
+  var name = nameEl.value.trim();
+  if (!name) { toast('Type a name for the template first.'); nameEl.focus(); return; }
+  var body = document.getElementById('cus-body').value.trim();
+  if (!body) { toast('Nothing to save — the body is empty.'); return; }
+
+  var tpls = cusTemplates();
+  if (tpls[name] && !confirm('A template called "' + name + '" already exists. Overwrite it?')) return;
+
+  tpls[name] = {
+    titleEn:  document.getElementById('cus-title-en').value.trim(),
+    titleJp:  document.getElementById('cus-title-jp').value.trim(),
+    issuerEn: document.getElementById('cus-issuer-en').value.trim(),
+    issuerJp: document.getElementById('cus-issuer-jp').value.trim(),
+    cols:     document.getElementById('cus-cols').value,
+    country:  document.getElementById('cus-country').value.trim(),
+    purpose:  document.getElementById('cus-purpose').value.trim(),
+    body:     body
+  };
+  try {
+    localStorage.setItem(CUS_TPL_KEY, JSON.stringify(tpls));
+  } catch (e) {
+    toast('Could not save — browser storage is full or blocked.');
+    return;
+  }
+  nameEl.value = '';
+  cusRefreshTemplateList();
+  document.getElementById('cus-tpl-list').value = name;
+  toast('Template saved: ' + name);
+}
+
+function loadCustomTemplate() {
+  var name = document.getElementById('cus-tpl-list').value;
+  if (!name) { toast('Pick a saved template first.'); return; }
+  var t = cusTemplates()[name];
+  if (!t) { toast('That template is no longer available.'); cusRefreshTemplateList(); return; }
+  if (document.getElementById('cus-body').value.trim() &&
+      !confirm('Replace what you have typed with the template "' + name + '"?')) return;
+
+  document.getElementById('cus-title-en').value  = t.titleEn  || '';
+  document.getElementById('cus-title-jp').value  = t.titleJp  || '';
+  document.getElementById('cus-issuer-en').value = t.issuerEn || '';
+  document.getElementById('cus-issuer-jp').value = t.issuerJp || '';
+  document.getElementById('cus-cols').value      = t.cols     || '2';
+  document.getElementById('cus-country').value   = t.country  || '';
+  document.getElementById('cus-purpose').value   = t.purpose  || '';
+  document.getElementById('cus-body').value      = t.body     || '';
+  cusRenderPreview();
+  toast('Loaded template: ' + name);
+}
+
+function deleteCustomTemplate() {
+  var name = document.getElementById('cus-tpl-list').value;
+  if (!name) { toast('Pick a saved template first.'); return; }
+  if (!confirm('Delete the template "' + name + '"? This cannot be undone.')) return;
+  var tpls = cusTemplates();
+  delete tpls[name];
+  localStorage.setItem(CUS_TPL_KEY, JSON.stringify(tpls));
+  cusRefreshTemplateList();
+  toast('Deleted template: ' + name);
+}
+
+// Save the generated document straight to disk instead of opening a tab
+var forceDownloadFile = false;
+function doDownloadCustomFile() {
+  forceDownloadFile = true;
+  doDownloadPDF();
+}
+
+// ── CUSTOM (MANUAL) TRANSLATION ───────────────
+function toggleCustomPanel() {
+  var s = subs.find(function(x) { return x.id === activeId; });
+  if (!s) return;
+  var p = document.getElementById('custom-panel');
+  if (p.style.display === 'block') { p.style.display = 'none'; return; }
+
+  // Close the other panels so only one is open at a time
+  document.getElementById('edit-panel').style.display = 'none';
+  document.getElementById('correction-panel').style.display = 'none';
+  closeTranslationEditor();
+
+  cusPopulatePresets();
+  cusRefreshTemplateList();
+
+  // Sensible defaults on first open
+  if (!document.getElementById('cus-title-en').value) {
+    document.getElementById('cus-title-en').value = (s.doctype || '').toUpperCase();
+  }
+  p.style.display = 'block';
+  document.getElementById('cus-preview').style.display = 'block';
+  document.getElementById('cus-prev-btn').textContent = '👁 Hide preview';
+  cusRenderPreview();
+  document.getElementById('cus-body').focus();
+}
+
+async function saveCustomTranslation() {
+  var s = subs.find(function(x) { return x.id === activeId; });
+  if (!s) return;
+
+  var body = document.getElementById('cus-body').value.trim();
+  if (!body) { alert('Please enter at least one line in the translation body.'); return; }
+
+  s.customTitleEn  = document.getElementById('cus-title-en').value.trim();
+  s.customTitleJp  = document.getElementById('cus-title-jp').value.trim();
+  s.customIssuerEn = document.getElementById('cus-issuer-en').value.trim();
+  s.customIssuerJp = document.getElementById('cus-issuer-jp').value.trim();
+  s.customDocNo    = document.getElementById('cus-docno').value.trim();
+  s.customCountry  = document.getElementById('cus-country').value.trim();
+  s.customPurpose  = document.getElementById('cus-purpose').value.trim();
+  s.customCols     = document.getElementById('cus-cols').value;
+  s.customBody     = body;
+  if (s.status !== 'translated') s.status = 'translated';
+
+  await saveSubs();
+  document.getElementById('cus-status').textContent = '✓ Saved — overrides the template';
+  document.getElementById('b-custom').textContent = '📝 Custom Translation ●';
+  render(); updateStats();
+  toast('Custom translation saved for ' + s.name);
+}
+
+async function clearCustomTranslation() {
+  var s = subs.find(function(x) { return x.id === activeId; });
+  if (!s) return;
+  if (!confirm('Remove the custom translation and go back to the built-in template?')) return;
+
+  delete s.customTitleEn; delete s.customTitleJp;
+  delete s.customIssuerEn; delete s.customIssuerJp;
+  delete s.customDocNo; delete s.customCols; delete s.customBody;
+  delete s.customCountry; delete s.customPurpose;
+
+  await saveSubs();
+  ['cus-title-en','cus-title-jp','cus-issuer-en','cus-issuer-jp','cus-docno','cus-body','cus-country','cus-purpose']
+    .forEach(function(id) { document.getElementById(id).value = ''; });
+  document.getElementById('cus-cols').value = '2';
+  document.getElementById('cus-status').textContent = '';
+  document.getElementById('b-custom').textContent = '📝 Custom Translation';
+  render(); updateStats();
+  toast('Custom translation cleared — using template again');
 }
 
 function toggleTranslationEditor() {
