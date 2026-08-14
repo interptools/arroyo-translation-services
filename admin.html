@@ -3633,7 +3633,7 @@ async function saveEdit() {
 // only the Japanese values are left to type.
 var CUSTOM_PRESETS = {
   'barangay': {
-    label: 'Barangay Clearance / Certificate',
+    group: 'Other Certificates & Documents', label: 'Barangay Clearance / Certificate',
     titleEn: 'BARANGAY CLEARANCE', titleJp: 'バランガイ証明書',
     issuerEn: 'Office of the Barangay Captain', issuerJp: 'バランガイ長事務所', cols: '2',
     body: [
@@ -3668,7 +3668,7 @@ var CUSTOM_PRESETS = {
     ].join('\n')
   },
   'nbi': {
-    label: 'NBI Clearance',
+    group: 'Other Certificates & Documents', label: 'NBI Clearance',
     titleEn: 'NBI CLEARANCE', titleJp: 'NBI\uff08\u56fd\u5bb6\u635c\u67fb\u5c40\uff09\u8a3c\u660e\u66f8',
     issuerEn: 'National Bureau of Investigation', issuerJp: '\u30d5\u30a3\u30ea\u30d4\u30f3\u56fd\u5bb6\u635c\u67fb\u5c40\uff08NBI\uff09', cols: '2',
     body: [
@@ -3701,7 +3701,7 @@ var CUSTOM_PRESETS = {
     ].join('\n')
   },
   'police': {
-    label: 'Police Clearance',
+    group: 'Other Certificates & Documents', label: 'Police Clearance',
     titleEn: 'POLICE CLEARANCE', titleJp: '\u8b66\u5bdf\u8a3c\u660e\u66f8',
     issuerEn: 'Philippine National Police', issuerJp: '\u30d5\u30a3\u30ea\u30d4\u30f3\u56fd\u5bb6\u8b66\u5bdf\uff08PNP\uff09', cols: '2',
     body: [
@@ -3735,7 +3735,7 @@ var CUSTOM_PRESETS = {
     ].join('\n')
   },
   'residency': {
-    label: 'Certificate of Residency',
+    group: 'Other Certificates & Documents', label: 'Certificate of Residency',
     titleEn: 'CERTIFICATE OF RESIDENCY', titleJp: '\u5c45\u4f4f\u8a3c\u660e\u66f8',
     issuerEn: 'Office of the Barangay Captain', issuerJp: '\u30d0\u30e9\u30f3\u30ac\u30a4\u9577\u4e8b\u52d9\u6240', cols: '2',
     body: [
@@ -3768,7 +3768,7 @@ var CUSTOM_PRESETS = {
     ].join('\n')
   },
   'medical': {
-    label: 'Medical Certificate',
+    group: 'Other Certificates & Documents', label: 'Medical Certificate',
     titleEn: 'MEDICAL CERTIFICATE', titleJp: '\u5065\u5eb7\u8a3a\u65ad\u66f8',
     issuerEn: '', issuerJp: '', cols: '2',
     body: [
@@ -3806,7 +3806,7 @@ var CUSTOM_PRESETS = {
     ].join('\n')
   },
   'tor': {
-    label: 'Transcript of Records (TOR)',
+    group: 'Other Certificates & Documents', label: 'Transcript of Records (TOR)',
     titleEn: 'TRANSCRIPT OF RECORDS', titleJp: '\u6210\u7e3e\u8a3c\u660e\u66f8',
     issuerEn: '', issuerJp: '', cols: '1',
     body: [
@@ -3843,7 +3843,7 @@ var CUSTOM_PRESETS = {
     ].join('\n')
   },
   'diploma': {
-    label: 'Diploma / Certificate of Graduation',
+    group: 'Other Certificates & Documents', label: 'Diploma / Certificate of Graduation',
     titleEn: 'DIPLOMA', titleJp: '\u5352\u696d\u8a3c\u66f8',
     issuerEn: '', issuerJp: '', cols: '1',
     body: [
@@ -3871,7 +3871,7 @@ var CUSTOM_PRESETS = {
     ].join('\n')
   },
   'permit': {
-    label: "Business / Mayor's Permit",
+    group: 'Other Certificates & Documents', label: "Business / Mayor's Permit",
     titleEn: "MAYOR'S PERMIT (BUSINESS PERMIT)", titleJp: '\u55b6\u696d\u8a31\u53ef\u8a3c\uff08\u5e02\u9577\u8a31\u53ef\uff09',
     issuerEn: 'Office of the City Mayor', issuerJp: '\u5e02\u9577\u4e8b\u52d9\u6240', cols: '2',
     body: [
@@ -3903,7 +3903,7 @@ var CUSTOM_PRESETS = {
     ].join('\n')
   },
   'affidavit': {
-    label: 'Affidavit of Support / Guarantee',
+    group: 'Other Certificates & Documents', label: 'Affidavit of Support / Guarantee',
     titleEn: 'AFFIDAVIT OF SUPPORT AND GUARANTEE', titleJp: '\u8eab\u5143\u4fdd\u8a3c\u66f8',
     issuerEn: '', issuerJp: '', cols: '2',
     body: [
@@ -3945,7 +3945,7 @@ var CUSTOM_PRESETS = {
     ].join('\n')
   },
   'license': {
-    label: "Driver's License",
+    group: 'Other Certificates & Documents', label: "Driver's License",
     titleEn: "DRIVER'S LICENSE", titleJp: '\u904b\u8ee2\u514d\u8a31\u8a3c',
     issuerEn: 'Land Transportation Office', issuerJp: '\u9678\u904b\u5c40\uff08LTO\uff09', cols: '2',
     body: [
@@ -3975,7 +3975,7 @@ var CUSTOM_PRESETS = {
     ].join('\n')
   },
   'landtitle': {
-    label: 'Land Title (TCT / OCT)',
+    group: 'Other Certificates & Documents', label: 'Land Title (TCT / OCT)',
     titleEn: 'TRANSFER CERTIFICATE OF TITLE', titleJp: '\u571f\u5730\u6a29\u5229\u79fb\u8ee2\u8a3c\u66f8',
     issuerEn: 'Registry of Deeds', issuerJp: '\u767b\u8a18\u6240', cols: '1',
     body: [
@@ -4008,16 +4008,503 @@ var CUSTOM_PRESETS = {
       '',
       '> \u3014\u539f\u672c\u306b\u306f\u767b\u8a18\u5b98\u306e\u7f72\u540d\u304a\u3088\u3073\u767b\u8a18\u6240\u306e\u516c\u5370\u304c\u4ed8\u3055\u308c\u3066\u3044\u308b\u3002\u3015'
     ].join('\n')
+  },
+  // ══ PSA CIVIL REGISTRY ═══════════════════════════════════════════
+  'birth': {
+    group: 'PSA Civil Registry', label: 'Birth Certificate (custom layout)',
+    titleEn: 'CERTIFICATE OF LIVE BIRTH', titleJp: '出生証明書',
+    issuerEn: 'Philippine Statistics Authority (PSA)', issuerJp: 'フィリピン統計局（PSA）', cols: '2',
+    body: [
+      '## A.\u3000子の情報 / CHILD INFORMATION',
+      '氏名 / Child Full Name |  | ',
+      '生年月日 / Date of Birth |  | ',
+      '出生地 / Place of Birth |  | ',
+      '性別 / Sex |  | ',
+      '出生順位 / Birth Order |  | ',
+      '出生形態 / Type of Birth |  | ',
+      '体重 / Birth Weight |  | ',
+      '立会者 / Attendant at Birth |  | ',
+      '',
+      '## B.\u3000母の情報 / MOTHER INFORMATION',
+      '母の旧姓氏名 / Mother Maiden Name |  | ',
+      '国籍 / Citizenship |  | ',
+      '宗教 / Religion |  | ',
+      '年齢 / Age at Time of Birth |  | ',
+      '出産回数 / Total Children Born |  | ',
+      '職業 / Occupation |  | ',
+      '住所 / Residence |  | ',
+      '',
+      '## C.\u3000父の情報 / FATHER INFORMATION',
+      '父の氏名 / Father Full Name |  | ',
+      '国籍 / Citizenship |  | ',
+      '宗教 / Religion |  | ',
+      '年齢 / Age at Time of Birth |  | ',
+      '職業 / Occupation |  | ',
+      '',
+      '## D.\u3000婚姻情報 / MARRIAGE OF PARENTS',
+      '婚姻日 / Date of Marriage |  | ',
+      '婚姻地 / Place of Marriage |  | ',
+      '',
+      '## E.\u3000登記情報 / REGISTRY INFORMATION',
+      '登録番号 / Registry No. |  | ',
+      '登録日 / Date of Registration |  | ',
+      '備考・注記 / Remarks / Annotation |  | ',
+      '',
+      '> 〔原本にはPSAの security paper（SECPA）、バーコードおよび市民登録官の署名が付されている。〕'
+    ].join('\n')
+  },
+  'marriage': {
+    group: 'PSA Civil Registry', label: 'Marriage Certificate (custom layout)',
+    titleEn: 'CERTIFICATE OF MARRIAGE', titleJp: '婚姻証明書',
+    issuerEn: 'Philippine Statistics Authority (PSA)', issuerJp: 'フィリピン統計局（PSA）', cols: '2',
+    body: [
+      '## A.\u3000夫の情報 / HUSBAND',
+      '氏名 / Full Name |  | ',
+      '生年月日 / Date of Birth |  | ',
+      '出生地 / Place of Birth |  | ',
+      '年齢 / Age |  | ',
+      '国籍 / Citizenship |  | ',
+      '宗教 / Religion |  | ',
+      '婚姻前の身分 / Civil Status |  | ',
+      '住所 / Residence |  | ',
+      '父の氏名 / Father Name |  | ',
+      '母の旧姓 / Mother Maiden Name |  | ',
+      '',
+      '## B.\u3000妻の情報 / WIFE',
+      '氏名 / Full Name |  | ',
+      '生年月日 / Date of Birth |  | ',
+      '出生地 / Place of Birth |  | ',
+      '年齢 / Age |  | ',
+      '国籍 / Citizenship |  | ',
+      '宗教 / Religion |  | ',
+      '婚姻前の身分 / Civil Status |  | ',
+      '住所 / Residence |  | ',
+      '父の氏名 / Father Name |  | ',
+      '母の旧姓 / Mother Maiden Name |  | ',
+      '',
+      '## C.\u3000婚姻情報 / MARRIAGE DETAILS',
+      '婚姻日 / Date of Marriage |  | ',
+      '婚姻地 / Place of Marriage |  | ',
+      '挙式形態 / Type of Ceremony |  | ',
+      '挙式執行者 / Solemnizing Officer |  | ',
+      '証人 / Witnesses |  | ',
+      '',
+      '## D.\u3000登記情報 / REGISTRY INFORMATION',
+      '登録番号 / Registry No. |  | ',
+      '登録日 / Date of Registration |  | ',
+      '備考・注記 / Remarks / Annotation |  | ',
+      '',
+      '> 〔原本にはPSAの security paper（SECPA）、バーコードおよび市民登録官の署名が付されている。〕'
+    ].join('\n')
+  },
+  'death': {
+    group: 'PSA Civil Registry', label: 'Death Certificate (custom layout)',
+    titleEn: 'CERTIFICATE OF DEATH', titleJp: '死亡証明書',
+    issuerEn: 'Philippine Statistics Authority (PSA)', issuerJp: 'フィリピン統計局（PSA）', cols: '2',
+    body: [
+      '## A.\u3000死亡者の情報 / DECEASED',
+      '氏名 / Full Name |  | ',
+      '性別 / Sex |  | ',
+      '生年月日 / Date of Birth |  | ',
+      '出生地 / Place of Birth |  | ',
+      '死亡時年齢 / Age at Death |  | ',
+      '婚姻状況 / Civil Status |  | ',
+      '国籍 / Citizenship |  | ',
+      '宗教 / Religion |  | ',
+      '職業 / Occupation |  | ',
+      '常住地 / Usual Residence |  | ',
+      '',
+      '## B.\u3000死亡情報 / DEATH DETAILS',
+      '死亡日 / Date of Death |  | ',
+      '死亡地 / Place of Death |  | ',
+      '直接死因 / Immediate Cause |  | ',
+      '前提死因 / Antecedent Cause |  | ',
+      '原死因 / Underlying Cause |  | ',
+      '死亡の様態 / Manner of Death |  | ',
+      '',
+      '## C.\u3000両親の情報 / PARENTS',
+      '父の氏名 / Father Name |  | ',
+      '母の旧姓 / Mother Maiden Name |  | ',
+      '',
+      '## D.\u3000遺体の処置 / DISPOSAL',
+      '処置方法 / Corpse Disposal |  | ',
+      '埋葬地 / Place of Burial |  | ',
+      '',
+      '## E.\u3000登記情報 / REGISTRY INFORMATION',
+      '登録番号 / Registry No. |  | ',
+      '登録日 / Date of Registration |  | ',
+      '備考・注記 / Remarks / Annotation |  | ',
+      '',
+      '> 〔原本にはPSAの security paper（SECPA）、バーコードおよび市民登録官の署名が付されている。〕'
+    ].join('\n')
+  },
+  'cenomar': {
+    group: 'PSA Civil Registry', label: 'CENOMAR (custom layout)',
+    titleEn: 'CERTIFICATE OF NO MARRIAGE RECORD', titleJp: '未婚証明書（CENOMAR）',
+    issuerEn: 'Philippine Statistics Authority (PSA)', issuerJp: 'フィリピン統計局（PSA）', cols: '2',
+    body: [
+      '## A.\u3000申請者情報 / APPLICANT',
+      '氏名 / Full Name |  | ',
+      '性別 / Sex |  | ',
+      '生年月日 / Date of Birth |  | ',
+      '出生地 / Place of Birth |  | ',
+      '国籍 / Citizenship |  | ',
+      '父の氏名 / Father Name |  | ',
+      '母の旧姓 / Mother Maiden Name |  | ',
+      '',
+      '## B.\u3000証明事項 / CERTIFICATION',
+      '照会範囲 / Search Coverage |  | ',
+      '> 本機関の全国婚姻記録索引を照会した結果、上記の者の婚姻記録は存在しないことを証明する。',
+      '証明目的 / Purpose |  | ',
+      '',
+      '## C.\u3000発行情報 / ISSUANCE',
+      '発行日 / Date of Issuance |  | ',
+      '参照番号 / Reference No. |  | ',
+      '発行担当官 / Issued By |  | ',
+      '',
+      '> 〔原本にはPSAの security paper（SECPA）、バーコードおよび発行担当官の署名が付されている。〕'
+    ].join('\n')
+  },
+  'advisory': {
+    group: 'PSA Civil Registry', label: 'Advisory on Marriages (custom layout)',
+    titleEn: 'ADVISORY ON MARRIAGES', titleJp: '婚姻記録照会書',
+    issuerEn: 'Philippine Statistics Authority (PSA)', issuerJp: 'フィリピン統計局（PSA）', cols: '2',
+    body: [
+      '## A.\u3000対象者情報 / SUBJECT',
+      '氏名 / Full Name |  | ',
+      '性別 / Sex |  | ',
+      '生年月日 / Date of Birth |  | ',
+      '出生地 / Place of Birth |  | ',
+      '',
+      '## B.\u3000婚姻記録 / MARRIAGE RECORD FOUND',
+      '記録件数 / Number of Marriages |  | ',
+      '配偶者氏名 / Name of Spouse |  | ',
+      '婚姻日 / Date of Marriage |  | ',
+      '婚姻地 / Place of Marriage |  | ',
+      '登録番号 / Registry No. |  | ',
+      '注記 / Annotation |  | ',
+      '',
+      '## C.\u3000発行情報 / ISSUANCE',
+      '照会範囲 / Search Coverage |  | ',
+      '発行日 / Date of Issuance |  | ',
+      '参照番号 / Reference No. |  | ',
+      '発行担当官 / Issued By |  | ',
+      '',
+      '> 〔原本にはPSAの security paper（SECPA）、バーコードおよび発行担当官の署名が付されている。〕'
+    ].join('\n')
+  },
+  'nobirth': {
+    group: 'PSA Civil Registry', label: 'Certificate of No Birth Record (custom layout)',
+    titleEn: 'CERTIFICATE OF NO BIRTH RECORD', titleJp: '出生記録不存在証明書',
+    issuerEn: 'Philippine Statistics Authority (PSA)', issuerJp: 'フィリピン統計局（PSA）', cols: '2',
+    body: [
+      '## A.\u3000対象者情報 / SUBJECT',
+      '氏名 / Full Name |  | ',
+      '生年月日 / Date of Birth |  | ',
+      '出生地 / Place of Birth |  | ',
+      '父の氏名 / Father Name |  | ',
+      '母の旧姓 / Mother Maiden Name |  | ',
+      '',
+      '## B.\u3000証明事項 / CERTIFICATION',
+      '> 本機関の記録を照会した結果、上記の者の出生記録は当機関に存在しないことを証明する。',
+      '照会範囲 / Search Coverage |  | ',
+      '証明目的 / Purpose |  | ',
+      '',
+      '## C.\u3000発行情報 / ISSUANCE',
+      '発行日 / Date of Issuance |  | ',
+      '参照番号 / Reference No. |  | ',
+      '発行担当官 / Issued By |  | ',
+      '',
+      '> 〔原本にはPSAの security paper（SECPA）、バーコードおよび発行担当官の署名が付されている。〕'
+    ].join('\n')
+  },
+  // ══ DFA ══════════════════════════════════════════════════════════
+  'apostille': {
+    group: 'DFA / Authentication', label: 'DFA Apostille Certificate (custom layout)',
+    titleEn: 'APOSTILLE (Convention de La Haye du 5 octobre 1961)', titleJp: 'アポスティーユ認証（1961年ハーグ条約）',
+    issuerEn: 'Department of Foreign Affairs', issuerJp: 'フィリピン外務省（DFA）', cols: '1',
+    body: [
+      '## A.\u3000認証情報 / APOSTILLE DETAILS',
+      '通し番号 / Serial No. (S.N.) |  | ',
+      '1. 国 / Country |  | ',
+      '',
+      '## B.\u3000公文書の表示 / THIS PUBLIC DOCUMENT',
+      '2. 署名者 / Has been signed by |  | ',
+      '3. 資格 / Acting in the capacity of |  | ',
+      '4. 印章 / Bears the seal / stamp of |  | ',
+      '',
+      '## C.\u3000認証事項 / CERTIFIED',
+      '5. 認証地 / At |  | ',
+      '6. 認証日 / The |  | ',
+      '7. 認証機関 / By |  | ',
+      '8. 番号 / No. |  | ',
+      '9. 印章 / Seal / Stamp |  | ',
+      '10. 署名 / Signature |  | ',
+      '',
+      '> 〔原本にはDFAの浮き出し公印、認証担当官の署名およびQRコードが付されている。〕'
+    ].join('\n')
+  },
+  // ══ EMPLOYMENT & FINANCIAL ═══════════════════════════════════════
+  'ph_payslip': {
+    group: 'Employment & Financial', label: 'Philippine Payslip (custom layout)',
+    titleEn: 'PAYSLIP', titleJp: 'フィリピン給与明細書',
+    issuerEn: '', issuerJp: '', cols: '2',
+    body: [
+      '## A.\u3000会社情報 / COMPANY INFORMATION',
+      '会社名 / Company Name |  | ',
+      '所在地 / Address |  | ',
+      '対象期間 / Pay Period |  | ',
+      '支給日 / Pay Date |  | ',
+      '',
+      '## B.\u3000従業員情報 / EMPLOYEE INFORMATION',
+      '氏名 / Employee Name |  | ',
+      '社員番号 / Employee ID |  | ',
+      '部署 / Department |  | ',
+      '役職 / Position |  | ',
+      '',
+      '## C.\u3000支給 / EARNINGS',
+      '基本給 / Basic Pay |  | ',
+      '生活費手当 / Cost of Living Allowance |  | ',
+      '食費手当 / Rice Allowance |  | ',
+      '交通費手当 / Transportation Allowance |  | ',
+      '残業代 / Overtime Pay |  | ',
+      'その他支給 / Other Earnings |  | ',
+      '支給合計 / GROSS PAY |  | ',
+      '',
+      '## D.\u3000控除 / DEDUCTIONS',
+      'SSS（社会保険） / SSS Contribution |  | ',
+      'PhilHealth（医療保険） / PhilHealth |  | ',
+      'Pag-IBIG（住宅積立） / Pag-IBIG |  | ',
+      '源泉所得税 / Withholding Tax |  | ',
+      'その他控除 / Other Deductions |  | ',
+      '控除合計 / TOTAL DEDUCTIONS |  | ',
+      '',
+      '## E.\u3000差引支給額 / NET PAY',
+      '差引支給額 / NET PAY |  | ',
+      '担当者 / Prepared By |  | ',
+      '',
+      '> 〔原本には会社の社印および給与担当者の署名が付されている。〕'
+    ].join('\n')
+  },
+  'jp_payslip': {
+    group: 'Employment & Financial', label: 'Japanese Payslip (custom layout)',
+    titleEn: 'PAYSLIP (JAPAN)', titleJp: '給与明細書',
+    issuerEn: '', issuerJp: '', cols: '2',
+    body: [
+      '## A.\u3000会社情報 / COMPANY INFORMATION',
+      '会社名 / Company Name |  | ',
+      '所在地 / Address |  | ',
+      '対象期間 / Pay Period |  | ',
+      '支給日 / Pay Date |  | ',
+      '',
+      '## B.\u3000従業員情報 / EMPLOYEE INFORMATION',
+      '氏名 / Employee Name |  | ',
+      '社員番号 / Employee No. |  | ',
+      '所属 / Department |  | ',
+      '',
+      '## C.\u3000支給 / EARNINGS',
+      '基本給 / Basic Salary |  | ',
+      '役職手当 / Management Allowance |  | ',
+      '時間外手当 / Overtime Pay |  | ',
+      '通勤手当 / Commuting Allowance |  | ',
+      '住宅手当 / Housing Allowance |  | ',
+      'その他手当 / Other Allowances |  | ',
+      '支給合計 / GROSS PAY |  | ',
+      '',
+      '## D.\u3000控除 / DEDUCTIONS',
+      '健康保険 / Health Insurance |  | ',
+      '厚生年金 / Employees Pension |  | ',
+      '雇用保険 / Employment Insurance |  | ',
+      '所得税 / Income Tax |  | ',
+      '住民税 / Resident Tax |  | ',
+      '控除合計 / TOTAL DEDUCTIONS |  | ',
+      '',
+      '## E.\u3000差引支給額 / NET PAY',
+      '差引支給額 / NET PAY |  | ',
+      '',
+      '> 〔原本には会社の社印が付されている。〕'
+    ].join('\n')
+  },
+  'coe': {
+    group: 'Employment & Financial', label: 'Certificate of Employment (custom layout)',
+    titleEn: 'CERTIFICATE OF EMPLOYMENT', titleJp: '在職証明書',
+    issuerEn: '', issuerJp: '', cols: '2',
+    body: [
+      '## A.\u3000雇用者情報 / EMPLOYER',
+      '会社名 / Company Name |  | ',
+      '所在地 / Company Address |  | ',
+      '電話番号 / Telephone No. |  | ',
+      'TIN番号 / TIN |  | ',
+      '',
+      '## B.\u3000従業員情報 / EMPLOYEE',
+      '氏名 / Employee Name |  | ',
+      '役職 / Position |  | ',
+      '部署 / Department |  | ',
+      '雇用形態 / Employment Status |  | ',
+      '在籍開始日 / Employed Since |  | ',
+      '在籍期間 / Employment Period |  | ',
+      '',
+      '## C.\u3000給与情報 / COMPENSATION',
+      '月額基本給 / Monthly Basic Salary |  | ',
+      '各種手当 / Allowances |  | ',
+      '年収 / Annual Salary |  | ',
+      '',
+      '## D.\u3000証明事項 / CERTIFICATION',
+      '> 上記の者は本証明書発行日現在、当社に在籍していることを証明する。',
+      '証明目的 / Purpose |  | ',
+      '',
+      '## E.\u3000発行情報 / ISSUANCE',
+      '発行日 / Date Issued |  | ',
+      '証明者氏名 / Certified By |  | ',
+      '役職 / Position / Title |  | ',
+      '',
+      '> 〔原本には会社のレターヘッド、社印および証明責任者の署名が付されている。〕'
+    ].join('\n')
+  },
+  'itr': {
+    group: 'Employment & Financial', label: 'ITR / BIR Form 2316 (custom layout)',
+    titleEn: 'BIR FORM 2316 — CERTIFICATE OF COMPENSATION PAYMENT / TAX WITHHELD',
+    titleJp: '給与所得・源泉徴収票（BIR様式2316）',
+    issuerEn: 'Bureau of Internal Revenue', issuerJp: 'フィリピン内国歳入庁（BIR）', cols: '2',
+    body: [
+      '## A.\u3000対象期間 / PERIOD COVERED',
+      '対象期間（自） / From |  | ',
+      '対象期間（至） / To |  | ',
+      '',
+      '## B.\u3000納税者情報 / EMPLOYEE (TAXPAYER)',
+      '氏名 / Employee Name |  | ',
+      'TIN番号 / TIN |  | ',
+      '住所 / Registered Address |  | ',
+      '生年月日 / Date of Birth |  | ',
+      '連絡先 / Contact No. |  | ',
+      '',
+      '## C.\u3000雇用者情報 / EMPLOYER',
+      '会社名 / Employer Name |  | ',
+      'TIN番号 / Employer TIN |  | ',
+      '所在地 / Employer Address |  | ',
+      '',
+      '## D.\u3000所得・控除 / INCOME AND DEDUCTIONS',
+      '基本給総額 / Gross Compensation |  | ',
+      '非課税所得 / Non-Taxable Income |  | ',
+      '13ヶ月給与・賞与 / 13th Month Pay and Other Benefits |  | ',
+      'SSS・医療・住宅控除 / SSS, PhilHealth, Pag-IBIG |  | ',
+      '課税所得 / Taxable Compensation |  | ',
+      '源泉徴収税額 / Tax Withheld |  | ',
+      '納付済税額 / Tax Paid |  | ',
+      '',
+      '## E.\u3000署名 / SIGNATORIES',
+      '雇用者代表者 / Authorized Employer Representative |  | ',
+      '発行日 / Date Issued |  | ',
+      '',
+      '> 〔原本には雇用者代表者および従業員の署名が付されている。〕'
+    ].join('\n')
+  },
+  'bank_cert': {
+    group: 'Employment & Financial', label: 'Bank Certificate (custom layout)',
+    titleEn: 'BANK CERTIFICATE', titleJp: '残高証明書',
+    issuerEn: '', issuerJp: '', cols: '2',
+    body: [
+      '## A.\u3000銀行情報 / BANK INFORMATION',
+      '銀行名 / Bank Name |  | ',
+      '支店名 / Branch |  | ',
+      '所在地 / Address |  | ',
+      '電話番号 / Telephone No. |  | ',
+      '',
+      '## B.\u3000口座情報 / ACCOUNT INFORMATION',
+      '口座名義人 / Account Name |  | ',
+      '口座番号 / Account No. |  | ',
+      '口座種別 / Account Type |  | ',
+      '通貨 / Currency |  | ',
+      '口座開設日 / Account Opened |  | ',
+      '',
+      '## C.\u3000残高 / BALANCE',
+      '残高照会日 / Balance As Of |  | ',
+      '現在残高 / Current Balance |  | ',
+      '平均残高 / Average Daily Balance |  | ',
+      '',
+      '## D.\u3000証明事項 / CERTIFICATION',
+      '> 上記口座は当行に開設されており、上記日付現在の残高は上記のとおりであることを証明する。',
+      '証明目的 / Purpose |  | ',
+      '',
+      '## E.\u3000発行情報 / ISSUANCE',
+      '発行日 / Date Issued |  | ',
+      '証明者氏名 / Certified By |  | ',
+      '役職 / Position / Title |  | ',
+      '',
+      '> 〔原本には銀行のレターヘッド、銀行印および担当者の署名が付されている。〕'
+    ].join('\n')
+  },
+  'bank_stmt': {
+    group: 'Employment & Financial', label: 'Bank Statement (custom layout)',
+    titleEn: 'BANK STATEMENT', titleJp: '銀行口座明細書',
+    issuerEn: '', issuerJp: '', cols: '2',
+    body: [
+      '## A.\u3000銀行・口座情報 / BANK AND ACCOUNT INFORMATION',
+      '銀行名 / Bank Name |  | ',
+      '支店名 / Branch |  | ',
+      '所在地 / Address |  | ',
+      '口座名義人 / Account Name |  | ',
+      '口座番号 / Account No. |  | ',
+      '口座種別 / Account Type |  | ',
+      '通貨 / Currency |  | ',
+      '',
+      '## B.\u3000明細期間 / STATEMENT PERIOD',
+      '期間（自） / Period From |  | ',
+      '期間（至） / Period To |  | ',
+      '',
+      '## C.\u3000残高集計 / BALANCE SUMMARY',
+      '期首残高 / Opening Balance |  | ',
+      '入金合計 / Total Deposits |  | ',
+      '出金合計 / Total Withdrawals |  | ',
+      '期末残高 / Closing Balance |  | ',
+      '平均残高 / Average Daily Balance |  | ',
+      '',
+      '## D.\u3000取引明細 / TRANSACTION DETAILS',
+      '> 取引明細は下記のとおり（日付・摘要・入出金・残高の順）。※件数が多い場合は別紙に分割してください。',
+      '取引 / Transaction |  | ',
+      '取引 / Transaction |  | ',
+      '取引 / Transaction |  | ',
+      '',
+      '## E.\u3000発行情報 / ISSUANCE',
+      '発行日 / Date Issued |  | ',
+      '担当者 / Authorized Officer |  | ',
+      '',
+      '> 〔原本には銀行のレターヘッドおよび銀行印が付されている。〕'
+    ].join('\n')
   }
 };
 
+// Order the dropdown by document family so 24 presets stay navigable.
+var CUS_GROUP_ORDER = [
+  'PSA Civil Registry',
+  'DFA / Authentication',
+  'Employment & Financial',
+  'Other Certificates & Documents'
+];
+
 function cusPopulatePresets() {
   var sel = document.getElementById('cus-preset');
-  if (!sel || sel.options.length > 1) return;   // already built
+  if (!sel || sel.getElementsByTagName('optgroup').length) return;   // already built
+
+  var byGroup = {};
   Object.keys(CUSTOM_PRESETS).forEach(function(k) {
-    var o = document.createElement('option');
-    o.value = k; o.textContent = CUSTOM_PRESETS[k].label;
-    sel.appendChild(o);
+    var g = CUSTOM_PRESETS[k].group || 'Other Certificates & Documents';
+    (byGroup[g] = byGroup[g] || []).push(k);
+  });
+
+  var order = CUS_GROUP_ORDER.slice();
+  Object.keys(byGroup).forEach(function(g) { if (order.indexOf(g) < 0) order.push(g); });
+
+  order.forEach(function(g) {
+    if (!byGroup[g]) return;
+    var grp = document.createElement('optgroup');
+    grp.label = g;
+    byGroup[g].forEach(function(k) {
+      var o = document.createElement('option');
+      o.value = k; o.textContent = CUSTOM_PRESETS[k].label;
+      grp.appendChild(o);
+    });
+    sel.appendChild(grp);
   });
 }
 
