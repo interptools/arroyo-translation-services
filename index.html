@@ -312,6 +312,17 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
           <option value="ITR / BIR Form 2316">ITR / BIR Form 2316 → Japanese</option>
           <option value="Bank Certificate">Bank Certificate → Japanese</option>
           <option value="Bank Statement">Bank Statement → Japanese</option>
+          <option value="Barangay Clearance">Barangay Clearance / Certificate</option>
+          <option value="NBI Clearance">NBI Clearance</option>
+          <option value="Police Clearance">Police Clearance</option>
+          <option value="Certificate of Residency">Certificate of Residency</option>
+          <option value="Medical Certificate">Medical Certificate</option>
+          <option value="Transcript of Records">Transcript of Records (TOR)</option>
+          <option value="Diploma">Diploma / Certificate of Graduation</option>
+          <option value="Business Permit">Business / Mayor's Permit</option>
+          <option value="Affidavit of Support">Affidavit of Support / Guarantee</option>
+          <option value="Driver's License">Driver's License</option>
+          <option value="Land Title">Land Title (TCT / OCT)</option>
         </select>
       </div>
     </div>
@@ -1433,6 +1444,216 @@ const DOC_FIELDS = {
     {id:'bank_issue_date',       label:'Date of issuance',                 ph:'', type:'date'},
     {id:'purpose',               label:'Purpose of translation',           ph:'e.g. Japanese visa application'}
   ]
+,
+  // ══ NON-PSA DOCUMENTS (selected under "Others") ══════════════════
+  // Field sets mirror the Custom Translation presets in admin.html so the
+  // same information is collected here and rendered there.
+  'Barangay Clearance': [
+    {id:'brgy_name', label:'Barangay', ph:'e.g. Pajac'},
+    {id:'brgy_city', label:'City / Municipality', ph:'e.g. Lapu-Lapu City'},
+    {id:'brgy_province', label:'Province', ph:'e.g. Cebu'},
+    {id:'brgy_full_name', label:'Full name on clearance', ph:'e.g. Juan dela Cruz Santos'},
+    {id:'brgy_dob', label:'Date of birth', ph:'', type:'date'},
+    {id:'brgy_age', label:'Age', ph:'e.g. 34', req:false},
+    {id:'brgy_sex', label:'Sex', ph:'', type:'select', opts:['Male','Female'], req:false},
+    {id:'brgy_citizenship', label:'Citizenship', ph:'e.g. Filipino', req:false},
+    {id:'brgy_civil_status', label:'Civil status', ph:'', type:'select', opts:['Single','Married','Widowed','Separated','Annulled'], req:false},
+    {id:'brgy_address', label:'Address', ph:'Full address as written'},
+    {id:'brgy_residency', label:'Length of residency', ph:'e.g. 10 years', req:false},
+    {id:'brgy_purpose', label:'Purpose stated on document', ph:'e.g. Visa application', req:false},
+    {id:'brgy_date_issued', label:'Date issued', ph:'', type:'date'},
+    {id:'brgy_captain', label:'Barangay Captain name', ph:'', req:false},
+    {id:'brgy_ctc', label:'CTC No.', ph:'', req:false},
+    {id:'brgy_or', label:'OR No.', ph:'', req:false}
+  ],
+  'NBI Clearance': [
+    {id:'nbi_full_name', label:'Full name', ph:'e.g. Juan dela Cruz Santos'},
+    {id:'nbi_dob', label:'Date of birth', ph:'', type:'date'},
+    {id:'nbi_pob', label:'Place of birth', ph:'', req:false},
+    {id:'nbi_age', label:'Age', ph:'', req:false},
+    {id:'nbi_sex', label:'Sex', ph:'', type:'select', opts:['Male','Female'], req:false},
+    {id:'nbi_civil_status', label:'Civil status', ph:'', type:'select', opts:['Single','Married','Widowed','Separated','Annulled'], req:false},
+    {id:'nbi_nationality', label:'Nationality', ph:'e.g. Filipino', req:false},
+    {id:'nbi_height', label:'Height', ph:'as printed', req:false},
+    {id:'nbi_weight', label:'Weight', ph:'as printed', req:false},
+    {id:'nbi_address', label:'Address', ph:''},
+    {id:'nbi_remarks', label:'Remarks / result', ph:'e.g. NO CRIMINAL RECORD'},
+    {id:'nbi_purpose', label:'Purpose', ph:'', req:false},
+    {id:'nbi_id_no', label:'NBI ID No.', ph:''},
+    {id:'nbi_ref_no', label:'Reference No.', ph:'', req:false},
+    {id:'nbi_date_issued', label:'Date issued', ph:'', type:'date'},
+    {id:'nbi_valid_until', label:'Valid until', ph:'', type:'date', req:false}
+  ],
+  'Police Clearance': [
+    {id:'pol_full_name', label:'Full name', ph:''},
+    {id:'pol_dob', label:'Date of birth', ph:'', type:'date'},
+    {id:'pol_pob', label:'Place of birth', ph:'', req:false},
+    {id:'pol_age', label:'Age', ph:'', req:false},
+    {id:'pol_sex', label:'Sex', ph:'', type:'select', opts:['Male','Female'], req:false},
+    {id:'pol_civil_status', label:'Civil status', ph:'', type:'select', opts:['Single','Married','Widowed','Separated','Annulled'], req:false},
+    {id:'pol_citizenship', label:'Citizenship', ph:'', req:false},
+    {id:'pol_occupation', label:'Occupation', ph:'', req:false},
+    {id:'pol_address', label:'Address', ph:''},
+    {id:'pol_findings', label:'Findings / result', ph:'e.g. No derogatory record'},
+    {id:'pol_purpose', label:'Purpose', ph:'', req:false},
+    {id:'pol_clearance_no', label:'Clearance No.', ph:'', req:false},
+    {id:'pol_station', label:'Issuing police station', ph:''},
+    {id:'pol_date_issued', label:'Date issued', ph:'', type:'date'},
+    {id:'pol_valid_until', label:'Valid until', ph:'', type:'date', req:false},
+    {id:'pol_chief', label:'Chief of Police', ph:'', req:false}
+  ],
+  'Certificate of Residency': [
+    {id:'res_brgy', label:'Barangay', ph:''},
+    {id:'res_city', label:'City / Municipality', ph:''},
+    {id:'res_province', label:'Province', ph:'', req:false},
+    {id:'res_full_name', label:'Full name', ph:''},
+    {id:'res_dob', label:'Date of birth', ph:'', type:'date'},
+    {id:'res_age', label:'Age', ph:'', req:false},
+    {id:'res_sex', label:'Sex', ph:'', type:'select', opts:['Male','Female'], req:false},
+    {id:'res_civil_status', label:'Civil status', ph:'', type:'select', opts:['Single','Married','Widowed','Separated','Annulled'], req:false},
+    {id:'res_citizenship', label:'Citizenship', ph:'', req:false},
+    {id:'res_address', label:'Present address', ph:''},
+    {id:'res_since', label:'Residing since', ph:'e.g. January 2015'},
+    {id:'res_purpose', label:'Purpose', ph:'', req:false},
+    {id:'res_date_issued', label:'Date issued', ph:'', type:'date'},
+    {id:'res_certified_by', label:'Certified by (name)', ph:'', req:false},
+    {id:'res_position', label:'Position / title', ph:'', req:false}
+  ],
+  'Medical Certificate': [
+    {id:'med_clinic', label:'Clinic / hospital name', ph:''},
+    {id:'med_clinic_addr', label:'Clinic address', ph:'', req:false},
+    {id:'med_clinic_tel', label:'Clinic contact no.', ph:'', req:false},
+    {id:'med_patient', label:'Patient full name', ph:''},
+    {id:'med_dob', label:'Date of birth', ph:'', type:'date'},
+    {id:'med_age', label:'Age', ph:'', req:false},
+    {id:'med_sex', label:'Sex', ph:'', type:'select', opts:['Male','Female'], req:false},
+    {id:'med_address', label:'Patient address', ph:'', req:false},
+    {id:'med_exam_date', label:'Date of examination', ph:'', type:'date'},
+    {id:'med_height', label:'Height', ph:'', req:false},
+    {id:'med_weight', label:'Weight', ph:'', req:false},
+    {id:'med_bp', label:'Blood pressure', ph:'', req:false},
+    {id:'med_vision', label:'Vision', ph:'', req:false},
+    {id:'med_xray', label:'Chest X-ray result', ph:'', req:false},
+    {id:'med_lab', label:'Laboratory results', ph:'', req:false},
+    {id:'med_diagnosis', label:'Diagnosis', ph:'', req:false},
+    {id:'med_findings', label:'Findings / fitness statement', ph:''},
+    {id:'med_physician', label:'Physician name', ph:''},
+    {id:'med_prc', label:'PRC license no.', ph:'', req:false},
+    {id:'med_specialization', label:'Specialization', ph:'', req:false},
+    {id:'med_date_issued', label:'Date issued', ph:'', type:'date'}
+  ],
+  'Transcript of Records': [
+    {id:'tor_school', label:'Name of school', ph:''},
+    {id:'tor_school_addr', label:'School address', ph:'', req:false},
+    {id:'tor_full_name', label:'Student full name', ph:''},
+    {id:'tor_dob', label:'Date of birth', ph:'', type:'date'},
+    {id:'tor_pob', label:'Place of birth', ph:'', req:false},
+    {id:'tor_student_no', label:'Student number', ph:'', req:false},
+    {id:'tor_course', label:'Course / major', ph:''},
+    {id:'tor_attendance', label:'Period of attendance', ph:'e.g. 2014–2018'},
+    {id:'tor_units', label:'Total units earned', ph:'', req:false},
+    {id:'tor_average', label:'General average', ph:'', req:false},
+    {id:'tor_grad_date', label:'Date of graduation', ph:'', type:'date', req:false},
+    {id:'tor_degree', label:'Degree conferred', ph:'', req:false},
+    {id:'tor_registrar', label:'Registrar name', ph:'', req:false},
+    {id:'tor_date_issued', label:'Date issued', ph:'', type:'date', req:false},
+    {id:'tor_remarks', label:'Remarks', ph:'', req:false}
+  ],
+  'Diploma': [
+    {id:'dip_school', label:'Name of school', ph:''},
+    {id:'dip_school_addr', label:'School address', ph:'', req:false},
+    {id:'dip_full_name', label:'Graduate full name', ph:''},
+    {id:'dip_dob', label:'Date of birth', ph:'', type:'date', req:false},
+    {id:'dip_degree', label:'Degree / title conferred', ph:''},
+    {id:'dip_major', label:'Major / specialization', ph:'', req:false},
+    {id:'dip_grad_date', label:'Date of graduation', ph:'', type:'date'},
+    {id:'dip_place', label:'Place conferred', ph:'', req:false},
+    {id:'dip_president', label:'School President', ph:'', req:false},
+    {id:'dip_dean', label:'Dean', ph:'', req:false},
+    {id:'dip_registrar', label:'Registrar', ph:'', req:false}
+  ],
+  'Business Permit': [
+    {id:'bp_business_name', label:'Business name', ph:''},
+    {id:'bp_trade_name', label:'Trade name', ph:'', req:false},
+    {id:'bp_owner', label:'Owner name', ph:''},
+    {id:'bp_org_type', label:'Type of organization', ph:'e.g. Sole Proprietorship', req:false},
+    {id:'bp_address', label:'Business address', ph:''},
+    {id:'bp_line', label:'Line of business', ph:''},
+    {id:'bp_permit_no', label:'Permit No.', ph:''},
+    {id:'bp_permit_year', label:'Permit year', ph:'', req:false},
+    {id:'bp_date_issued', label:'Date issued', ph:'', type:'date'},
+    {id:'bp_valid_until', label:'Valid until', ph:'', type:'date', req:false},
+    {id:'bp_capital', label:'Capitalization', ph:'', req:false},
+    {id:'bp_gross', label:'Gross sales', ph:'', req:false},
+    {id:'bp_tax_paid', label:'Business tax paid', ph:'', req:false},
+    {id:'bp_or', label:'OR No.', ph:'', req:false},
+    {id:'bp_mayor', label:'City / Municipal Mayor', ph:'', req:false},
+    {id:'bp_place', label:'Place issued', ph:'', req:false}
+  ],
+  'Affidavit of Support': [
+    {id:'aos_affiant', label:'Guarantor (affiant) full name', ph:''},
+    {id:'aos_affiant_dob', label:'Guarantor date of birth', ph:'', type:'date', req:false},
+    {id:'aos_affiant_citizen', label:'Guarantor citizenship', ph:'', req:false},
+    {id:'aos_affiant_addr', label:'Guarantor address', ph:''},
+    {id:'aos_affiant_passport', label:'Guarantor passport no.', ph:'', req:false},
+    {id:'aos_occupation', label:'Guarantor occupation', ph:'', req:false},
+    {id:'aos_employer', label:'Guarantor employer', ph:'', req:false},
+    {id:'aos_income', label:'Annual income', ph:'', req:false},
+    {id:'aos_beneficiary', label:'Beneficiary full name', ph:''},
+    {id:'aos_relationship', label:'Relationship to beneficiary', ph:''},
+    {id:'aos_ben_dob', label:'Beneficiary date of birth', ph:'', type:'date', req:false},
+    {id:'aos_ben_passport', label:'Beneficiary passport no.', ph:'', req:false},
+    {id:'aos_travel_purpose', label:'Purpose of travel', ph:'', req:false},
+    {id:'aos_duration', label:'Duration of stay', ph:'', req:false},
+    {id:'aos_addr_japan', label:'Address in Japan', ph:'', req:false},
+    {id:'aos_date_sworn', label:'Date sworn', ph:'', type:'date'},
+    {id:'aos_place', label:'Place of notarization', ph:'', req:false},
+    {id:'aos_notary', label:'Notary Public', ph:'', req:false},
+    {id:'aos_ctc', label:'CTC No.', ph:'', req:false},
+    {id:'aos_doc_no', label:'Doc. No.', ph:'', req:false},
+    {id:'aos_page_no', label:'Page No.', ph:'', req:false},
+    {id:'aos_book_no', label:'Book No.', ph:'', req:false},
+    {id:'aos_series', label:'Series of (year)', ph:'', req:false}
+  ],
+  "Driver's License": [
+    {id:'dl_full_name', label:'Full name', ph:''},
+    {id:'dl_dob', label:'Date of birth', ph:'', type:'date'},
+    {id:'dl_sex', label:'Sex', ph:'', type:'select', opts:['Male','Female'], req:false},
+    {id:'dl_nationality', label:'Nationality', ph:'', req:false},
+    {id:'dl_address', label:'Address', ph:''},
+    {id:'dl_height', label:'Height', ph:'', req:false},
+    {id:'dl_weight', label:'Weight', ph:'', req:false},
+    {id:'dl_blood_type', label:'Blood type', ph:'', req:false},
+    {id:'dl_eyes', label:'Eyes colour', ph:'', req:false},
+    {id:'dl_license_no', label:'License No.', ph:''},
+    {id:'dl_type', label:'License type', ph:'e.g. Non-Professional', req:false},
+    {id:'dl_codes', label:'DL codes', ph:'e.g. A, B', req:false},
+    {id:'dl_conditions', label:'Conditions', ph:'', req:false},
+    {id:'dl_restrictions', label:'Restrictions', ph:'', req:false},
+    {id:'dl_date_issued', label:'Date issued', ph:'', type:'date', req:false},
+    {id:'dl_expiry', label:'Expiration date', ph:'', type:'date'},
+    {id:'dl_agency_code', label:'Agency code', ph:'', req:false}
+  ],
+  'Land Title': [
+    {id:'lt_registry', label:'Registry of Deeds for', ph:'e.g. Province of Cebu'},
+    {id:'lt_title_no', label:'Title No.', ph:''},
+    {id:'lt_prev_title', label:'Previous title no.', ph:'', req:false},
+    {id:'lt_owner', label:'Registered owner', ph:''},
+    {id:'lt_civil_status', label:'Civil status', ph:'', type:'select', opts:['Single','Married','Widowed','Separated','Annulled'], req:false},
+    {id:'lt_spouse', label:'Name of spouse', ph:'', req:false},
+    {id:'lt_citizenship', label:'Citizenship', ph:'', req:false},
+    {id:'lt_address', label:'Owner address', ph:'', req:false},
+    {id:'lt_lot_no', label:'Lot No.', ph:''},
+    {id:'lt_block_no', label:'Block No.', ph:'', req:false},
+    {id:'lt_survey_no', label:'Survey plan no.', ph:'e.g. Psd-072244-000123', req:false},
+    {id:'lt_location', label:'Location of property', ph:''},
+    {id:'lt_area', label:'Area', ph:'e.g. 250 square meters'},
+    {id:'lt_classification', label:'Classification', ph:'e.g. Residential', req:false},
+    {id:'lt_entry_no', label:'Entry No.', ph:'', req:false},
+    {id:'lt_date_registered', label:'Date registered', ph:'', type:'date', req:false},
+    {id:'lt_register_of_deeds', label:'Register of Deeds', ph:'', req:false},
+    {id:'lt_encumbrances', label:'Encumbrances / annotations', ph:'', req:false}
+  ]
 };
 
 // Demo animation
@@ -1615,6 +1836,8 @@ async function onDoc2Upload(input) {
   if (!file) return;
 
   doc2FileData = await toBase64(file);
+  var scanImg2 = await prepImageForScan(file);
+  if (!scanImg2) { alert('Could not read that file. Please try a JPG or PNG photo.'); input.value=''; return; }
   document.getElementById('doc2-ok').textContent = 'Selected: ' + file.name;
   document.getElementById('doc2-ok').style.display = 'block';
 
@@ -1657,35 +1880,13 @@ async function onDoc2Upload(input) {
 
     var prompt2 = 'You are an expert at reading Philippine PSA civil registry documents. ' +
       'This is Page 2 of a PSA Birth Certificate. ' + affDesc +
+      HANDWRITING_RULES +
+      'Affidavits on this page are usually typed onto a form but signed, dated and annotated by hand. ' +
       'Extract ONLY these exact field IDs: ' + fieldIds + '. ' +
       'IMPORTANT: Return ONLY a raw JSON object. No markdown. No backticks. No explanation. ' +
       'Full names as First Middle Last. Dates as YYYY-MM-DD. Use empty string if field not present or unreadable.';
 
-    var res2 = await fetch('https://gemini-proxy.areymar36.workers.dev', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        contents: [{parts: [
-          {text: prompt2},
-          {inline_data: {mime_type: file.type || 'image/jpeg', data: doc2FileData}}
-        ]}],
-        generationConfig: {temperature: 0.1, maxOutputTokens: 1500}
-      })
-    });
-
-    var data2 = await res2.json();
-    if (data2.error) throw new Error(data2.error.message);
-
-    var raw2 = data2.candidates && data2.candidates[0] && data2.candidates[0].content &&
-               data2.candidates[0].content.parts && data2.candidates[0].content.parts[0]
-               ? data2.candidates[0].content.parts[0].text || '' : '';
-    if (typeof raw2 !== 'string') raw2 = JSON.stringify(raw2);
-    raw2 = raw2.replace(/```json/g,'').replace(/```/g,'').trim();
-    var js2 = raw2.indexOf('{'), je2 = raw2.lastIndexOf('}');
-    if (js2 < 0 || je2 < 0) throw new Error('No JSON in AI response');
-    raw2 = raw2.slice(js2, je2 + 1);
-
-    var ex2 = JSON.parse(raw2);
+    var ex2 = await callScanAI(prompt2, scanImg2.data, scanImg2.mime);
     var filled2 = 0;
     Object.keys(ex2).forEach(function(id) {
       var el = document.getElementById(id);
@@ -1751,6 +1952,115 @@ function buildInput(f) {
   return '<input type="' + (f.type || 'text') + '" id="' + f.id + '" placeholder="' + f.ph + '" required>';
 }
 
+// ══ SCAN SUPPORT ═══════════════════════════════════════════════════
+// Prepare an image for OCR. Modern phone cameras produce 4–12MB files;
+// base64 inflates them by ~33%, which is slow on mobile data and can be
+// rejected outright. Downscaling the long edge to 2200px still gives about
+// 185 DPI on an A4 sheet — well above what handwriting needs — and cuts the
+// payload dramatically. HEIC/HEIF from iPhones cannot always be decoded by
+// canvas, so on any failure we fall back to sending the original bytes.
+var SCAN_MAX_EDGE = 2200;
+
+function prepImageForScan(file) {
+  return new Promise(function(resolve) {
+    var fallback = function() {
+      toBase64(file).then(function(b64) {
+        resolve({ data: b64, mime: file.type || 'image/jpeg', resized: false });
+      }, function() { resolve(null); });
+    };
+    if (!file.type || file.type.indexOf('image/') !== 0) { fallback(); return; }
+
+    var reader = new FileReader();
+    reader.onerror = fallback;
+    reader.onload = function(e) {
+      var img = new Image();
+      img.onerror = fallback;
+      img.onload = function() {
+        try {
+          var longEdge = Math.max(img.width, img.height);
+          if (longEdge <= SCAN_MAX_EDGE && file.size < 1500000) { fallback(); return; }
+          var ratio  = SCAN_MAX_EDGE / longEdge;
+          var canvas = document.createElement('canvas');
+          canvas.width  = Math.round(img.width * ratio);
+          canvas.height = Math.round(img.height * ratio);
+          var ctx = canvas.getContext('2d');
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          // 0.92 keeps faint pen strokes legible; 0.3 would smear them
+          var out = canvas.toDataURL('image/jpeg', 0.92).split(',')[1];
+          if (!out || out.length < 1000) { fallback(); return; }
+          resolve({ data: out, mime: 'image/jpeg', resized: true });
+        } catch (err) { fallback(); }
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// Rules that materially improve handwritten Philippine civil-registry reads.
+var HANDWRITING_RULES =
+  'HANDWRITING: Much of this document is filled in by hand, often in block capitals, ' +
+  'sometimes in cursive, and it may be faint, smudged, slanted or written over printed guide lines. ' +
+  'Read handwritten entries as carefully as printed ones. ' +
+  'Take care with these common confusions: 0/O, 1/I/l, 2/Z, 5/S, 6/G, 8/B, rn/m, U/V, and a/o in cursive. ' +
+  'Filipino names often contain Ñ, hyphens (e.g. DELA CRUZ-SANTOS), and multi-word surnames ' +
+  '(DELA CRUZ, DE LEON, DELOS SANTOS, SAN JOSE) — keep those as one surname, do not split them. ' +
+  'Transcribe names exactly as written; do not correct spelling and do not translate them. ' +
+  'Tick boxes and X marks: report the option that is marked, not the printed label next to an empty box. ' +
+  'ACCURACY OVER COMPLETENESS: if a value is genuinely unclear, return an empty string for that field ' +
+  'rather than guessing. Never invent or approximate dates, registry numbers or amounts — ' +
+  'a blank field is corrected by the customer, a wrong one is not noticed. ';
+
+// Single place for the vision call: greedy decoding, one retry on a transient
+// failure, and an explicit truncation check so a cut-off reply is not reported
+// to the customer as an unreadable document.
+async function callScanAI(prompt, imgData, imgMime) {
+  var body = JSON.stringify({
+    contents: [{ parts: [
+      { text: prompt },
+      { inline_data: { mime_type: imgMime || 'image/jpeg', data: imgData } }
+    ]}],
+    generationConfig: { temperature: 0, topK: 1, topP: 1, maxOutputTokens: 4096 }
+  });
+
+  var lastErr = null;
+  for (var attempt = 0; attempt < 2; attempt++) {
+    if (attempt) await new Promise(function(r) { setTimeout(r, 1200); });
+    try {
+      var res = await fetch('https://gemini-proxy.areymar36.workers.dev', {
+        method: 'POST', headers: {'Content-Type': 'application/json'}, body: body
+      });
+      if (!res.ok) {
+        lastErr = new Error('Server returned ' + res.status);
+        if (res.status === 429 || res.status >= 500) continue;   // worth retrying
+        throw lastErr;
+      }
+      var data = await res.json();
+      if (data.error) throw new Error(data.error.message);
+
+      var cand = data.candidates && data.candidates[0];
+      if (!cand) throw new Error('No response from the AI');
+      if (cand.finishReason && cand.finishReason !== 'STOP') {
+        throw new Error(cand.finishReason === 'MAX_TOKENS'
+          ? 'The reply was cut short before it finished'
+          : 'The AI stopped early (' + cand.finishReason + ')');
+      }
+      var raw = cand.content && cand.content.parts && cand.content.parts[0]
+                ? cand.content.parts[0].text : '';
+      if (typeof raw !== 'string') raw = JSON.stringify(raw);
+      raw = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
+      var a = raw.indexOf('{'), b = raw.lastIndexOf('}');
+      if (a < 0 || b < 0) throw new Error('The AI did not return readable data');
+      return JSON.parse(raw.slice(a, b + 1));
+    } catch (e) {
+      lastErr = e;
+      if (/cut short|stopped early|readable data|JSON/i.test(e.message)) break;
+    }
+  }
+  throw lastErr || new Error('Scan failed');
+}
+
 function toBase64(file) {
   return new Promise(function(resolve, reject) {
     var reader = new FileReader();
@@ -1791,6 +2101,17 @@ async function onDocUpload(input) {
   document.getElementById('doc-ok').textContent = 'Selected: ' + file.name;
   document.getElementById('doc-ok').style.display = 'block';
 
+  // Downscaled copy for OCR only — the original is what gets stored/sent on.
+  var scanImg = await prepImageForScan(file);
+  if (!scanImg) {
+    document.getElementById('scan-status').style.cssText = 'display:flex;background:#fffbeb;border:1px solid #fde68a;color:#92400e;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12px;gap:8px';
+    document.getElementById('scan-status').innerHTML = 'Could not read that file. Please try a JPG or PNG photo, or fill in the fields below.';
+    document.getElementById('details-section').style.display = 'block';
+    document.getElementById('details-fields').innerHTML = buildFields(effectiveDoctype);
+    setStep(3);
+    return;
+  }
+
   var detailsSection = document.getElementById('details-section');
   var detailsFields = document.getElementById('details-fields');
   detailsSection.style.display = 'block';
@@ -1817,50 +2138,31 @@ async function onDocUpload(input) {
       'Bank Certificate': 'This is a Philippine Bank Certificate (Certificate of Deposit/Balance). Read bank letterhead for: bank name, branch name, full address, telephone number. Read body for: account holder full name (First Middle Last), account number (may be partially masked — read as shown), account type (Savings/Checking/Time Deposit), currency (PHP/USD), account opening date (YYYY-MM-DD). Read balance section for: current balance amount with currency, balance as of date (YYYY-MM-DD), average daily balance (ADB) if stated with period covered. Read certification block for: bank officer name, position/title, date of issuance (YYYY-MM-DD). Note stated purpose.',
       'Bank Statement': 'This is a Philippine Bank Statement. Read bank header for: bank name, branch, address, account holder name, account number, account type, currency. Read statement period: from date (YYYY-MM-DD) to date (YYYY-MM-DD). Read balance summary: opening balance, closing balance, average daily balance (ADB) with period, total credits/deposits, total debits/withdrawals. Read any remarks or account status notes. Read bank officer name, position, and issuance date (YYYY-MM-DD) if present. Note stated purpose.',
       'Philippine Payslip': 'This is a Philippine company payslip. Read company header: company name, address, telephone, TIN if visible, HR/payroll officer name. Read employee info: name, ID, department, position, pay period. Read earnings section: basic pay, all allowances (COLA, rice, transport, clothing, overtime, holiday, other) with PHP amounts. Read deductions: SSS, PhilHealth, Pag-IBIG, withholding tax, loans, other deductions. Read totals: gross pay, total deductions, net pay (take home). All amounts in PHP.',
-      'Japanese Payslip': 'This is a Japanese payslip (給与明細書). Read company info: 会社名 (company name), 所在地 (address), 電話番号 (phone), 法人番号 if visible, 担当者 (HR officer). Read employee info: 氏名 (name), 社員番号 (ID), 部署 (dept), 役職 (position), 支給月 (pay period). Read 支給 (earnings): 基本給, all 手当 allowances with yen amounts. Read 控除 (deductions): 健康保険, 厚生年金, 雇用保険, 所得税, 住民税, others. Read totals: 支給合計 (gross), 控除合計 (total deductions), 差引支給額 (net pay).'
+      'Japanese Payslip': 'This is a Japanese payslip (給与明細書). Read company info: 会社名 (company name), 所在地 (address), 電話番号 (phone), 法人番号 if visible, 担当者 (HR officer). Read employee info: 氏名 (name), 社員番号 (ID), 部署 (dept), 役職 (position), 支給月 (pay period). Read 支給 (earnings): 基本給, all 手当 allowances with yen amounts. Read 控除 (deductions): 健康保険, 厚生年金, 雇用保険, 所得税, 住民税, others. Read totals: 支給合計 (gross), 控除合計 (total deductions), 差引支給額 (net pay).',
+      'Barangay Clearance': 'This is a Philippine Barangay Clearance. Read the letterhead for barangay name, city/municipality and province. Then the resident full name, date of birth, age, sex, citizenship, civil status, address, length of residency, purpose. At the bottom: date issued, Barangay Captain name and signature, CTC number and OR number. Much of the middle section is handwritten on printed lines.',
+      'NBI Clearance': 'This is a Philippine NBI Clearance. Read full name, date of birth, place of birth, age, sex, civil status, nationality, height, weight, address. Read the REMARKS box exactly (usually NO CRIMINAL RECORD ON FILE). Read NBI ID No., reference/barcode number, date issued and valid until.',
+      'Police Clearance': 'This is a Philippine PNP Police Clearance. Read full name, date of birth, place of birth, age, sex, civil status, citizenship, occupation, address. Read the findings/result line, clearance number, issuing police station, date issued, valid until and the Chief of Police name.',
+      'Certificate of Residency': 'This is a Philippine Certificate of Residency from a barangay. Read barangay, city/municipality, province from the letterhead. Then full name, date of birth, age, sex, civil status, citizenship, present address, residing since date, purpose, date issued, and the name and position of the certifying official.',
+      'Medical Certificate': 'This is a medical certificate. Read the clinic or hospital name, address and contact number from the letterhead. Then patient name, date of birth, age, sex, address. Then date of examination, height, weight, blood pressure, vision, chest X-ray result, laboratory results, diagnosis and findings. At the bottom read the physician name, PRC license number and specialization. Physician handwriting is often difficult — leave unclear values empty.',
+      'Transcript of Records': 'This is a school Transcript of Records. Read school name and address, student full name, date of birth, place of birth, student number, course/major, period of attendance, total units earned, general average, date of graduation, degree conferred, registrar name and date issued. Do NOT try to read the individual subject rows.',
+      'Diploma': 'This is a school diploma or certificate of graduation. Read school name and address, graduate full name, date of birth if shown, the degree or title conferred, major, date of graduation, place conferred, and the signatory names (President, Dean, Registrar). Diploma text is often in ornate or script type.',
+      'Business Permit': "This is a Philippine Mayor's Permit / Business Permit. Read business name, trade name, owner name, type of organization, business address, line of business. Then permit number, permit year, date issued, valid until, capitalization, gross sales, business tax paid, OR number and the Mayor name.",
+      'Affidavit of Support': 'This is an Affidavit of Support and Guarantee. Read the affiant (guarantor) full name, date of birth, citizenship, address, passport number, occupation, employer and annual income. Then the beneficiary full name, relationship, date of birth and passport number. Then purpose of travel, duration of stay and address in Japan if stated. From the notarial block read date sworn, place, Notary Public name, CTC No., Doc. No., Page No., Book No. and Series of year.',
+      "Driver's License": "This is a Philippine LTO driver's license card. Read full name, date of birth, sex, nationality, address, height, weight, blood type, eyes colour. Then license number, license type, DL codes, conditions, restrictions, date issued, expiration date and agency code. Text on the card is small — read carefully.",
+      'Land Title': 'This is a Philippine land title (TCT or OCT) from the Registry of Deeds. Read the Registry of Deeds location, title number and previous title number. Then registered owner name, civil status, name of spouse, citizenship and address. Then lot number, block number, survey plan number (Psd/Pcs/Ccs), location, area and classification. Then entry number, date registered, Register of Deeds name and any encumbrances or annotations. Do NOT attempt the technical description bearings.'
     };
 
     var prompt = 'You are an expert at reading Philippine government documents. ' +
       'This image is a ' + effectiveDoctype + '. Read ALL text very carefully including printed, stamped, and handwritten text. ' +
+      HANDWRITING_RULES +
       'Document reading tips: ' + (tips[effectiveDoctype] || 'Read all visible fields carefully.') + ' ' +
       'Extract ONLY these exact field IDs and their values: ' + fieldIds + '. ' +
       'IMPORTANT: Return ONLY a raw JSON object. No markdown. No backticks. No explanation. No extra text. ' +
       'Example format: {"apo_sn":"26e-0063046","apo_country":"Philippines","apo_date":"2026-07-09"} ' +
       'Rules: Full names as First Middle Last. Dates as YYYY-MM-DD. Use empty string if unreadable.';
 
-    var res = await fetch('https://gemini-proxy.areymar36.workers.dev', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        contents: [{parts: [
-          {text: prompt},
-          {inline_data: {mime_type: file.type || 'image/jpeg', data: docFileData}}
-        ]}],
-        generationConfig: {temperature: 0.1, maxOutputTokens: 1500}
-      })
-    });
+    var extracted = await callScanAI(prompt, scanImg.data, scanImg.mime);
 
-    var data = await res.json();
-    if (data.error) throw new Error(data.error.message);
-
-    var raw = data.candidates && data.candidates[0] && data.candidates[0].content &&
-              data.candidates[0].content.parts && data.candidates[0].content.parts[0]
-              ? data.candidates[0].content.parts[0].text || '' : '';
-
-    // Ensure raw is a string
-    if (typeof raw !== 'string') raw = JSON.stringify(raw);
-    raw = raw.replace(/```json/g,'').replace(/```/g,'').trim();
-    var jsonStart = raw.indexOf('{');
-    var jsonEnd = raw.lastIndexOf('}');
-    if (jsonStart < 0 || jsonEnd < 0) throw new Error('No JSON found in AI response');
-    raw = raw.slice(jsonStart, jsonEnd + 1);
-
-    var extracted;
-    try {
-      extracted = JSON.parse(raw);
-    } catch(pe) {
-      throw new Error('Invalid JSON from AI: ' + raw.slice(0,100));
-    }
     var filled = 0;
     Object.keys(extracted).forEach(function(id) {
       var el = document.getElementById(id);
@@ -1871,16 +2173,10 @@ async function onDocUpload(input) {
     if (filled > 0) {
       status.innerHTML = '✓ AI filled ' + filled + ' fields from your document. Please review and correct if needed.';
     } else {
-      // Show what AI returned to help diagnose
-      var keys = Object.keys(extracted);
-      var preview = keys.length > 0
-        ? 'AI returned ' + keys.length + ' fields but none matched form fields. Keys: ' + keys.slice(0,5).join(', ')
-        : 'AI returned no data. Raw: ' + raw.slice(0,120);
       status.style.cssText = 'display:flex;background:#fffbeb;border:1px solid #fde068;color:#92400e;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12px;gap:8px';
-      status.innerHTML = '⚠ Could not auto-fill fields. ' + preview + '. Please fill in manually below.';
-      console.log('AI raw response:', raw);
-      console.log('Extracted:', extracted);
-      console.log('Field IDs expected:', fieldIds);
+      status.innerHTML = '⚠ We could not read this document automatically. ' +
+        'A clearer, well-lit photo of the whole page often works — or just fill in the fields below yourself.';
+      console.log('Extracted:', extracted, 'expected IDs:', fieldIds);
     }
 
     if (filled > 0) {
@@ -1891,8 +2187,21 @@ async function onDocUpload(input) {
 
   } catch(e) {
     console.error('Scan error:', e.message);
+    var em = e.message || '';
+    var hint;
+    if (/Failed to fetch|NetworkError|network/i.test(em)) {
+      hint = 'We could not reach the scanning service — check your internet connection and re-select the file, or fill in the fields below.';
+    } else if (/429|rate|quota|busy/i.test(em)) {
+      hint = 'The scanning service is busy right now. Please wait a moment and re-select the file, or fill in the fields below.';
+    } else if (/cut short|MAX_TOKENS/i.test(em)) {
+      hint = 'This document has more text than we could read in one pass. Please fill in the fields below.';
+    } else if (/SAFETY|blocked|declined/i.test(em)) {
+      hint = 'The scanning service declined this image. Please fill in the fields below.';
+    } else {
+      hint = 'Could not auto-read the document. A clearer, well-lit photo of the full page usually helps — or fill in the fields below.';
+    }
     status.style.cssText = 'display:flex;background:#fffbeb;border:1px solid #fde68a;color:#92400e;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12px;align-items:center;gap:8px';
-    status.innerHTML = 'Could not auto-read document. Please fill in the fields manually below.';
+    status.innerHTML = hint;
     setStep(3);
   }
 }
@@ -1963,9 +2272,11 @@ function showScanReview(filledCount, doctype) {
   // Instructions
   html += '<div style="background:#fefce8;border:1px solid #fde047;border-radius:10px;padding:12px 16px;font-size:12px;color:#854d0e;margin-bottom:8px">' +
     '<strong>📌 How to proceed:</strong><ul style="margin:6px 0 0 16px;padding:0;line-height:2">' +
-    '<li>Check if the AI read all details correctly from your document</li>' +
+    '<li>Check every value against your document — <strong>handwritten entries are the most likely to be misread</strong></li>' +
+    '<li>Anything shown as <em>⚠ Not filled</em> means the AI was not confident — please type it in yourself</li>' +
+    '<li>Pay extra attention to names, dates and registry numbers</li>' +
     '<li>If everything looks correct → tap <strong>✓ Looks Correct</strong></li>' +
-    '<li>If any detail is wrong → tap <strong>✏ Edit Details</strong> to fix manually</li>' +
+    '<li>If any detail is wrong → tap <strong>✏ Edit Details</strong> to fix it</li>' +
     '</ul></div>';
 
   // Update badge

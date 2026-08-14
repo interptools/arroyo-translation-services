@@ -101,6 +101,10 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
   .edit-save-btn{padding:8px 18px;background:#1a2744;color:#e8c97a;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif}
   .edit-cancel-btn{padding:8px 18px;background:#f0ede8;color:#6b7280;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif}
 .abtn:disabled{opacity:0.5;cursor:not-allowed}
+.vtabs{display:flex;gap:6px;margin:0 0 14px;flex-wrap:wrap}
+.vtab{padding:10px 20px;background:#fff;color:#8a8578;border:1px solid #e5e0d8;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;transition:all .15s}
+.vtab:hover{background:#faf8f0;color:#1a2744}
+.vtab.active{background:#1a2744;color:#e8c97a;border-color:#1a2744}
 .t-out{background:#f8fafc;border:1px solid #e5e0d8;border-radius:8px;padding:12px;font-size:12px;color:#1a2744;white-space:pre-wrap;max-height:200px;overflow-y:auto;display:none;margin-top:10px;line-height:1.6}
 /* ── Inline preview for the Custom Translation panel ── */
 #cus-preview{display:none;background:#faf8f0;border:1.5px solid #c4b5fd;border-radius:6px;padding:0;margin-top:8px;max-height:340px;overflow-y:auto;font-family:'Noto Sans JP',sans-serif}
@@ -168,6 +172,14 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
     </div>
   </header>
 
+
+  <!-- ══ VIEW TABS ══ -->
+  <div class="vtabs">
+    <button class="vtab active" id="vt-subs"   onclick="showView('subs')">📋 Submissions</button>
+    <button class="vtab"        id="vt-custom" onclick="showView('custom')">📝 Custom Translation</button>
+  </div>
+
+<div id="view-subs">
   <div class="stats">
     <div class="stat"><div class="stat-label">Total</div><div class="stat-val" id="s-total">0</div></div>
     <div class="stat"><div class="stat-label">Pending</div><div class="stat-val orange" id="s-pending">0</div></div>
@@ -204,140 +216,42 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
     <div class="empty" id="empty">No submissions found.</div>
   </div>
 </div>
-
-<!-- MODAL -->
-<div class="overlay" id="overlay">
-  <div class="modal">
-    <div class="modal-head">
-      <h3 id="m-title">Submission</h3>
-      <button class="mclose" id="mclose-btn">×</button>
+<!-- ══ CUSTOM TRANSLATION WORKSPACE (own tab) ══ -->
+<div id="view-custom" style="display:none">
+  <div class="table-wrap" style="padding:0">
+    <div class="table-head">
+      <div class="table-title">📝 Custom Translation</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span style="font-size:11px;color:#8a8578">Build a certified translation for any document type</span>
+      </div>
     </div>
-    <div class="modal-body">
-      <div class="modal-grid">
-        <div class="mfield"><label>Name</label><span id="m-name"></span></div>
-        <div class="mfield"><label>Email</label><span id="m-email"></span></div>
-        <div class="mfield"><label>Phone</label><span id="m-phone"></span></div>
-        <div class="mfield"><label>Document</label><span id="m-doc"></span></div>
-        <div class="mfield"><label>Purpose</label><span id="m-purpose"></span></div>
-        <div class="mfield"><label>Date</label><span id="m-date"></span></div>
-        <div class="mfield"><label>Status</label><span id="m-status"></span></div>
-      </div>
 
-      <div class="img-row">
-        <div class="img-box">
-          <div class="img-box-label">PSA Document — Page 1</div>
-          <div id="m-doc-img"></div>
-        </div>
-        <div class="img-box" id="m-doc2-box" style="display:none">
-          <div class="img-box-label" style="color:#c9a84c;font-weight:700">📄 Page 2 — Affidavits</div>
-          <div id="m-doc2-img"></div>
-        </div>
-        <div class="img-box">
-          <div class="img-box-label">Payment Proof</div>
-          <div id="m-proof-img"></div>
-        </div>
-      </div>
-
-      <div class="fields-box">
-        <div class="fields-box-title">Document Fields — Page 1</div>
-        <div class="fields-grid" id="m-fields"></div>
-      </div>
-
-      <!-- Page 2 affidavit fields — shown only when hasPage2 -->
-      <div class="fields-box" id="m-page2-box" style="display:none;border-color:#c9a84c">
-        <div class="fields-box-title" style="color:#c9a84c">Page 2 — Affidavit Fields</div>
-        <div class="fields-grid" id="m-page2-fields"></div>
-      </div>
-
-      <!-- Consent badge — admin only -->
-      <div id="m-consent"></div>
-
-      <div class="action-row">
-        <button class="abtn abtn-approve" id="b-approve" onclick="doApprove()">✓ Approve</button>
-        <button class="abtn abtn-reject" id="b-reject" onclick="doReject()">✕ Reject</button>
-        <button class="abtn abtn-translate" id="b-translate" onclick="doTranslate()">⚡ Translate (AI)</button>
-        <button class="abtn abtn-pdf" id="b-pdf" onclick="doDownloadPDF()">↓ Download PDF</button>
-        <button class="abtn" id="b-correction" onclick="toggleCorrectionPanel()" style="background:#d1fae5;color:#065f46">↩ Add Correction Annotation</button>
-        <button class="abtn" id="b-affidavit" onclick="doGenerateAffidavit()" style="background:#fef3c7;color:#92400e">📜 Generate Affidavit</button>
-        <button class="abtn abtn-email" id="b-email" onclick="doEmail()">✉ Email Customer</button>
-        <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#555;cursor:pointer;margin-left:4px">
-          <input type="checkbox" id="chk-notary" style="width:14px;height:14px;cursor:pointer">
-          Include notarization notice in email
-        </label>
-        <button class="abtn abtn-edit" id="b-edit" onclick="toggleEdit()">✏ Edit Details</button>
-        <button class="abtn" id="b-edit-trans" onclick="toggleTranslationEditor()" style="background:#e0f2fe;color:#0369a1">✏ Edit Translation</button>
-        <button class="abtn" id="b-custom" onclick="toggleCustomPanel()" style="background:#ede9fe;color:#5b21b6">📝 Custom Translation</button>
-        <button class="abtn" id="b-delete" onclick="doDelete()" style="background:#fee2e2;color:#dc2626;margin-left:auto">🗑 Delete</button>
-      </div>
-
-      <div class="t-out" id="t-out"></div>
-
-      <!-- Translation Editor -->
-      <div id="translation-editor" style="display:none;margin-top:10px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <span style="font-size:11px;font-weight:600;color:#1a2744;text-transform:uppercase;letter-spacing:1px">Edit Translation</span>
-          <div style="display:flex;gap:6px">
-            <button onclick="saveTranslation()" style="padding:6px 14px;background:#1a2744;color:#e8c97a;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Save</button>
-            <button onclick="closeTranslationEditor()" style="padding:6px 14px;background:#f0ede8;color:#6b7280;border:none;border-radius:6px;font-size:11px;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>
-          </div>
-        </div>
-        <textarea id="translation-textarea" style="width:100%;height:220px;padding:10px;border:1px solid #e5e0d8;border-radius:8px;font-size:11px;font-family:Noto Sans JP,sans-serif;color:#1a2744;background:#faf8f4;resize:vertical;line-height:1.6"></textarea>
-        <div style="font-size:10px;color:#6b7280;margin-top:4px">Edit the Japanese translation directly. Each line: Japanese label: English value / Japanese value</div>
-      </div>
-
-      <div class="edit-panel" id="edit-panel">
-        <h4>Edit Document Details</h4>
-        <div class="edit-grid" id="edit-fields-grid"></div>
-        <div class="edit-save-row">
-          <button class="edit-save-btn" onclick="saveEdit()">Save Changes</button>
-          <button class="edit-cancel-btn" onclick="toggleEdit()">Cancel</button>
-        </div>
-      </div>
-
-      <!-- CORRECTION ANNOTATION PANEL -->
-      <div id="correction-panel" style="display:none;background:#f0fdf4;border:1.5px solid #86efac;border-radius:8px;padding:14px;margin-top:12px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+    <div style="padding:16px 18px">
+      <!-- Who this is for -->
+      <div style="background:#fff;border:1px solid #e5e0d8;border-radius:8px;padding:12px 14px;margin-bottom:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <div>
-            <div style="font-size:11px;font-weight:700;color:#065f46;text-transform:uppercase;letter-spacing:1px">↩ Correction Annotation (Rotated 90°)</div>
-            <div style="font-size:10px;color:#6b7280;margin-top:2px">Only fills if original document has a rotated correction text on the right margin.</div>
+            <label style="font-size:10px;font-weight:600;color:#8a8578;display:block;margin-bottom:3px">Attach to a submission (optional)</label>
+            <select id="cus-link" onchange="onCustomLinkChange()"
+              style="width:100%;padding:8px 10px;border:1px solid #e5e0d8;border-radius:6px;font-size:11.5px;font-family:Inter,sans-serif">
+              <option value="">— Standalone (not linked to a customer) —</option>
+            </select>
           </div>
-          <button onclick="toggleCorrectionPanel()" style="background:none;border:none;font-size:16px;cursor:pointer;color:#6b7280">×</button>
+          <div>
+            <label style="font-size:10px;font-weight:600;color:#8a8578;display:block;margin-bottom:3px">Customer / subject name</label>
+            <input id="cus-cust-name" placeholder="e.g. Maria Santos"
+              style="width:100%;padding:8px 10px;border:1px solid #e5e0d8;border-radius:6px;font-size:11.5px;font-family:Inter,sans-serif">
+          </div>
         </div>
-
-        <div style="margin-bottom:8px">
-          <label style="font-size:11px;font-weight:600;color:#1a2744;display:block;margin-bottom:4px">Original English Text (copy from document)</label>
-          <textarea id="corr-en" rows="3" placeholder="e.g. PURSUANT TO THE DECISION RENDERED BY CCR LEO ANTHONY R. BRACEROS DATED SEPTEMBER 16, 2025 AND AFFIRMED BY ORG UNDER OCRG NO. 25-2848533, THE CHILD'S DATE OF BIRTH IS HEREBY CORRECTED TO '25 FEBRUARY 16, 2019'."
-            style="width:100%;padding:8px 10px;border:1px solid #bbf7d0;border-radius:6px;font-size:12px;font-family:Inter,sans-serif;background:#fff;color:#1a2744;resize:vertical;line-height:1.5"></textarea>
-        </div>
-
-        <div style="display:flex;gap:8px;margin-bottom:8px">
-          <button onclick="translateCorrection()" id="corr-translate-btn"
-            style="padding:8px 16px;background:#1a2744;color:#e8c97a;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
-            ⚡ Translate to Japanese (AI)
-          </button>
-          <button onclick="clearCorrection()"
-            style="padding:8px 14px;background:#f0ede8;color:#6b7280;border:none;border-radius:6px;font-size:11px;cursor:pointer;font-family:Inter,sans-serif">
-            Clear
-          </button>
-        </div>
-
-        <div style="margin-bottom:10px">
-          <label style="font-size:11px;font-weight:600;color:#1a2744;display:block;margin-bottom:4px">Japanese Translation <span style="font-weight:400;color:#6b7280">(auto-filled by AI, or type manually)</span></label>
-          <textarea id="corr-jp" rows="2" placeholder="例：民事登録局長代行ブラセロス氏（2025年9月16日付決定、OCRG番号25-2848533承認）に基づき、子の出生日付を「2019年2月25日」に訂正する。"
-            style="width:100%;padding:8px 10px;border:1px solid #bbf7d0;border-radius:6px;font-size:12px;font-family:Inter,sans-serif;background:#fff;color:#1a2744;resize:vertical;line-height:1.5"></textarea>
-        </div>
-
-        <div style="display:flex;gap:8px">
-          <button onclick="saveCorrectionAnnotation()"
-            style="padding:8px 18px;background:#16a34a;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
-            ✓ Save &amp; Apply to PDF
-          </button>
-          <div id="corr-status" style="font-size:11px;color:#16a34a;display:flex;align-items:center;gap:4px"></div>
+        <div style="font-size:10.5px;color:#8a8578;margin-top:8px;line-height:1.5">
+          Attaching to a submission saves this translation onto that customer's record, so
+          <b>Send PDF by email</b> works from their row. Standalone is for walk-ins and one-off jobs —
+          nothing is written to the submissions list.
         </div>
       </div>
 
-      <!-- ══ CUSTOM (MANUAL) TRANSLATION PANEL ══ -->
-      <div id="custom-panel" style="display:none;background:#f5f3ff;border:1.5px solid #c4b5fd;border-radius:8px;padding:14px;margin-top:12px">
+      <div id="custom-panel-host" style="background:#f5f3ff;border:1.5px solid #c4b5fd;border-radius:8px;padding:14px">
+
         <div style="font-size:12px;font-weight:700;color:#5b21b6;margin-bottom:4px">📝 Custom Translation — type it yourself</div>
         <div style="font-size:10.5px;color:#6d28d9;margin-bottom:10px;line-height:1.5">
           For any document with no built-in template. Whatever you enter here is used <b>instead of</b> the template,
@@ -456,26 +370,166 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
         </div>
         <div id="cus-preview"></div>
 
-        <div style="display:flex;gap:8px;margin-top:12px;align-items:center;flex-wrap:wrap">
-          <button onclick="saveCustomTranslation()"
-            style="padding:8px 18px;background:#7c3aed;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
-            ✓ Save Custom Translation
-          </button>
-          <button onclick="doDownloadPDF()"
-            style="padding:8px 18px;background:#1a2744;color:#e8c97a;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
-            👁 Open &amp; Print PDF
-          </button>
-          <button onclick="doDownloadCustomFile()"
-            style="padding:8px 18px;background:#0369a1;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
-            ⬇ Save as file
-          </button>
-          <button onclick="clearCustomTranslation()"
-            style="padding:8px 14px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
-            Clear &amp; use template
-          </button>
-          <div id="cus-status" style="font-size:11px;color:#7c3aed;display:flex;align-items:center;gap:4px"></div>
+        <div id="cus-status" style="font-size:11px;font-weight:600;color:#7c3aed;margin-top:10px;min-height:14px"></div>
+      
+      </div>
+
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap">
+        <button onclick="clearCustomWorkspace()"
+          style="padding:9px 16px;background:#fff;color:#dc2626;border:1px solid #fecaca;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
+          🗑 Clear all
+        </button>
+        <button onclick="saveCustomToSubmission()" id="cus-save-btn"
+          style="padding:9px 16px;background:#fff;color:#5b21b6;border:1.5px solid #c4b5fd;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
+          💾 Save to submission
+        </button>
+        <button onclick="customGenerate(false)"
+          style="padding:9px 20px;background:#1a2744;color:#e8c97a;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">
+          👁 Open &amp; Print PDF
+        </button>
+        <button onclick="customGenerate(true)"
+          style="padding:9px 20px;background:#0369a1;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">
+          ⬇ Save as file
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="m-title">Submission</h3>
+      <button class="mclose" id="mclose-btn">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-grid">
+        <div class="mfield"><label>Name</label><span id="m-name"></span></div>
+        <div class="mfield"><label>Email</label><span id="m-email"></span></div>
+        <div class="mfield"><label>Phone</label><span id="m-phone"></span></div>
+        <div class="mfield"><label>Document</label><span id="m-doc"></span></div>
+        <div class="mfield"><label>Purpose</label><span id="m-purpose"></span></div>
+        <div class="mfield"><label>Date</label><span id="m-date"></span></div>
+        <div class="mfield"><label>Status</label><span id="m-status"></span></div>
+      </div>
+
+      <div class="img-row">
+        <div class="img-box">
+          <div class="img-box-label">PSA Document — Page 1</div>
+          <div id="m-doc-img"></div>
+        </div>
+        <div class="img-box" id="m-doc2-box" style="display:none">
+          <div class="img-box-label" style="color:#c9a84c;font-weight:700">📄 Page 2 — Affidavits</div>
+          <div id="m-doc2-img"></div>
+        </div>
+        <div class="img-box">
+          <div class="img-box-label">Payment Proof</div>
+          <div id="m-proof-img"></div>
         </div>
       </div>
+
+      <div class="fields-box">
+        <div class="fields-box-title">Document Fields — Page 1</div>
+        <div class="fields-grid" id="m-fields"></div>
+      </div>
+
+      <!-- Page 2 affidavit fields — shown only when hasPage2 -->
+      <div class="fields-box" id="m-page2-box" style="display:none;border-color:#c9a84c">
+        <div class="fields-box-title" style="color:#c9a84c">Page 2 — Affidavit Fields</div>
+        <div class="fields-grid" id="m-page2-fields"></div>
+      </div>
+
+      <!-- Consent badge — admin only -->
+      <div id="m-consent"></div>
+
+      <div class="action-row">
+        <button class="abtn abtn-approve" id="b-approve" onclick="doApprove()">✓ Approve</button>
+        <button class="abtn abtn-reject" id="b-reject" onclick="doReject()">✕ Reject</button>
+        <button class="abtn abtn-translate" id="b-translate" onclick="doTranslate()">⚡ Translate (AI)</button>
+        <button class="abtn abtn-pdf" id="b-pdf" onclick="doDownloadPDF()">↓ Download PDF</button>
+        <button class="abtn" id="b-correction" onclick="toggleCorrectionPanel()" style="background:#d1fae5;color:#065f46">↩ Add Correction Annotation</button>
+        <button class="abtn" id="b-affidavit" onclick="doGenerateAffidavit()" style="background:#fef3c7;color:#92400e">📜 Generate Affidavit</button>
+        <button class="abtn abtn-email" id="b-email" onclick="doEmail()">✉ Email Customer</button>
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#555;cursor:pointer;margin-left:4px">
+          <input type="checkbox" id="chk-notary" style="width:14px;height:14px;cursor:pointer">
+          Include notarization notice in email
+        </label>
+        <button class="abtn abtn-edit" id="b-edit" onclick="toggleEdit()">✏ Edit Details</button>
+        <button class="abtn" id="b-edit-trans" onclick="toggleTranslationEditor()" style="background:#e0f2fe;color:#0369a1">✏ Edit Translation</button>
+        <button class="abtn" id="b-custom" onclick="openCustomForSubmission()" style="background:#ede9fe;color:#5b21b6">📝 Custom Translation</button>
+        <button class="abtn" id="b-delete" onclick="doDelete()" style="background:#fee2e2;color:#dc2626;margin-left:auto">🗑 Delete</button>
+      </div>
+
+      <div class="t-out" id="t-out"></div>
+
+      <!-- Translation Editor -->
+      <div id="translation-editor" style="display:none;margin-top:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:11px;font-weight:600;color:#1a2744;text-transform:uppercase;letter-spacing:1px">Edit Translation</span>
+          <div style="display:flex;gap:6px">
+            <button onclick="saveTranslation()" style="padding:6px 14px;background:#1a2744;color:#e8c97a;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Save</button>
+            <button onclick="closeTranslationEditor()" style="padding:6px 14px;background:#f0ede8;color:#6b7280;border:none;border-radius:6px;font-size:11px;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>
+          </div>
+        </div>
+        <textarea id="translation-textarea" style="width:100%;height:220px;padding:10px;border:1px solid #e5e0d8;border-radius:8px;font-size:11px;font-family:Noto Sans JP,sans-serif;color:#1a2744;background:#faf8f4;resize:vertical;line-height:1.6"></textarea>
+        <div style="font-size:10px;color:#6b7280;margin-top:4px">Edit the Japanese translation directly. Each line: Japanese label: English value / Japanese value</div>
+      </div>
+
+      <div class="edit-panel" id="edit-panel">
+        <h4>Edit Document Details</h4>
+        <div class="edit-grid" id="edit-fields-grid"></div>
+        <div class="edit-save-row">
+          <button class="edit-save-btn" onclick="saveEdit()">Save Changes</button>
+          <button class="edit-cancel-btn" onclick="toggleEdit()">Cancel</button>
+        </div>
+      </div>
+
+      <!-- CORRECTION ANNOTATION PANEL -->
+      <div id="correction-panel" style="display:none;background:#f0fdf4;border:1.5px solid #86efac;border-radius:8px;padding:14px;margin-top:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#065f46;text-transform:uppercase;letter-spacing:1px">↩ Correction Annotation (Rotated 90°)</div>
+            <div style="font-size:10px;color:#6b7280;margin-top:2px">Only fills if original document has a rotated correction text on the right margin.</div>
+          </div>
+          <button onclick="toggleCorrectionPanel()" style="background:none;border:none;font-size:16px;cursor:pointer;color:#6b7280">×</button>
+        </div>
+
+        <div style="margin-bottom:8px">
+          <label style="font-size:11px;font-weight:600;color:#1a2744;display:block;margin-bottom:4px">Original English Text (copy from document)</label>
+          <textarea id="corr-en" rows="3" placeholder="e.g. PURSUANT TO THE DECISION RENDERED BY CCR LEO ANTHONY R. BRACEROS DATED SEPTEMBER 16, 2025 AND AFFIRMED BY ORG UNDER OCRG NO. 25-2848533, THE CHILD'S DATE OF BIRTH IS HEREBY CORRECTED TO '25 FEBRUARY 16, 2019'."
+            style="width:100%;padding:8px 10px;border:1px solid #bbf7d0;border-radius:6px;font-size:12px;font-family:Inter,sans-serif;background:#fff;color:#1a2744;resize:vertical;line-height:1.5"></textarea>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <button onclick="translateCorrection()" id="corr-translate-btn"
+            style="padding:8px 16px;background:#1a2744;color:#e8c97a;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
+            ⚡ Translate to Japanese (AI)
+          </button>
+          <button onclick="clearCorrection()"
+            style="padding:8px 14px;background:#f0ede8;color:#6b7280;border:none;border-radius:6px;font-size:11px;cursor:pointer;font-family:Inter,sans-serif">
+            Clear
+          </button>
+        </div>
+
+        <div style="margin-bottom:10px">
+          <label style="font-size:11px;font-weight:600;color:#1a2744;display:block;margin-bottom:4px">Japanese Translation <span style="font-weight:400;color:#6b7280">(auto-filled by AI, or type manually)</span></label>
+          <textarea id="corr-jp" rows="2" placeholder="例：民事登録局長代行ブラセロス氏（2025年9月16日付決定、OCRG番号25-2848533承認）に基づき、子の出生日付を「2019年2月25日」に訂正する。"
+            style="width:100%;padding:8px 10px;border:1px solid #bbf7d0;border-radius:6px;font-size:12px;font-family:Inter,sans-serif;background:#fff;color:#1a2744;resize:vertical;line-height:1.5"></textarea>
+        </div>
+
+        <div style="display:flex;gap:8px">
+          <button onclick="saveCorrectionAnnotation()"
+            style="padding:8px 18px;background:#16a34a;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
+            ✓ Save &amp; Apply to PDF
+          </button>
+          <div id="corr-status" style="font-size:11px;color:#16a34a;display:flex;align-items:center;gap:4px"></div>
+        </div>
+      </div>
+
+
     </div>
   </div>
 </div>
@@ -718,19 +772,8 @@ function openModal(id) {
   document.getElementById('corr-jp').value = s.correctionJp || '';
   document.getElementById('corr-status').textContent = s.correctionEn ? '✓ Annotation saved' : '';
 
-  // Reset + pre-fill custom translation panel
-  document.getElementById('custom-panel').style.display = 'none';
-  document.getElementById('cus-title-en').value  = s.customTitleEn  || '';
-  document.getElementById('cus-title-jp').value  = s.customTitleJp  || '';
-  document.getElementById('cus-issuer-en').value = s.customIssuerEn || '';
-  document.getElementById('cus-issuer-jp').value = s.customIssuerJp || '';
-  document.getElementById('cus-docno').value     = s.customDocNo    || '';
-  document.getElementById('cus-country').value   = s.customCountry   || '';
-  document.getElementById('cus-purpose').value   = s.customPurpose   || (s.purpose || '');
-  document.getElementById('cus-cols').value      = s.customCols     || '2';
-  document.getElementById('cus-body').value      = s.customBody     || '';
-  document.getElementById('cus-status').textContent =
-    (s.customBody && s.customBody.trim()) ? '✓ Custom translation active — overrides the template' : '';
+  // The Custom Translation workspace lives in its own tab now, so the modal
+  // only reports whether one exists — it must not overwrite unsaved work there.
   document.getElementById('b-custom').textContent =
     (s.customBody && s.customBody.trim()) ? '📝 Custom Translation ●' : '📝 Custom Translation';
 
@@ -4255,61 +4298,185 @@ function doDownloadCustomFile() {
   doDownloadPDF();
 }
 
-// ── CUSTOM (MANUAL) TRANSLATION ───────────────
-function toggleCustomPanel() {
+// ══ VIEW SWITCHING ═════════════════════════════════════════════════
+var curView = 'subs';
+
+function showView(v) {
+  curView = v;
+  document.getElementById('view-subs').style.display   = (v === 'subs')   ? '' : 'none';
+  document.getElementById('view-custom').style.display = (v === 'custom') ? '' : 'none';
+  document.getElementById('vt-subs').classList.toggle('active',   v === 'subs');
+  document.getElementById('vt-custom').classList.toggle('active', v === 'custom');
+  if (v === 'custom') {
+    cusPopulatePresets();
+    cusRefreshTemplateList();
+    refreshCustomLinkList();
+    document.getElementById('cus-preview').style.display = 'block';
+    document.getElementById('cus-prev-btn').textContent = '👁 Hide preview';
+    cusRenderPreview();
+  }
+  window.scrollTo(0, 0);
+}
+
+// ══ CUSTOM TRANSLATION WORKSPACE ═══════════════════════════════════
+// The workspace is standalone: it can generate a certified translation with no
+// submission behind it, or be attached to one so the e-mail flow still works.
+
+function refreshCustomLinkList() {
+  var sel = document.getElementById('cus-link');
+  if (!sel) return;
+  var keep = sel.value;
+  sel.innerHTML = '<option value="">— Standalone (not linked to a customer) —</option>';
+  subs.slice().sort(function(a, b) { return (b.date || '').localeCompare(a.date || ''); })
+    .forEach(function(s) {
+      var o = document.createElement('option');
+      o.value = s.id;
+      o.textContent = s.id + ' · ' + (s.name || 'unnamed') + ' · ' + (s.doctype || '')
+                    + (s.customBody ? '  ●' : '');
+      sel.appendChild(o);
+    });
+  sel.value = keep;
+}
+
+function onCustomLinkChange() {
+  var id = document.getElementById('cus-link').value;
+  if (!id) {
+    document.getElementById('cus-status').textContent = 'Standalone — nothing will be saved to the submissions list';
+    document.getElementById('cus-status').style.color = '#8a8578';
+    return;
+  }
+  var s = subs.find(function(x) { return x.id === id; });
+  if (!s) return;
+  if (document.getElementById('cus-body').value.trim() &&
+      !confirm('Load the saved custom translation for ' + s.name + '? This replaces what is on screen.')) {
+    return;
+  }
+  loadCustomFromSubmission(s);
+}
+
+function loadCustomFromSubmission(s) {
+  document.getElementById('cus-cust-name').value = s.name || '';
+  document.getElementById('cus-title-en').value  = s.customTitleEn  || (s.doctype || '').toUpperCase();
+  document.getElementById('cus-title-jp').value  = s.customTitleJp  || '';
+  document.getElementById('cus-issuer-en').value = s.customIssuerEn || '';
+  document.getElementById('cus-issuer-jp').value = s.customIssuerJp || '';
+  document.getElementById('cus-docno').value     = s.customDocNo    || '';
+  document.getElementById('cus-country').value   = s.customCountry  || '';
+  document.getElementById('cus-purpose').value   = s.customPurpose  || s.purpose || '';
+  document.getElementById('cus-cols').value      = s.customCols     || '2';
+  document.getElementById('cus-body').value      = s.customBody     || '';
+  var st = document.getElementById('cus-status');
+  st.textContent = s.customBody
+    ? '✓ Loaded saved custom translation for ' + s.name
+    : 'Linked to ' + s.name + ' — nothing saved yet';
+  st.style.color = '#7c3aed';
+  cusRenderPreview();
+}
+
+// Jump from a customer row straight into the workspace, pre-linked
+function openCustomForSubmission() {
   var s = subs.find(function(x) { return x.id === activeId; });
   if (!s) return;
-  var p = document.getElementById('custom-panel');
-  if (p.style.display === 'block') { p.style.display = 'none'; return; }
-
-  // Close the other panels so only one is open at a time
-  document.getElementById('edit-panel').style.display = 'none';
-  document.getElementById('correction-panel').style.display = 'none';
-  closeTranslationEditor();
-
-  cusPopulatePresets();
-  cusRefreshTemplateList();
-
-  // Sensible defaults on first open
-  if (!document.getElementById('cus-title-en').value) {
-    document.getElementById('cus-title-en').value = (s.doctype || '').toUpperCase();
-  }
-  p.style.display = 'block';
-  document.getElementById('cus-preview').style.display = 'block';
-  document.getElementById('cus-prev-btn').textContent = '👁 Hide preview';
-  cusRenderPreview();
+  closeModal();
+  showView('custom');
+  document.getElementById('cus-link').value = s.id;
+  loadCustomFromSubmission(s);
   document.getElementById('cus-body').focus();
 }
 
-async function saveCustomTranslation() {
-  var s = subs.find(function(x) { return x.id === activeId; });
-  if (!s) return;
+function readCustomWorkspace() {
+  return {
+    name:     document.getElementById('cus-cust-name').value.trim(),
+    titleEn:  document.getElementById('cus-title-en').value.trim(),
+    titleJp:  document.getElementById('cus-title-jp').value.trim(),
+    issuerEn: document.getElementById('cus-issuer-en').value.trim(),
+    issuerJp: document.getElementById('cus-issuer-jp').value.trim(),
+    docNo:    document.getElementById('cus-docno').value.trim(),
+    country:  document.getElementById('cus-country').value.trim(),
+    purpose:  document.getElementById('cus-purpose').value.trim(),
+    cols:     document.getElementById('cus-cols').value,
+    body:     document.getElementById('cus-body').value.trim()
+  };
+}
 
-  var body = document.getElementById('cus-body').value.trim();
-  if (!body) { alert('Please enter at least one line in the translation body.'); return; }
+// Generate without needing a submission: build a throwaway record, render, restore.
+function customGenerate(asFile) {
+  var w = readCustomWorkspace();
+  if (!w.body) { alert('Please enter at least one line in the translation body.'); return; }
+  if (!w.titleEn && !w.titleJp) { alert('Please enter a document title (English or Japanese).'); return; }
 
-  s.customTitleEn  = document.getElementById('cus-title-en').value.trim();
-  s.customTitleJp  = document.getElementById('cus-title-jp').value.trim();
-  s.customIssuerEn = document.getElementById('cus-issuer-en').value.trim();
-  s.customIssuerJp = document.getElementById('cus-issuer-jp').value.trim();
-  s.customDocNo    = document.getElementById('cus-docno').value.trim();
-  s.customCountry  = document.getElementById('cus-country').value.trim();
-  s.customPurpose  = document.getElementById('cus-purpose').value.trim();
-  s.customCols     = document.getElementById('cus-cols').value;
-  s.customBody     = body;
+  var linkId = document.getElementById('cus-link').value;
+  var prevSubs = subs, prevActive = activeId;
+  var temp = {
+    id: linkId || ('CUSTOM-' + String(Date.now()).slice(-6)),
+    name: w.name || 'Custom Translation',
+    doctype: 'Others', status: 'translated', fields: {},
+    customTitleEn: w.titleEn, customTitleJp: w.titleJp,
+    customIssuerEn: w.issuerEn, customIssuerJp: w.issuerJp,
+    customDocNo: w.docNo, customCountry: w.country,
+    customPurpose: w.purpose, customCols: w.cols, customBody: w.body
+  };
+  if (linkId) {
+    var real = subs.find(function(x) { return x.id === linkId; });
+    if (real) { temp.correctionEn = real.correctionEn; temp.correctionJp = real.correctionJp; }
+  }
+  subs = [temp]; activeId = temp.id;
+  try {
+    if (asFile) forceDownloadFile = true;
+    doDownloadPDF();
+  } finally {
+    subs = prevSubs; activeId = prevActive;
+  }
+}
+
+async function saveCustomToSubmission() {
+  var linkId = document.getElementById('cus-link').value;
+  if (!linkId) {
+    alert('Choose a submission in "Attach to a submission" first.\n\n' +
+          'Standalone translations are not saved — use "Open & Print PDF" or "Save as file" instead.');
+    return;
+  }
+  var s = subs.find(function(x) { return x.id === linkId; });
+  if (!s) { toast('That submission is no longer available.'); refreshCustomLinkList(); return; }
+
+  var w = readCustomWorkspace();
+  if (!w.body) { alert('Please enter at least one line in the translation body.'); return; }
+
+  s.customTitleEn  = w.titleEn;  s.customTitleJp  = w.titleJp;
+  s.customIssuerEn = w.issuerEn; s.customIssuerJp = w.issuerJp;
+  s.customDocNo    = w.docNo;    s.customCountry  = w.country;
+  s.customPurpose  = w.purpose;  s.customCols     = w.cols;
+  s.customBody     = w.body;
   if (s.status !== 'translated') s.status = 'translated';
 
   await saveSubs();
-  document.getElementById('cus-status').textContent = '✓ Saved — overrides the template';
-  document.getElementById('b-custom').textContent = '📝 Custom Translation ●';
-  render(); updateStats();
+  document.getElementById('cus-status').textContent = '✓ Saved to ' + s.name + ' — ready to e-mail';
+  document.getElementById('cus-status').style.color = '#16a34a';
+  render(); updateStats(); refreshCustomLinkList();
   toast('Custom translation saved for ' + s.name);
 }
 
+function clearCustomWorkspace() {
+  if (!confirm('Clear everything in the workspace? Saved submissions and templates are not affected.')) return;
+  ['cus-cust-name','cus-title-en','cus-title-jp','cus-issuer-en','cus-issuer-jp',
+   'cus-docno','cus-country','cus-purpose','cus-body','cus-tpl-name']
+    .forEach(function(id) { document.getElementById(id).value = ''; });
+  document.getElementById('cus-cols').value = '2';
+  document.getElementById('cus-link').value = '';
+  document.getElementById('cus-preset').value = '';
+  document.getElementById('cus-status').textContent = '';
+  cusRenderPreview();
+  toast('Workspace cleared');
+}
+
+// Remove a saved custom translation from a submission (restores its template)
 async function clearCustomTranslation() {
-  var s = subs.find(function(x) { return x.id === activeId; });
+  var linkId = document.getElementById('cus-link').value;
+  if (!linkId) { alert('Choose the submission whose custom translation you want to remove.'); return; }
+  var s = subs.find(function(x) { return x.id === linkId; });
   if (!s) return;
-  if (!confirm('Remove the custom translation and go back to the built-in template?')) return;
+  if (!confirm('Remove the saved custom translation from ' + s.name +
+               ' and go back to the built-in template?')) return;
 
   delete s.customTitleEn; delete s.customTitleJp;
   delete s.customIssuerEn; delete s.customIssuerJp;
@@ -4317,13 +4484,10 @@ async function clearCustomTranslation() {
   delete s.customCountry; delete s.customPurpose;
 
   await saveSubs();
-  ['cus-title-en','cus-title-jp','cus-issuer-en','cus-issuer-jp','cus-docno','cus-body','cus-country','cus-purpose']
-    .forEach(function(id) { document.getElementById(id).value = ''; });
-  document.getElementById('cus-cols').value = '2';
-  document.getElementById('cus-status').textContent = '';
-  document.getElementById('b-custom').textContent = '📝 Custom Translation';
-  render(); updateStats();
-  toast('Custom translation cleared — using template again');
+  document.getElementById('cus-status').textContent = 'Removed — ' + s.name + ' uses its template again';
+  document.getElementById('cus-status').style.color = '#8a8578';
+  render(); updateStats(); refreshCustomLinkList();
+  toast('Custom translation removed');
 }
 
 function toggleTranslationEditor() {
