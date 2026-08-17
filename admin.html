@@ -621,6 +621,11 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
         </button>
       </div>
 
+      <button onclick="stCleanupTestRecords()" id="st-clean"
+        style="width:100%;padding:10px;background:#fff;color:#b91c1c;border:1.5px solid #fecaca;border-radius:9px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:12px">
+        🧹 Clean up leftover test records
+      </button>
+
       <div id="st-summary" style="display:none;margin-bottom:12px"></div>
       <div id="st-results" style="font-size:12.5px"></div>
 
@@ -6182,7 +6187,53 @@ async function saveTranslation() {
 // internal status/pricing logic, the renderers and the UI wiring.
 // ══════════════════════════════════════════════════════════════════════
 
-var stGroups = [], stBusy = false;
+var stGroups = [], stBusy = false, stLeftover = null;
+
+// Removes any record left behind by an interrupted or rate-limited full test.
+// Matches on the marker name rather than an id, so it also catches records from
+// earlier runs whose id you no longer have.
+async function stCleanupTestRecords() {
+  var btn = document.getElementById('st-clean');
+  btn.disabled = true; btn.textContent = '⏳ Looking…';
+  try {
+    await loadSubs();
+    var junk = subs.filter(function (s) {
+      return /ZZ SELF-TEST/i.test(String(s.name || '')) ||
+             String(s.email || '').indexOf('selftest@example.invalid') === 0 ||
+             (stLeftover && s.id === stLeftover);
+    });
+    if (!junk.length) {
+      await uiAlert('No test records found — nothing to clean up.', { kind: 'ok', title: 'All clear' });
+      return;
+    }
+    if (!await uiConfirm('Found ' + junk.length + ' test record(s):\n\n' +
+        junk.map(function (s) { return s.id + '  ' + (s.name || ''); }).join('\n') +
+        '\n\nDelete them?', { title: 'Remove test records?', okText: 'Delete', danger: true })) return;
+
+    var ids = junk.map(function (s) { return s.id; });
+    var done = false;
+    for (var attempt = 0; attempt < 4 && !done; attempt++) {
+      if (attempt) await stPause(1500 * attempt);
+      try {
+        await loadSubs();
+        subs = subs.filter(function (s) { return ids.indexOf(s.id) === -1; });
+        await saveSubs();
+        await loadSubs();
+        done = !subs.some(function (s) { return ids.indexOf(s.id) > -1; });
+      } catch (e) { /* retry */ }
+    }
+    if (done) {
+      stLeftover = null;
+      toast('Removed ' + ids.length + ' test record(s)', 'ok');
+      render(); updateStats();
+    } else {
+      await uiAlert('JSONBin is still rate limiting. Wait a minute and try again — the records are safe, just not deleted yet.',
+        { kind: 'warn', title: 'Could not delete yet' });
+    }
+  } finally {
+    btn.disabled = false; btn.textContent = '🧹 Clean up leftover test records';
+  }
+}
 
 function stOpen() {
   document.getElementById('st-overlay').style.display = 'block';
@@ -6262,6 +6313,29 @@ function stGroup(name) {
       return same;
     }
   };
+}
+
+// The lifecycle test makes ~15 JSONBin round-trips. Without pacing, JSONBin
+// rate-limits with a 429 whose body has no .request field — which is what made
+// the test throw "cannot read properties of undefined".
+function stPause(ms) { return new Promise(function (r) { setTimeout(r, ms || 700); }); }
+
+// Always returns { ok, status, body }. Never throws, so a rate limit produces a
+// readable failure instead of a TypeError three lines later.
+async function stJson(url, init) {
+  for (var attempt = 0; attempt < 3; attempt++) {
+    if (attempt) await stPause(1200 * attempt);
+    try {
+      var r = await fetch(url, init);
+      var b = null;
+      try { b = await r.json(); } catch (e) { b = null; }
+      if (r.status === 429) continue;              // rate limited — back off
+      return { ok: r.ok, status: r.status, body: b };
+    } catch (e) {
+      if (attempt === 2) return { ok: false, status: 0, body: { error: e.message } };
+    }
+  }
+  return { ok: false, status: 429, body: { error: 'rate limited by JSONBin after 3 attempts' } };
 }
 
 async function stTimed(fn) {
@@ -6574,78 +6648,102 @@ async function runSelfTest(deep) {
     } else {
       var testId = null;
       try {
-        // create via the PUBLIC endpoint, exactly as a customer would
-        var c = await fetch(DATA_API + '/api/requests', {
+        // Every call goes through stJson (paced + retried) and every response
+        // is checked before use, so a rate limit reports itself instead of
+        // throwing a TypeError further down.
+        var c = await stJson(DATA_API + '/api/requests', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ request: {
             name: 'ZZ SELF-TEST', email: 'selftest@example.invalid', phone: '0000',
             doctype: 'Birth Certificate', purpose: 'self-test',
-            // Deliberately try to cheat: claim it is already paid.
+            // Deliberately try to cheat: claim it is already paid for.
             status: 'released', paymentStatus: 'verified', amount: 1
           }})
         });
-        var cb = await c.json();
-        testId = cb.id;
-        g.add('Customer can create a request', c.status === 201 && !!testId ? 'pass' : 'fail',
-          testId ? 'created ' + testId : JSON.stringify(cb));
+        if (!c.ok || !c.body || !c.body.id) {
+          g.add('Customer can create a request', 'fail',
+            'HTTP ' + c.status + ' — ' + ((c.body && c.body.error) || 'no id returned'));
+          throw new Error('cannot continue without a test record');
+        }
+        testId = c.body.id;
+        g.add('Customer can create a request', 'pass', 'created ' + testId);
+        g.eq('Server sets the price, not the client', c.body.amount, 300);
+        await stPause();
 
-        g.eq('Server sets the price, not the client', cb.amount, 300);
+        var st1 = await stJson(DATA_API + '/api/requests/' + testId);
+        if (st1.ok && st1.body && st1.body.request) {
+          g.eq('Forged paid status ignored', st1.body.request.status, 'pending');
+          g.ok('No preview before translation', st1.body.request.preview === null,
+            'a preview was served for an untranslated job');
+        } else {
+          g.add('Status readable after create', 'fail',
+            'HTTP ' + st1.status + ' — ' + ((st1.body && st1.body.error) || 'no request in response'));
+        }
+        await stPause();
 
-        // The forged "already paid" claim must have been ignored.
-        var st1 = await (await fetch(DATA_API + '/api/requests/' + testId)).json();
-        g.eq('Forged paid status ignored', st1.request.status, 'pending');
-        g.ok('No preview served before translation', st1.request.preview === null,
-          'a preview was served for an untranslated job');
-
-        // Customer cannot pay before the work exists.
-        var early = await fetch(DATA_API + '/api/requests/' + testId + '/proof', {
+        var early = await stJson(DATA_API + '/api/requests/' + testId + '/proof', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ proof: { name: 't.jpg', data: 'x'.repeat(200) } })
         });
-        g.add('Payment blocked before translation', early.status === 409 ? 'pass' : 'fail', 'HTTP ' + early.status);
+        g.add('Payment blocked before translation', early.status === 409 ? 'pass' : 'fail',
+          'HTTP ' + early.status + (early.status === 409 ? '' : ' — expected 409'));
+        await stPause();
 
-        // Translate it (as the admin would), then save.
         await loadSubs();
         var rec = subs.find(function (x) { return x.id === testId; });
-        g.ok('New request appears in the dashboard', !!rec, 'record not found after reload');
-        if (rec) {
-          rec.translation = ['child_name|自己診断テスト', 'child_dob|2026年8月17日', 'reg_number|TEST-0001'].join('\n');
-          rec.status = 'translated';
-          rec.amount = amountFor(rec);
-          rec.paymentRequestedAt = new Date().toISOString();
-          await saveSubs();
-          g.add('Admin can save a translation', 'pass', '3 fields written');
+        if (!g.ok('New request appears in the dashboard', !!rec, 'record not found after reload')) {
+          throw new Error('record missing from dashboard');
+        }
 
-          // Full watermarked preview should now be served.
-          var st2 = await (await fetch(DATA_API + '/api/requests/' + testId)).json();
-          var pvw = st2.request.preview;
-          g.ok('Full preview served once translated', !!(pvw && pvw.blocks && pvw.blocks.length === 3),
-            'preview: ' + JSON.stringify(pvw && pvw.total));
+        rec.translation = ['child_name|自己診断テスト', 'child_dob|2026年8月17日', 'reg_number|TEST-0001'].join('\n');
+        rec.status = 'translated';
+        rec.amount = amountFor(rec);
+        rec.paymentRequestedAt = new Date().toISOString();
+        await saveSubs();
+        g.add('Admin can save a translation', 'pass', '3 fields written');
+        await stPause();
+
+        var st2 = await stJson(DATA_API + '/api/requests/' + testId);
+        if (st2.ok && st2.body && st2.body.request) {
+          var pvw = st2.body.request.preview;
+          g.ok('Full preview served once translated',
+            !!(pvw && pvw.blocks && pvw.blocks.length === 3),
+            'preview total: ' + JSON.stringify(pvw && pvw.total));
           g.ok('Preview contains the whole translation',
-            JSON.stringify(pvw).indexOf('自己診断テスト') > -1 && JSON.stringify(pvw).indexOf('TEST-0001') > -1);
-          g.eq('Amount due shown to customer', st2.request.amount, 300);
-          g.ok('Customer email is masked in the public view',
-            !!st2.request.emailMasked && st2.request.emailMasked.indexOf('selftest@') !== 0,
-            'got: ' + st2.request.emailMasked);
-          g.ok('Document fields never sent to the customer', !('fields' in st2.request));
+            JSON.stringify(pvw || {}).indexOf('自己診断テスト') > -1 &&
+            JSON.stringify(pvw || {}).indexOf('TEST-0001') > -1);
+          g.eq('Amount due shown to customer', st2.body.request.amount, 300);
+          g.ok('Customer email is masked',
+            !!st2.body.request.emailMasked && st2.body.request.emailMasked.indexOf('selftest@') !== 0,
+            'got: ' + st2.body.request.emailMasked);
+          g.ok('Document fields never sent to the customer', !('fields' in st2.body.request));
+        } else {
+          g.add('Preview readable after translation', 'fail',
+            'HTTP ' + st2.status + ' — ' + ((st2.body && st2.body.error) || 'no request in response'));
+        }
+        await stPause();
 
-          // Customer pays.
-          var pay = await fetch(DATA_API + '/api/requests/' + testId + '/proof', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ proof: { name: 'selftest.jpg', data: 'y'.repeat(300) } })
-          });
-          var payb = await pay.json();
-          g.add('Customer can upload payment proof', pay.status === 200 ? 'pass' : 'fail', 'HTTP ' + pay.status);
-          g.eq('Status moves to To Verify', payb.request && payb.request.status, 'paid');
+        var pay = await stJson(DATA_API + '/api/requests/' + testId + '/proof', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ proof: { name: 'selftest.jpg', data: 'y'.repeat(300) } })
+        });
+        g.add('Customer can upload payment proof', pay.ok ? 'pass' : 'fail',
+          'HTTP ' + pay.status + (pay.ok ? '' : ' — ' + ((pay.body && pay.body.error) || '')));
+        if (pay.ok && pay.body && pay.body.request) {
+          g.eq('Status moves to To Verify', pay.body.request.status, 'paid');
+        }
+        await stPause();
 
-          // Preview must be withdrawn now the customer is paying.
-          var st3 = await (await fetch(DATA_API + '/api/requests/' + testId)).json();
-          g.ok('Preview withdrawn after payment', st3.request.preview === null);
+        var st3 = await stJson(DATA_API + '/api/requests/' + testId);
+        if (st3.ok && st3.body && st3.body.request) {
+          g.ok('Preview withdrawn after payment', st3.body.request.preview === null);
+        }
+        await stPause();
 
-          // Admin verifies.
-          await loadSubs();
-          var rec2 = subs.find(function (x) { return x.id === testId; });
-          g.ok('Proof visible to admin', !!(rec2 && rec2.proofFile && rec2.proofFile.data));
+        await loadSubs();
+        var rec2 = subs.find(function (x) { return x.id === testId; });
+        if (rec2) {
+          g.ok('Proof visible to admin', !!(rec2.proofFile && rec2.proofFile.data));
           g.eq('Admin sees To Verify', statusLabel(normStatus(rec2)), 'To Verify');
           rec2.status = 'released';
           rec2.paymentStatus = 'verified';
@@ -6653,22 +6751,34 @@ async function runSelfTest(deep) {
           await saveSubs();
           g.eq('Verifying releases the job', statusLabel(normStatus(rec2)), 'Released');
           g.ok('Released job counts as paid', isPaid(rec2));
+        } else {
+          g.add('Proof visible to admin', 'fail', 'record not found on reload');
         }
       } catch (e) {
         g.add('Lifecycle test', 'fail', e.message);
       } finally {
-        // Always clean up, even if an assertion above threw.
+        // Cleanup retries, because a rate limit here leaves a test record in
+        // your live data. If it still cannot delete, say exactly what to do.
         if (testId) {
-          try {
-            await loadSubs();
-            subs = subs.filter(function (x) { return x.id !== testId; });
-            await saveSubs();
-            await loadSubs();
-            var still = subs.some(function (x) { return x.id === testId; });
-            g.add('Test record deleted', still ? 'fail' : 'pass',
-              still ? 'LEFTOVER: delete ' + testId + ' by hand' : testId + ' removed');
-          } catch (e) {
-            g.add('Test record deleted', 'fail', 'cleanup failed — delete ' + testId + ' by hand (' + e.message + ')');
+          var cleaned = false;
+          for (var attempt = 0; attempt < 4 && !cleaned; attempt++) {
+            if (attempt) await stPause(1500 * attempt);
+            try {
+              await loadSubs();
+              subs = subs.filter(function (x) { return x.id !== testId; });
+              await saveSubs();
+              await loadSubs();
+              cleaned = !subs.some(function (x) { return x.id === testId; });
+            } catch (e) { /* retry */ }
+          }
+          if (cleaned) {
+            g.add('Test record deleted', 'pass', testId + ' removed');
+          } else {
+            g.add('Test record deleted', 'fail',
+              'Could not remove ' + testId + ' — JSONBin is rate limiting. ' +
+              'Use the "Clean up test records" button below, or search SELF-TEST and delete it.');
+            stLeftover = testId;
+            stRender();
           }
         }
       }
