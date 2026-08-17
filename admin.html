@@ -22,6 +22,11 @@ body{font-family:Inter,sans-serif;background:#f0ede8;min-height:100vh}
 .login-label{font-size:12px;font-weight:500;color:#1a2744;margin-bottom:5px;display:block}
 .login-input{width:100%;padding:10px 12px;border:1px solid #e5e0d8;border-radius:8px;font-size:14px;font-family:Inter,sans-serif;outline:none;margin-bottom:16px}
 .login-input:focus{border-color:#1a2744}
+.login-field{position:relative;margin-bottom:16px}
+.login-field .login-input{margin-bottom:0;padding-right:42px}
+.eye-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:6px;line-height:0;border-radius:6px;color:#6b7280}
+.eye-btn:hover{background:#f0ede8;color:#1a2744}
+.eye-btn svg{display:block}
 .login-btn{width:100%;padding:12px;background:#1a2744;color:#e8c97a;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif}
 .login-err{font-size:12px;color:#dc2626;margin-top:8px;display:none}
 /* MAIN */
@@ -155,9 +160,19 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
     <div class="login-title">Admin Dashboard</div>
     <div class="login-sub">Sign in to manage translation requests</div>
     <label class="login-label">Password</label>
-    <input class="login-input" type="password" id="pw-input" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="login-field">
+      <input class="login-input" type="password" id="pw-input" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()">
+      <button type="button" class="eye-btn" id="eye-pw" onclick="toggleReveal('pw-input','eye-pw')" title="Show password" aria-label="Show password">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
     <label class="login-label" style="margin-top:12px">API Token</label>
-    <input class="login-input" type="password" id="tok-input" placeholder="Worker ADMIN_TOKEN" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="login-field">
+      <input class="login-input" type="password" id="tok-input" placeholder="Worker ADMIN_TOKEN" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
+      <button type="button" class="eye-btn" id="eye-tok" onclick="toggleReveal('tok-input','eye-tok')" title="Show token" aria-label="Show token">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
     <div style="font-size:11px;color:#6b7280;margin-top:6px;line-height:1.6">Remembered for this browser tab only. This is the <code>ADMIN_TOKEN</code> secret from your data worker.</div>
     <button class="login-btn" onclick="doLogin()" style="margin-top:14px">Sign in</button>
     <div class="login-err" id="login-err">Incorrect password. Please try again.</div>
@@ -577,10 +592,16 @@ let binBytes = 0, binMax = 90000, searchTerm = '';
 // -- AUTH --------------------------------------
 function doLogin() {
   var pw = document.getElementById('pw-input').value;
+  var err = document.getElementById('login-err');
   if (pw !== PASS) {
-    document.getElementById('login-err').style.display = 'block';
+    // Reset the text: the token branch below overwrites it, so a stale
+    // message would otherwise persist and confuse the next attempt.
+    err.innerHTML = 'Incorrect password. Check for a stray space, and note it is case-sensitive.' +
+      '<br><span style="color:#6b7280">Use the 👁 icon to see what you typed.</span>';
+    err.style.display = 'block';
     return;
   }
+  err.style.display = 'none';
   // The password only unlocks this page; the API needs its own token. Kept in
   // sessionStorage so it is gone when the tab closes.
   var tok = document.getElementById('tok-input').value.trim() ||
@@ -592,6 +613,7 @@ function doLogin() {
   }
   ADMIN_TOKEN = tok;
   sessionStorage.setItem('ats_admin_token', tok);
+  sessionStorage.setItem(SESS_KEY, '1');   // survives F5, not tab close
   document.getElementById('login-wrap').style.display = 'none';
   document.getElementById('main-wrap').style.display = 'block';
   loadSubs();
@@ -599,6 +621,7 @@ function doLogin() {
 function doLogout() {
   ADMIN_TOKEN = '';
   sessionStorage.removeItem('ats_admin_token');
+  sessionStorage.removeItem(SESS_KEY);
   document.getElementById('login-wrap').style.display = 'flex';
   document.getElementById('main-wrap').style.display = 'none';
   document.getElementById('pw-input').value = '';
@@ -610,22 +633,57 @@ function apiHeaders(json) {
   return h;
 }
 
-// Restore the token on reload so a refresh does not force a re-paste.
-(function prefillToken() {
-  var go = function() {
-    var saved = sessionStorage.getItem('ats_admin_token');
-    var el = document.getElementById('tok-input');
-    if (saved && el) el.value = saved;
-  };
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go);
-  else go();
+// Show/hide for the password and token fields.
+function toggleReveal(inputId, btnId) {
+  var inp = document.getElementById(inputId);
+  var btn = document.getElementById(btnId);
+  if (!inp || !btn) return;
+  var showing = inp.type === 'text';
+  inp.type = showing ? 'password' : 'text';
+  // Open eye = currently hidden; struck-through eye = currently visible.
+  btn.innerHTML = showing
+    ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'
+    : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+  btn.title = showing ? 'Show' : 'Hide';
+  btn.setAttribute('aria-label', btn.title);
+  inp.focus();
+}
+
+// ── SESSION RESTORE ──────────────────────────────────────────────────
+// A refresh used to dump you back to the login card. Both the password
+// check and the token are remembered for the life of the browser TAB
+// (sessionStorage), so F5 keeps you signed in but closing the tab does not.
+var SESS_KEY = 'ats_admin_session';
+
+function restoreSession() {
+  var tok = sessionStorage.getItem('ats_admin_token');
+  var authed = sessionStorage.getItem(SESS_KEY) === '1';
+  var tokEl = document.getElementById('tok-input');
+  if (tok && tokEl) tokEl.value = tok;
+
+  if (authed && tok) {
+    ADMIN_TOKEN = tok;
+    document.getElementById('login-wrap').style.display = 'none';
+    document.getElementById('main-wrap').style.display = 'block';
+    loadSubs();
+  }
+}
+
+(function initSession() {
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', restoreSession);
+  else restoreSession();
 })();
 
 // -- DATA --------------------------------------
 async function loadSubs() {
   try {
     var r = await fetch(DATA_API + '/api/admin/requests', { headers: apiHeaders(false) });
-    if (r.status === 401) { toast('API token rejected — sign out and re-enter it.'); subs = []; }
+    if (r.status === 401) {
+      toast('API token rejected — please sign in again.');
+      sessionStorage.removeItem(SESS_KEY);
+      sessionStorage.removeItem('ats_admin_token');
+      subs = [];
+    }
     else {
       var d = await r.json();
       if (!r.ok || !d.ok) throw new Error(d.error || ('HTTP ' + r.status));
