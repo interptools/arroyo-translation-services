@@ -131,6 +131,13 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
 #cus-preview .fj{font-size:11px;font-weight:bold;color:#1a2744;line-height:1.3}
 #cus-preview .fe{font-size:8.5px;color:#aaa;font-style:italic;line-height:1.2}
 #cus-preview .cp-empty{color:#dc2626;font-weight:bold}
+#cus-preview .prose{border:1px solid #bbb;border-top:none;background:#faf8f0;padding:6px 9px 7px}
+#cus-preview .prose.s{background:#f0ece0}
+#cus-preview .para{font-size:11px;color:#1a2744;line-height:1.85;text-align:justify;margin:0 0 6px;text-indent:1em}
+#cus-preview .para:last-child{margin-bottom:0}
+#cus-preview .para.ind{margin-left:14px;text-indent:0}
+#cus-preview .para.ctr{text-align:center;text-indent:0}
+#cus-preview .para-en{font-size:9px;color:#666;font-style:italic;line-height:1.6;margin:2px 0 0;text-indent:0}
 .cus-tool{padding:4px 9px;background:#fff;color:#5b21b6;border:1px solid #c4b5fd;border-radius:5px;font-size:10.5px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif}
 .cus-tool:hover{background:#ede9fe}
 .cus-fit{font-size:10px;font-weight:600;padding:3px 8px;border-radius:5px}
@@ -375,11 +382,22 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
           <label style="font-size:10px;font-weight:600;color:#5b21b6">Translation body — one entry per line</label>
           <div style="display:flex;gap:4px;flex-wrap:wrap">
             <button class="cus-tool" onclick="cusInsert('## ')" title="Insert a section header line">＋ Section</button>
-            <button class="cus-tool" onclick="cusInsert('&gt; ')" title="Insert a full-width paragraph line">＋ Paragraph</button>
+            <button class="cus-tool" onclick="cusInsert('&gt; ')" title="Full-width paragraph. Add | English after it for a bilingual paragraph.">＋ Paragraph</button>
+            <button class="cus-tool" onclick="cusInsert('&gt;&gt; ')" title="Indented numbered clause — for affidavit points 1., 2., 3.">＋ Clause</button>
+            <button class="cus-tool" onclick="cusInsert('&gt;c ')" title="Centred line — for signature and date blocks">＋ Centred</button>
             <button class="cus-tool" onclick="cusInsert(' |  | ')" title="Insert the field separators">＋ Field</button>
             <button class="cus-tool" onclick="cusInsertSeal()" title="Note that the original bears a seal, signature or photo">＋ Seal note</button>
             <button class="cus-tool" onclick="cusAutoFormat()" title="Turn pasted 'Label: value' or tab-separated text into field lines">🔤 Format pasted text</button>
           </div>
+        </div>
+        <div style="background:#faf5ff;border:1px solid #e9d5ff;border-radius:6px;padding:8px 10px;margin-bottom:5px;font-size:10px;color:#5b21b6;line-height:1.85">
+          <strong style="display:block;margin-bottom:3px;font-size:9.5px;letter-spacing:.4px;text-transform:uppercase">Line syntax</strong>
+          <code>## Heading</code> section bar &nbsp;·&nbsp;
+          <code>Label | 日本語 | English</code> field &nbsp;·&nbsp;
+          <code>&gt; 日本語 | English</code> paragraph &nbsp;·&nbsp;
+          <code>&gt;&gt; 1.　…</code> indented clause &nbsp;·&nbsp;
+          <code>&gt;c …</code> centred line<br>
+          <span style="color:#7c3aed">Consecutive paragraph lines flow together as one passage — use these for affidavits, jurats and certifications rather than field rows.</span>
         </div>
         <textarea id="cus-body" rows="12" spellcheck="false" oninput="cusRenderPreview()"
           placeholder="## 申請者情報 / APPLICANT INFORMATION&#10;氏名 / Full Name | ヒラハラ・マリア・サントス | HIRAHARA, MARIA SANTOS&#10;生年月日 / Date of Birth | 1990年5月14日 | May 14, 1990&#10;住所 / Address | セブ州ラプラプ市パハク | Pajac, Lapu-Lapu City, Cebu&#10;&#10;## 証明事項 / CERTIFICATION DETAILS&#10;&gt; 上記の者は2015年1月より現在まで当バランガイに居住していることを証明する。&#10;発行日 / Date Issued | 2026年8月10日 | August 10, 2026"
@@ -579,6 +597,271 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
 const PASS   = 'Trainer2026';
 // The JSONBin master key now lives only in the worker. Admin calls carry a
 // bearer token entered at login, so nothing sensitive is baked into this file.
+
+/* ══════════════════════════════════════════════════════════════════════
+   UI DIALOGS — replaces native alert() / confirm() / prompt()
+   Promise-based so calls read the same as the originals:
+       await uiAlert('Saved');
+       if (!await uiConfirm('Delete this?')) return;
+       var v = await uiPrompt('How many days?', '90');
+   Mobile-first: caps at 380px, stacks buttons under 360px, and keeps
+   44px touch targets.
+   ══════════════════════════════════════════════════════════════════════ */
+(function () {
+  if (window.__uiDialogReady) return;
+  window.__uiDialogReady = true;
+
+  var CSS = ''
+    + '.uid-ov{position:fixed;inset:0;background:rgba(16,20,32,.55);backdrop-filter:blur(3px);'
+    +   '-webkit-backdrop-filter:blur(3px);z-index:2147483000;display:flex;align-items:center;'
+    +   'justify-content:center;padding:18px;opacity:0;transition:opacity .16s ease}'
+    + '.uid-ov.in{opacity:1}'
+    + '.uid-box{background:#fff;border-radius:16px;width:100%;max-width:380px;'
+    +   'box-shadow:0 18px 48px rgba(0,0,0,.28);overflow:hidden;transform:translateY(10px) scale(.98);'
+    +   'transition:transform .18s cubic-bezier(.2,.9,.3,1);font-family:Inter,system-ui,sans-serif;'
+    +   'max-height:calc(100vh - 36px);display:flex;flex-direction:column}'
+    + '.uid-ov.in .uid-box{transform:none}'
+    + '.uid-top{padding:22px 22px 0;text-align:center}'
+    + '.uid-ic{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;'
+    +   'justify-content:center;font-size:23px;margin:0 auto 12px}'
+    + '.uid-ic.info{background:#eff6ff;color:#1d4ed8}'
+    + '.uid-ic.ok{background:#f0fdf4;color:#15803d}'
+    + '.uid-ic.warn{background:#fffbeb;color:#b45309}'
+    + '.uid-ic.danger{background:#fef2f2;color:#b91c1c}'
+    + '.uid-ic.ask{background:#f4f1e8;color:#8a6d1f}'
+    + '.uid-t{font-size:16px;font-weight:700;color:#1a2744;line-height:1.35;margin-bottom:6px}'
+    + '.uid-m{font-size:13px;color:#4b5563;line-height:1.7;white-space:pre-wrap;word-break:break-word}'
+    + '.uid-m strong{color:#1a2744}'
+    + '.uid-scroll{overflow-y:auto;padding-bottom:18px;-webkit-overflow-scrolling:touch}'
+    + '.uid-inwrap{padding:14px 22px 0;text-align:left}'
+    + '.uid-lbl{display:block;font-size:11px;font-weight:600;letter-spacing:.4px;'
+    +   'text-transform:uppercase;color:#6b7280;margin-bottom:6px}'
+    + '.uid-in{width:100%;padding:12px 13px;border:1.5px solid #e5e0d8;border-radius:9px;'
+    +   'font-size:15px;font-family:inherit;color:#1a2744;outline:none;box-sizing:border-box}'
+    + '.uid-in:focus{border-color:#1a2744}'
+    + '.uid-hint{font-size:11px;color:#9ca3af;margin-top:6px;line-height:1.6}'
+    + '.uid-acts{display:flex;gap:9px;padding:16px 18px 18px;border-top:1px solid #f0ede8;background:#fcfbf9}'
+    + '.uid-b{flex:1;min-height:44px;padding:12px 14px;border-radius:9px;font-size:14px;'
+    +   'font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:filter .12s}'
+    + '.uid-b:hover{filter:brightness(.95)}'
+    + '.uid-b:active{transform:translateY(1px)}'
+    + '.uid-b.cancel{background:#fff;color:#4b5563;border:1.5px solid #e5e0d8}'
+    + '.uid-b.go{background:#1a2744;color:#e8c97a}'
+    + '.uid-b.go.danger{background:#dc2626;color:#fff}'
+    + '.uid-b.go.ok{background:#16a34a;color:#fff}'
+    + '@media(max-width:360px){.uid-acts{flex-direction:column-reverse}.uid-b{width:100%}}'
+    /* toasts */
+    + '.uid-toasts{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:2147483100;'
+    +   'display:flex;flex-direction:column;gap:8px;width:calc(100% - 32px);max-width:420px;pointer-events:none}'
+    + '.uid-toast{display:flex;align-items:flex-start;gap:10px;background:#1a2744;color:#fff;'
+    +   'border-radius:11px;padding:12px 14px;font-size:13px;line-height:1.6;font-family:Inter,sans-serif;'
+    +   'box-shadow:0 8px 26px rgba(0,0,0,.26);opacity:0;transform:translateY(10px);'
+    +   'transition:opacity .18s,transform .18s;pointer-events:auto;border-left:4px solid #e8c97a}'
+    + '.uid-toast.in{opacity:1;transform:none}'
+    + '.uid-toast.ok{border-left-color:#22c55e}'
+    + '.uid-toast.err{border-left-color:#ef4444}'
+    + '.uid-toast.warn{border-left-color:#f59e0b}'
+    + '.uid-toast-ic{flex-shrink:0;font-size:15px;line-height:1.4}'
+    + '.uid-toast-x{margin-left:auto;flex-shrink:0;background:none;border:none;color:rgba(255,255,255,.5);'
+    +   'font-size:17px;cursor:pointer;padding:0 2px;line-height:1}'
+    + '.uid-toast-x:hover{color:#fff}';
+
+  var st = document.createElement('style');
+  st.textContent = CSS;
+  (document.head || document.documentElement).appendChild(st);
+
+  var ICONS = { info: 'ℹ', ok: '✓', warn: '⚠', danger: '✕', ask: '?' };
+
+  // Text is inserted via textContent, so a customer name or error string can
+  // never inject markup here.
+  function core(opts) {
+    return new Promise(function (resolve) {
+      var kind = opts.kind || 'info';
+      var ov = document.createElement('div');
+      ov.className = 'uid-ov';
+
+      var box = document.createElement('div');
+      box.className = 'uid-box';
+      box.setAttribute('role', 'dialog');
+      box.setAttribute('aria-modal', 'true');
+
+      var scroll = document.createElement('div');
+      scroll.className = 'uid-scroll';
+
+      var top = document.createElement('div');
+      top.className = 'uid-top';
+
+      var ic = document.createElement('div');
+      ic.className = 'uid-ic ' + kind;
+      ic.textContent = opts.icon || ICONS[kind] || ICONS.info;
+      top.appendChild(ic);
+
+      if (opts.title) {
+        var h = document.createElement('div');
+        h.className = 'uid-t';
+        h.textContent = opts.title;
+        top.appendChild(h);
+      }
+      if (opts.message) {
+        var m = document.createElement('div');
+        m.className = 'uid-m';
+        m.textContent = opts.message;
+        top.appendChild(m);
+      }
+      scroll.appendChild(top);
+
+      var input = null;
+      if (opts.input) {
+        var iw = document.createElement('div');
+        iw.className = 'uid-inwrap';
+        if (opts.inputLabel) {
+          var lb = document.createElement('label');
+          lb.className = 'uid-lbl';
+          lb.textContent = opts.inputLabel;
+          iw.appendChild(lb);
+        }
+        input = document.createElement('input');
+        input.className = 'uid-in';
+        input.type = opts.inputType || 'text';
+        input.value = opts.inputValue == null ? '' : String(opts.inputValue);
+        if (opts.placeholder) input.placeholder = opts.placeholder;
+        iw.appendChild(input);
+        if (opts.hint) {
+          var hn = document.createElement('div');
+          hn.className = 'uid-hint';
+          hn.textContent = opts.hint;
+          iw.appendChild(hn);
+        }
+        scroll.appendChild(iw);
+      }
+      box.appendChild(scroll);
+
+      var acts = document.createElement('div');
+      acts.className = 'uid-acts';
+
+      function shut(val) {
+        ov.classList.remove('in');
+        setTimeout(function () {
+          if (ov.parentNode) ov.parentNode.removeChild(ov);
+          document.removeEventListener('keydown', onKey, true);
+          resolve(val);
+        }, 170);
+      }
+
+      if (opts.cancel !== false) {
+        var cb = document.createElement('button');
+        cb.className = 'uid-b cancel';
+        cb.textContent = opts.cancelText || 'Cancel';
+        cb.onclick = function () { shut(opts.input ? null : false); };
+        acts.appendChild(cb);
+      }
+
+      var gb = document.createElement('button');
+      gb.className = 'uid-b go' + (opts.danger ? ' danger' : (kind === 'ok' ? ' ok' : ''));
+      gb.textContent = opts.okText || 'OK';
+      gb.onclick = function () { shut(opts.input ? input.value : true); };
+      acts.appendChild(gb);
+      box.appendChild(acts);
+      ov.appendChild(box);
+
+      // Backdrop click cancels — but never on a destructive prompt, where an
+      // accidental tap outside should not read as a decision.
+      ov.addEventListener('click', function (e) {
+        if (e.target === ov && !opts.danger) shut(opts.input ? null : false);
+      });
+
+      function onKey(e) {
+        if (e.key === 'Escape') { e.preventDefault(); shut(opts.input ? null : false); }
+        else if (e.key === 'Enter' && (opts.input || opts.cancel === false)) {
+          e.preventDefault(); gb.click();
+        }
+      }
+      document.addEventListener('keydown', onKey, true);
+
+      document.body.appendChild(ov);
+      requestAnimationFrame(function () {
+        ov.classList.add('in');
+        if (input) { input.focus(); input.select(); } else gb.focus();
+      });
+    });
+  }
+
+  window.uiAlert = function (message, opts) {
+    opts = opts || {};
+    return core({
+      kind: opts.kind || 'info', title: opts.title || '', message: message,
+      okText: opts.okText || 'Got it', cancel: false
+    });
+  };
+
+  window.uiConfirm = function (message, opts) {
+    opts = opts || {};
+    return core({
+      kind: opts.kind || (opts.danger ? 'danger' : 'warn'),
+      title: opts.title || 'Please confirm', message: message,
+      okText: opts.okText || 'Confirm', cancelText: opts.cancelText || 'Cancel',
+      danger: !!opts.danger
+    });
+  };
+
+  window.uiPrompt = function (message, defaultValue, opts) {
+    opts = opts || {};
+    return core({
+      kind: opts.kind || 'ask', title: opts.title || '', message: message,
+      input: true, inputValue: defaultValue, inputLabel: opts.inputLabel || '',
+      inputType: opts.inputType || 'text', placeholder: opts.placeholder || '',
+      hint: opts.hint || '', okText: opts.okText || 'Continue',
+      cancelText: opts.cancelText || 'Cancel'
+    });
+  };
+
+  // Stacking toasts. Replaces the single-slot toast that used to overwrite
+  // itself when two things happened close together.
+  var TIC = { ok: '✓', err: '✕', warn: '⚠', info: 'ℹ' };
+  window.uiToast = function (msg, kind, ms) {
+    var wrap = document.getElementById('uid-toasts');
+    if (!wrap) {
+      wrap = document.createElement('div');
+      wrap.id = 'uid-toasts';
+      wrap.className = 'uid-toasts';
+      document.body.appendChild(wrap);
+    }
+    kind = kind || 'info';
+    var el = document.createElement('div');
+    el.className = 'uid-toast ' + kind;
+
+    var i = document.createElement('span');
+    i.className = 'uid-toast-ic';
+    i.textContent = TIC[kind] || TIC.info;
+    el.appendChild(i);
+
+    var tx = document.createElement('div');
+    tx.style.flex = '1';
+    tx.textContent = String(msg == null ? '' : msg);
+    el.appendChild(tx);
+
+    var x = document.createElement('button');
+    x.className = 'uid-toast-x';
+    x.textContent = '×';
+    x.setAttribute('aria-label', 'Dismiss');
+    el.appendChild(x);
+
+    var gone = false;
+    function kill() {
+      if (gone) return; gone = true;
+      el.classList.remove('in');
+      setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 200);
+    }
+    x.onclick = kill;
+
+    wrap.appendChild(el);
+    requestAnimationFrame(function () { el.classList.add('in'); });
+    // Errors linger; routine confirmations clear themselves.
+    setTimeout(kill, ms || (kind === 'err' ? 7000 : 4000));
+    return kill;
+  };
+})();
+
 const DATA_API = 'https://ats-data.areymar36.workers.dev';
 var ADMIN_TOKEN = '';
 const WORKER = 'https://gemini-proxy.areymar36.workers.dev';
@@ -1031,11 +1314,18 @@ document.getElementById('overlay').addEventListener('click', function(e) {
 });
 
 // -- ACTIONS -----------------------------------
-function toast(msg) {
-  var t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(function() { t.classList.remove('show'); }, 3000);
+// Kept the same name and signature so every existing call site works, but it
+// now stacks instead of overwriting itself, and can be dismissed. An explicit
+// kind can be passed; otherwise the tone is inferred from the wording.
+function toast(msg, kind) {
+  var s = String(msg == null ? '' : msg);
+  if (!kind) {
+    if (/^\s*(⚠|✕)|fail|error|reject|could not|cannot|unable|refus/i.test(s)) kind = 'err';
+    else if (/cancel|missing|no longer|not confirmed|empty/i.test(s)) kind = 'warn';
+    else if (/^\s*(✓|✅)|sent|saved|verified|deleted|purged|copied|approved|received|promoted/i.test(s)) kind = 'ok';
+    else kind = 'info';
+  }
+  return uiToast(s, kind);
 }
 
 
@@ -1265,8 +1555,9 @@ async function doVerifyPayment() {
     return;
   }
   var amt = amountFor(s);
-  if (!confirm('Confirm you have checked your GCash history and received PHP ' + amt +
-               ' from ' + s.name + '?\n\nThis marks the payment as collected and allows the final PDF to be sent.')) return;
+  if (!await uiConfirm('You are recording PHP ' + amt + ' as received from ' + s.name +
+      '.\n\nThis marks the payment collected and unlocks the final PDF, so check your GCash history first.',
+      {title:'Verify payment of PHP ' + amt, okText:'Yes, payment received', kind:'ok'})) return;
 
   s.status = 'released';
   s.paymentStatus = 'verified';
@@ -1281,7 +1572,9 @@ async function doVerifyPayment() {
 async function doReject() {
   var s = subs.find(function(x) { return x.id === activeId; });
   if (!s) return;
-  if (!confirm('Reject this submission from ' + s.name + '?')) return;
+  if (!await uiConfirm('This marks the request as not proceeding. ' + s.name +
+      ' will owe nothing, and no PDF will be sent.',
+      {title:'Reject this request?', okText:'Reject', danger:true})) return;
   s.status = 'rejected';
   await saveSubs();
   render(); updateStats(); openModal(activeId);
@@ -1291,7 +1584,9 @@ async function doReject() {
 async function doDelete() {
   var s = subs.find(function(x) { return x.id === activeId; });
   if (!s) return;
-  if (!confirm('Permanently delete submission from ' + s.name + '? This cannot be undone.')) return;
+  if (!await uiConfirm('The request from ' + s.name + ' and its uploaded images will be erased. ' +
+      'This cannot be undone.',
+      {title:'Delete permanently?', okText:'Delete forever', danger:true})) return;
   subs = subs.filter(function(x) { return x.id !== activeId; });
   await saveSubs();
   closeModal();
@@ -1553,19 +1848,19 @@ async function doTranslate() {
   if (alreadyTranslated) {
     if (needIds.length) {
       var preview = needIds.slice(0, 8).join(', ') + (needIds.length > 8 ? ', …' : '');
-      if (!confirm(
-        'This submission is already translated.\n\n' +
-        needIds.length + ' of ' + requiredIds.length + ' field(s) still have no Japanese:\n' + preview + '\n\n' +
-        'OK\t= translate ONLY those fields and keep the rest of your wording untouched\n' +
-        'Cancel\t= leave it alone (use "Edit Translation" to fix by hand)'
+      if (!await uiConfirm(
+        needIds.length + ' of ' + requiredIds.length + ' field(s) still have no Japanese:\n\n' + preview +
+        '\n\nOnly those gaps will be filled — the wording you already have stays untouched.',
+        {title:'Fill in the missing fields?', okText:'Fill the gaps',
+         cancelText:'Leave it alone'}
       )) return;
       mode = 'fill';
     } else {
-      if (!confirm(
-        'This submission is already fully translated — every field has Japanese.\n\n' +
-        'Re-running the AI will produce DIFFERENT wording, especially for names and place names.\n\n' +
-        'OK\t= discard the current translation and generate a new one\n' +
-        'Cancel\t= keep what you have'
+      if (!await uiConfirm(
+        'Every field already has Japanese. Re-running the AI produces DIFFERENT wording, ' +
+        'especially for names and place names, and your current version is discarded.',
+        {title:'Replace the finished translation?', okText:'Re-translate anyway',
+         cancelText:'Keep what I have', danger:true}
       )) return;
     }
   }
@@ -1758,7 +2053,7 @@ function toggleCorrectionPanel() {
 
 async function translateCorrection() {
   var en = document.getElementById('corr-en').value.trim();
-  if (!en) { alert('Please enter the English correction text first.'); return; }
+  if (!en) { await uiAlert('Type the English correction text before translating it.', {kind:'warn', title:'Nothing to translate'}); return; }
   var btn = document.getElementById('corr-translate-btn');
   btn.disabled = true;
   btn.textContent = 'Translating...';
@@ -1797,7 +2092,7 @@ async function translateCorrection() {
 async function saveCorrectionAnnotation() {
   var en = document.getElementById('corr-en').value.trim();
   var jp = document.getElementById('corr-jp').value.trim();
-  if (!en || !jp) { alert('Please fill in both English and Japanese fields.'); return; }
+  if (!en || !jp) { await uiAlert('Both the English and Japanese fields are needed for an annotation.', {kind:'warn', title:'Both fields needed'}); return; }
   var s = subs.find(function(x) { return x.id === activeId; });
   if (!s) return;
   s.correctionEn = en;
@@ -1823,7 +2118,7 @@ function doDownloadPDF() {
 
   var hasCustom = !!(s.customBody && s.customBody.trim());
   if (!s.translation && !hasCustom) {
-    alert('Please translate the document first — or use "Custom Translation" to type it in yourself.');
+    uiAlert('Run the AI translation first, or use "Custom Translation" to type it in yourself.', {kind:'warn', title:'Nothing to put in the PDF'});
     return;
   }
 
@@ -2117,6 +2412,18 @@ function doDownloadPDF() {
     '.untr{display:inline-block;background:#dc2626;color:#fff;font-size:7px;font-weight:bold;padding:0 3px;border-radius:2px;letter-spacing:0.3px;-webkit-print-color-adjust:exact;print-color-adjust:exact}',
     '.untr-en{display:inline-block;color:#dc2626;font-size:7px;font-weight:normal;font-style:italic;margin-left:3px;text-decoration:underline wavy #dc2626}',
     '.fe{font-size:6.5px;color:#aaa;font-style:italic;line-height:1.1;margin-top:0}',
+    // ── PROSE ── Affidavits, jurats and certifications are flowing text, not
+    // form fields. These render without cell borders, at a readable size, and
+    // with Japanese paragraph conventions (full-width indent, justified).
+    '.prose{border:0.5px solid #bbb;border-top:none;background:#faf8f0;padding:4px 8px 5px}',
+    '.prose.s{background:#f0ece0}',
+    '.para{font-size:8.5px;color:#1a2744;line-height:1.85;text-align:justify;text-justify:inter-ideograph;margin:0 0 4px;text-indent:1em}',
+    '.para:last-child{margin-bottom:0}',
+    '.para.noind{text-indent:0}',
+    '.para.ind{margin-left:12px;text-indent:0}',
+    '.para.ctr{text-align:center;text-indent:0}',
+    '.para-en{font-size:6.8px;color:#666;font-style:italic;line-height:1.6;text-align:justify;margin:1px 0 0;text-indent:0}',
+    '.para-lbl{font-size:5.5px;color:#999;text-transform:uppercase;letter-spacing:.3px;margin-bottom:1px}',
     // Nested grids
     '.ng2{display:grid;grid-template-columns:1fr 1fr}',
     '.ng3{display:grid;grid-template-columns:1fr 1fr 1fr}',
@@ -2299,9 +2606,17 @@ function doDownloadPDF() {
   //   "> Sentence"                  → full-width paragraph
   function customRows(text, cols) {
     var wrap = (cols === 1) ? 'g1' : 'g2';
-    var out = '', buf = [], shade = true;
+    var out = '', buf = [], shade = true, proseBuf = [], proseShade = false;
+
+    function flushProse() {
+      if (!proseBuf.length) return;
+      out += '<div class="prose' + (proseShade ? ' s' : '') + '">' + proseBuf.join('') + '</div>';
+      proseBuf = [];
+      proseShade = !proseShade;
+    }
 
     function flush() {
+      flushProse();
       if (!buf.length) return;
       if (cols === 2 && buf.length % 2 === 1) buf.push('<div class="fb"></div>');
       out += '<div class="' + wrap + '">' + buf.join('') + '</div>';
@@ -2317,11 +2632,34 @@ function doDownloadPDF() {
         out += '<div class="sh">' + esc(line.slice(2).trim()) + '</div>';
         return;
       }
+      // ── PROSE LINES ──
+      //   >  text            paragraph
+      //   >  JP | EN         paragraph with the English underneath
+      //   >> text            indented sub-clause (numbered items etc.)
+      //   >c text            centred line (signature and date blocks)
+      // Consecutive prose lines collect into ONE block so they read as a
+      // continuous passage instead of a stack of bordered boxes.
       if (line.charAt(0) === '>') {
-        flush(); shade = true;
-        out += '<div class="g1"><div class="fb" style="padding:4px 7px">' +
-                 '<div class="fj" style="font-weight:500;line-height:1.6">' + esc(line.slice(1).trim()) + '</div>' +
-               '</div></div>';
+        // Flush pending FIELDS only; prose keeps accumulating so consecutive
+        // paragraphs land in the same block.
+        if (buf.length) {
+          if (cols === 2 && buf.length % 2 === 1) buf.push('<div class="fb"></div>');
+          out += '<div class="' + wrap + '">' + buf.join('') + '</div>';
+          buf = [];
+        }
+        var rest = line.slice(1);
+        var cls = 'para';
+        if (rest.charAt(0) === '>') { cls += ' ind'; rest = rest.slice(1); }
+        else if (rest.charAt(0) === 'c' && rest.charAt(1) === ' ') { cls += ' ctr'; rest = rest.slice(1); }
+        rest = rest.trim();
+        if (!rest) return;
+
+        var pp  = rest.split('|');
+        var pjp = (pp[0] || '').trim();
+        var pen = (pp[1] || '').trim();
+
+        proseBuf.push('<p class="' + cls + '">' + esc(pjp) + '</p>' +
+                      (pen ? '<p class="para-en">' + esc(pen) + '</p>' : ''));
         return;
       }
 
@@ -3585,10 +3923,10 @@ async function doEmail() {
   // Payment now comes first — block it by default, but allow an override
   // for the cases where money arrived outside the portal.
   if (!isPaid(s)) {
-    if (!confirm('⚠ Payment for ' + s.id + ' is NOT confirmed yet (PHP ' + amountFor(s) + ').\n\n' +
-                 'This email contains the complete translation, so sending it now gives the work away unpaid.\n\n' +
-                 'Use "📨 Request Payment" instead unless you have already received the money another way.\n\n' +
-                 'Send anyway?')) return;
+    if (!await uiConfirm('This email contains the complete translation, so sending it now hands over the ' +
+        'work unpaid.\n\nUse "Request Payment" instead, unless the money already reached you another way.',
+        {title:'PHP ' + amountFor(s) + ' not confirmed for ' + s.id,
+         okText:'Send anyway', danger:true})) return;
   }
 
   var includeNotary = document.getElementById('chk-notary') && document.getElementById('chk-notary').checked;
@@ -3911,12 +4249,14 @@ function renderBinMeter() {
 // translation is complete. Only released jobs past the window are touched;
 // a non-personal stub is archived so revenue history survives.
 async function doPurge() {
-  var days = prompt('Delete personal data for RELEASED jobs older than how many days?\n\n' +
-                    'Revenue totals are preserved via anonymous stubs.\n' +
-                    'Unpaid and unverified jobs are never touched.', '90');
+  var days = await uiPrompt('Only RELEASED jobs past this age are affected. Unpaid and unverified ' +
+      'jobs are never touched, and revenue totals survive as anonymous stubs.',
+      '90', {title:'Delete old personal data', inputLabel:'Older than (days)',
+             inputType:'number', okText:'Check what would be deleted',
+             hint:'Nothing is deleted until you confirm the list on the next screen.'});
   if (days === null) return;
   days = parseInt(days, 10);
-  if (!days || days < 1) { toast('Cancelled — enter a number of days.'); return; }
+  if (!days || days < 1) { toast('Cancelled — enter a number of days.', 'warn'); return; }
 
   try {
     // Dry run first so the operator sees the blast radius before committing.
@@ -3928,8 +4268,10 @@ async function doPurge() {
     if (!pr.ok || !pd.ok) throw new Error(pd.error || ('HTTP ' + pr.status));
 
     if (!pd.count) { toast('Nothing to purge — no released jobs older than ' + days + ' days.'); return; }
-    if (!confirm('Permanently delete personal data for ' + pd.count + ' released job(s) older than ' +
-                 days + ' days?\n\n' + pd.ids.join(', ') + '\n\nThis cannot be undone.')) return;
+    if (!await uiConfirm(pd.count + ' released job(s) older than ' + days + ' days will have their ' +
+        'personal data erased:\n\n' + pd.ids.join(', ') + '\n\nThis cannot be undone.',
+        {title:'Delete personal data for ' + pd.count + ' job(s)?',
+         okText:'Delete permanently', danger:true})) return;
 
     var r = await fetch(DATA_API + '/api/admin/purge', {
       method: 'POST', headers: apiHeaders(true),
@@ -3951,10 +4293,13 @@ async function doRequestTopUp() {
   var s = subs.find(function(x) { return x.id === activeId; });
   if (!s) return;
   var due = amountFor(s);
-  var got = prompt('How much did they actually send? (PHP)\n\nAmount due: ' + due, String(due));
+  var got = await uiPrompt('Enter what actually arrived and we will email ' + s.name +
+      ' the outstanding balance.', String(due),
+      {title:'Amount due is PHP ' + due, inputLabel:'Amount received (PHP)',
+       inputType:'number', okText:'Work out the balance'});
   if (got === null) return;
   got = Number(String(got).replace(/[^0-9.]/g, ''));
-  if (!got || got <= 0) { toast('Cancelled — enter the amount received.'); return; }
+  if (!got || got <= 0) { toast('Cancelled — enter the amount received.', 'warn'); return; }
 
   var short = due - got;
   if (short <= 0) {
@@ -4617,7 +4962,11 @@ var CUSTOM_PRESETS = {
       '滞在先 / Address in Japan |  | ',
       '',
       '## D.\u3000宣誓事項 / DECLARATION',
-      '> \u79c1\u306f\u4e0a\u8a18\u306e\u8005\u306e\u6e21\u822a\u304a\u3088\u3073\u6ede\u5728\u4e2d\u306e\u4e00\u5207\u306e\u8cbb\u7528\u3092\u8ca0\u62c5\u3057\u3001\u5e30\u56fd\u3092\u4fdd\u8a3c\u3057\u3001\u8eab\u5143\u3092\u4fdd\u8a3c\u3059\u308b\u3053\u3068\u3092\u5ba3\u8a93\u3059\u308b\u3002',
+      '> 私は、フィリピン共和国の法律に基づき正当に宣誓した上で、以下のとおり供述する。 | I, being duly sworn in accordance with the laws of the Republic of the Philippines, do hereby depose and state:',
+      '>> 1.\u3000私は上記被保証人の身元を保証し、日本滞在中の一切の責任を負う。 | 1. That I guarantee the identity of the above-named beneficiary and assume full responsibility during their stay in Japan.',
+      '>> 2.\u3000私は渡航費、滞在費、医療費その他一切の費用を負担する。 | 2. That I shall bear all travel, accommodation, medical and other expenses incurred.',
+      '>> 3.\u3000私は被保証人が滞在期間満了までに帰国することを保証する。 | 3. That I guarantee the beneficiary will depart Japan on or before the expiry of the permitted period of stay.',
+      '> 私は、本供述書の記載事項がすべて真実であることを宣誓する。 | I attest that all statements in this affidavit are true and correct.',
       '',
       '## E.\u3000公証情報 / NOTARIZATION',
       '宣誓日 / Date Sworn |  | ',
@@ -4630,6 +4979,44 @@ var CUSTOM_PRESETS = {
       '年度 / Series of |  | ',
       '',
       '> \u3014\u539f\u672c\u306b\u306f\u5ba3\u8a93\u8005\u306e\u7f72\u540d\u304a\u3088\u3073\u516c\u8a3c\u4eba\u306e\u7f72\u540d\u30fb\u516c\u5370\u304c\u4ed8\u3055\u308c\u3066\u3044\u308b\u3002\u3015'
+    ].join('\n')
+  },
+  'affidavit_general': {
+    group: 'Other Certificates & Documents', label: 'General Affidavit (paragraph style)',
+    titleEn: 'AFFIDAVIT', titleJp: '宣誓供述書',
+    issuerEn: '', issuerJp: '', cols: '2',
+    body: [
+      '## A.\u3000宣誓者情報 / AFFIANT',
+      '氏名 / Full Name |  | ',
+      '生年月日 / Date of Birth |  | ',
+      '国籍 / Citizenship |  | ',
+      '婚姻状況 / Civil Status |  | ',
+      '住所 / Address |  | ',
+      '身分証明書番号 / ID No. |  | ',
+      '',
+      '## B.\u3000宣誓事項 / STATEMENT OF FACTS',
+      '> 私は、フィリピン共和国の法律に基づき正当に宣誓した上で、以下のとおり自由意思により供述する。 | I, being duly sworn in accordance with the laws of the Republic of the Philippines, do hereby freely and voluntarily depose and state as follows:',
+      '>> 1.\u3000私は上記に記載された住所に居住する成人であり、本供述書の内容を理解する十分な判断能力を有する。 | 1. That I am of legal age, residing at the address stated above, and possess full capacity to understand the contents of this affidavit.',
+      '>> 2.\u3000（ここに事実関係を記載する。段落ごとに「>>」を用いて番号を付す。） | 2. (State the facts here. Use ">>" for each numbered clause.)',
+      '>> 3.\u3000（必要に応じて段落を追加する。） | 3. (Add further clauses as required.)',
+      '> 私は、本供述書に記載した事項がすべて真実かつ正確であることを宣誓し、いかなる者からの強制も受けていないことを確認する。 | I further attest that all statements herein are true and correct to the best of my knowledge, and that this affidavit was executed without coercion from any person.',
+      '> 上記の目的をもって、本供述書に署名する。 | IN WITNESS WHEREOF, I have hereunto affixed my signature for the purpose stated above.',
+      '',
+      '## C.\u3000署名 / SIGNATURE',
+      '>c （宣誓者署名） / (Signature of Affiant)',
+      '>c 宣誓者氏名 / Name of Affiant',
+      '',
+      '## D.\u3000公証情報 / JURAT',
+      '> 本日、上記宣誓者が本官の面前に出頭し、本供述書の内容を確認のうえ署名したことを証明する。 | SUBSCRIBED AND SWORN to before me this date, the affiant having exhibited to me the identification indicated above.',
+      '宣誓日 / Date Sworn |  | ',
+      '公証地 / Place Sworn |  | ',
+      '公証人 / Notary Public |  | ',
+      '文書番号 / Doc. No. |  | ',
+      '頁番号 / Page No. |  | ',
+      '簿冊番号 / Book No. |  | ',
+      '年度 / Series of |  | ',
+      '',
+      '> \u3014原本には宣誓者の署名および公証人の署名・公印が付されている。\u3015 | [The original bears the signature of the affiant together with the signature and official seal of the Notary Public.]'
     ].join('\n')
   },
   'license': {
@@ -5196,11 +5583,11 @@ function cusPopulatePresets() {
   });
 }
 
-function loadCustomPreset() {
+async function loadCustomPreset() {
   var key = document.getElementById('cus-preset').value;
   if (!key || !CUSTOM_PRESETS[key]) { toast('Pick a document type first.'); return; }
   var body = document.getElementById('cus-body').value.trim();
-  if (body && !confirm('Replace what you have typed with the "' + CUSTOM_PRESETS[key].label + '" skeleton?')) return;
+  if (body && !await uiConfirm('Loading the "' + CUSTOM_PRESETS[key].label + '" skeleton replaces what you have typed.', {title:'Replace current text?', okText:'Replace', danger:true})) return;
 
   var p = CUSTOM_PRESETS[key];
   document.getElementById('cus-title-en').value  = p.titleEn;
@@ -5282,7 +5669,18 @@ function cusRenderPreview() {
   var PX_LABEL = 5.5 * 1.1 + 1, PX_JP = 8 * 1.2, PX_EN = 6.5 * 1.1, PX_PAD = 3;
   var CHARS_PER_LINE = 94;   // 200mm content width at 8px Japanese glyphs
 
+  var proseBuf = [], proseShade = false;
+
+  function flushProse() {
+    if (!proseBuf.length) return;
+    html += '<div class="prose' + (proseShade ? ' s' : '') + '">' + proseBuf.join('') + '</div>';
+    proseBuf = [];
+    proseShade = !proseShade;
+    paraPx += 9;    // block padding, once per group rather than per line
+  }
+
   function flush() {
+    flushProse();
     if (!buf.length) return;
     if (cols === 2 && buf.length % 2 === 1) buf.push('<div class="fb"></div>');
     html += '<div class="' + wrap + '">' + buf.join('') + '</div>';
@@ -5298,12 +5696,26 @@ function cusRenderPreview() {
       return;
     }
     if (line.charAt(0) === '>') {
-      flush(); shade = true; nParas++;
-      var ptxt = line.slice(1).trim();
-      var plines = Math.max(1, Math.ceil(ptxt.length / CHARS_PER_LINE));
-      paraPx += 8 + (plines * 8 * 1.6) + 0.5;
-      html += '<div class="g1"><div class="fb"><div class="fj" style="font-weight:500">' +
-              cusEsc(ptxt) + '</div></div></div>';
+      // Flush pending FIELDS only — prose accumulates into one block.
+      if (buf.length) {
+        if (cols === 2 && buf.length % 2 === 1) buf.push('<div class="fb"></div>');
+        html += '<div class="' + wrap + '">' + buf.join('') + '</div>';
+        buf = [];
+      }
+      shade = true; nParas++;
+      var rest = line.slice(1), cls = 'para';
+      if (rest.charAt(0) === '>') { cls += ' ind'; rest = rest.slice(1); }
+      else if (rest.charAt(0) === 'c' && rest.charAt(1) === ' ') { cls += ' ctr'; rest = rest.slice(1); }
+      rest = rest.trim();
+      if (!rest) return;
+      var pp = rest.split('|');
+      var pjp = (pp[0] || '').trim(), pen = (pp[1] || '').trim();
+      // Prose wraps wider than field cells: full content width, 8.5px glyphs.
+      var jpLines = Math.max(1, Math.ceil(pjp.length / 88));
+      paraPx += jpLines * 8.5 * 1.85 + 4;
+      if (pen) paraPx += Math.max(1, Math.ceil(pen.length / 150)) * 6.8 * 1.6 + 1;
+      proseBuf.push('<p class="' + cls + '">' + cusEsc(pjp) + '</p>' +
+                    (pen ? '<p class="para-en">' + cusEsc(pen) + '</p>' : ''));
       return;
     }
     var p = line.split('|');
@@ -5403,7 +5815,7 @@ function cusRefreshTemplateList() {
   });
 }
 
-function saveCustomTemplate() {
+async function saveCustomTemplate() {
   var nameEl = document.getElementById('cus-tpl-name');
   var name = nameEl.value.trim();
   if (!name) { toast('Type a name for the template first.'); nameEl.focus(); return; }
@@ -5411,7 +5823,7 @@ function saveCustomTemplate() {
   if (!body) { toast('Nothing to save — the body is empty.'); return; }
 
   var tpls = cusTemplates();
-  if (tpls[name] && !confirm('A template called "' + name + '" already exists. Overwrite it?')) return;
+  if (tpls[name] && !await uiConfirm('A template called "' + name + '" already exists.', {title:'Overwrite it?', okText:'Overwrite', danger:true})) return;
 
   tpls[name] = {
     titleEn:  document.getElementById('cus-title-en').value.trim(),
@@ -5435,13 +5847,14 @@ function saveCustomTemplate() {
   toast('Template saved: ' + name);
 }
 
-function loadCustomTemplate() {
+async function loadCustomTemplate() {
   var name = document.getElementById('cus-tpl-list').value;
   if (!name) { toast('Pick a saved template first.'); return; }
   var t = cusTemplates()[name];
   if (!t) { toast('That template is no longer available.'); cusRefreshTemplateList(); return; }
   if (document.getElementById('cus-body').value.trim() &&
-      !confirm('Replace what you have typed with the template "' + name + '"?')) return;
+      !await uiConfirm('Loading the template "' + name + '" replaces what you have typed.',
+        {title:'Replace current text?', okText:'Replace', danger:true})) return;
 
   document.getElementById('cus-title-en').value  = t.titleEn  || '';
   document.getElementById('cus-title-jp').value  = t.titleJp  || '';
@@ -5455,10 +5868,10 @@ function loadCustomTemplate() {
   toast('Loaded template: ' + name);
 }
 
-function deleteCustomTemplate() {
+async function deleteCustomTemplate() {
   var name = document.getElementById('cus-tpl-list').value;
   if (!name) { toast('Pick a saved template first.'); return; }
-  if (!confirm('Delete the template "' + name + '"? This cannot be undone.')) return;
+  if (!await uiConfirm('The template "' + name + '" will be removed. This cannot be undone.', {title:'Delete template?', okText:'Delete', danger:true})) return;
   var tpls = cusTemplates();
   delete tpls[name];
   localStorage.setItem(CUS_TPL_KEY, JSON.stringify(tpls));
@@ -5513,7 +5926,7 @@ function refreshCustomLinkList() {
   sel.value = keep;
 }
 
-function onCustomLinkChange() {
+async function onCustomLinkChange() {
   var id = document.getElementById('cus-link').value;
   if (!id) {
     document.getElementById('cus-status').textContent = 'Standalone — nothing will be saved to the submissions list';
@@ -5523,7 +5936,8 @@ function onCustomLinkChange() {
   var s = subs.find(function(x) { return x.id === id; });
   if (!s) return;
   if (document.getElementById('cus-body').value.trim() &&
-      !confirm('Load the saved custom translation for ' + s.name + '? This replaces what is on screen.')) {
+      !await uiConfirm('Loading the saved translation for ' + s.name + ' replaces what is on screen.',
+        {title:'Load saved translation?', okText:'Load it', danger:true})) {
     return;
   }
   loadCustomFromSubmission(s);
@@ -5577,8 +5991,8 @@ function readCustomWorkspace() {
 // Generate without needing a submission: build a throwaway record, render, restore.
 function customGenerate(asFile) {
   var w = readCustomWorkspace();
-  if (!w.body) { alert('Please enter at least one line in the translation body.'); return; }
-  if (!w.titleEn && !w.titleJp) { alert('Please enter a document title (English or Japanese).'); return; }
+  if (!w.body) { uiAlert('Add at least one line to the translation body.', {kind:'warn', title:'Body is empty'}); return; }
+  if (!w.titleEn && !w.titleJp) { uiAlert('Give the document a title in English or Japanese.', {kind:'warn', title:'Title needed'}); return; }
 
   var linkId = document.getElementById('cus-link').value;
   var prevSubs = subs, prevActive = activeId;
@@ -5607,15 +6021,16 @@ function customGenerate(asFile) {
 async function saveCustomToSubmission() {
   var linkId = document.getElementById('cus-link').value;
   if (!linkId) {
-    alert('Choose a submission in "Attach to a submission" first.\n\n' +
-          'Standalone translations are not saved — use "Open & Print PDF" or "Save as file" instead.');
+    await uiAlert('Pick one under "Attach to a submission" first.\n\nStandalone translations are not ' +
+        'saved — use "Open & Print PDF" or "Save as file" instead.',
+        {kind:'warn', title:'No submission attached'});
     return;
   }
   var s = subs.find(function(x) { return x.id === linkId; });
   if (!s) { toast('That submission is no longer available.'); refreshCustomLinkList(); return; }
 
   var w = readCustomWorkspace();
-  if (!w.body) { alert('Please enter at least one line in the translation body.'); return; }
+  if (!w.body) { await uiAlert('Add at least one line to the translation body.', {kind:'warn', title:'Body is empty'}); return; }
 
   s.customTitleEn  = w.titleEn;  s.customTitleJp  = w.titleJp;
   s.customIssuerEn = w.issuerEn; s.customIssuerJp = w.issuerJp;
@@ -5631,8 +6046,8 @@ async function saveCustomToSubmission() {
   toast('Custom translation saved for ' + s.name);
 }
 
-function clearCustomWorkspace() {
-  if (!confirm('Clear everything in the workspace? Saved submissions and templates are not affected.')) return;
+async function clearCustomWorkspace() {
+  if (!await uiConfirm('Everything typed in the workspace will be cleared. Saved submissions and templates are not affected.', {title:'Clear the workspace?', okText:'Clear it', danger:true})) return;
   ['cus-cust-name','cus-title-en','cus-title-jp','cus-issuer-en','cus-issuer-jp',
    'cus-docno','cus-country','cus-purpose','cus-body','cus-tpl-name']
     .forEach(function(id) { document.getElementById(id).value = ''; });
@@ -5647,11 +6062,12 @@ function clearCustomWorkspace() {
 // Remove a saved custom translation from a submission (restores its template)
 async function clearCustomTranslation() {
   var linkId = document.getElementById('cus-link').value;
-  if (!linkId) { alert('Choose the submission whose custom translation you want to remove.'); return; }
+  if (!linkId) { await uiAlert('Pick the submission whose custom translation you want to remove.', {kind:'warn', title:'No submission selected'}); return; }
   var s = subs.find(function(x) { return x.id === linkId; });
   if (!s) return;
-  if (!confirm('Remove the saved custom translation from ' + s.name +
-               ' and go back to the built-in template?')) return;
+  if (!await uiConfirm('The custom translation saved against ' + s.name + ' will be removed and the ' +
+      'built-in template used instead.',
+      {title:'Remove custom translation?', okText:'Remove', danger:true})) return;
 
   delete s.customTitleEn; delete s.customTitleJp;
   delete s.customIssuerEn; delete s.customIssuerJp;

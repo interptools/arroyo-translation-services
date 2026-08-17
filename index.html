@@ -1208,6 +1208,271 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
 // Data now goes through a Cloudflare Worker that holds the JSONBin key
 // server-side. No credential is shipped to the browser, and the worker only
 // ever returns the ONE request being asked about.
+
+/* ══════════════════════════════════════════════════════════════════════
+   UI DIALOGS — replaces native alert() / confirm() / prompt()
+   Promise-based so calls read the same as the originals:
+       await uiAlert('Saved');
+       if (!await uiConfirm('Delete this?')) return;
+       var v = await uiPrompt('How many days?', '90');
+   Mobile-first: caps at 380px, stacks buttons under 360px, and keeps
+   44px touch targets.
+   ══════════════════════════════════════════════════════════════════════ */
+(function () {
+  if (window.__uiDialogReady) return;
+  window.__uiDialogReady = true;
+
+  var CSS = ''
+    + '.uid-ov{position:fixed;inset:0;background:rgba(16,20,32,.55);backdrop-filter:blur(3px);'
+    +   '-webkit-backdrop-filter:blur(3px);z-index:2147483000;display:flex;align-items:center;'
+    +   'justify-content:center;padding:18px;opacity:0;transition:opacity .16s ease}'
+    + '.uid-ov.in{opacity:1}'
+    + '.uid-box{background:#fff;border-radius:16px;width:100%;max-width:380px;'
+    +   'box-shadow:0 18px 48px rgba(0,0,0,.28);overflow:hidden;transform:translateY(10px) scale(.98);'
+    +   'transition:transform .18s cubic-bezier(.2,.9,.3,1);font-family:Inter,system-ui,sans-serif;'
+    +   'max-height:calc(100vh - 36px);display:flex;flex-direction:column}'
+    + '.uid-ov.in .uid-box{transform:none}'
+    + '.uid-top{padding:22px 22px 0;text-align:center}'
+    + '.uid-ic{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;'
+    +   'justify-content:center;font-size:23px;margin:0 auto 12px}'
+    + '.uid-ic.info{background:#eff6ff;color:#1d4ed8}'
+    + '.uid-ic.ok{background:#f0fdf4;color:#15803d}'
+    + '.uid-ic.warn{background:#fffbeb;color:#b45309}'
+    + '.uid-ic.danger{background:#fef2f2;color:#b91c1c}'
+    + '.uid-ic.ask{background:#f4f1e8;color:#8a6d1f}'
+    + '.uid-t{font-size:16px;font-weight:700;color:#1a2744;line-height:1.35;margin-bottom:6px}'
+    + '.uid-m{font-size:13px;color:#4b5563;line-height:1.7;white-space:pre-wrap;word-break:break-word}'
+    + '.uid-m strong{color:#1a2744}'
+    + '.uid-scroll{overflow-y:auto;padding-bottom:18px;-webkit-overflow-scrolling:touch}'
+    + '.uid-inwrap{padding:14px 22px 0;text-align:left}'
+    + '.uid-lbl{display:block;font-size:11px;font-weight:600;letter-spacing:.4px;'
+    +   'text-transform:uppercase;color:#6b7280;margin-bottom:6px}'
+    + '.uid-in{width:100%;padding:12px 13px;border:1.5px solid #e5e0d8;border-radius:9px;'
+    +   'font-size:15px;font-family:inherit;color:#1a2744;outline:none;box-sizing:border-box}'
+    + '.uid-in:focus{border-color:#1a2744}'
+    + '.uid-hint{font-size:11px;color:#9ca3af;margin-top:6px;line-height:1.6}'
+    + '.uid-acts{display:flex;gap:9px;padding:16px 18px 18px;border-top:1px solid #f0ede8;background:#fcfbf9}'
+    + '.uid-b{flex:1;min-height:44px;padding:12px 14px;border-radius:9px;font-size:14px;'
+    +   'font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:filter .12s}'
+    + '.uid-b:hover{filter:brightness(.95)}'
+    + '.uid-b:active{transform:translateY(1px)}'
+    + '.uid-b.cancel{background:#fff;color:#4b5563;border:1.5px solid #e5e0d8}'
+    + '.uid-b.go{background:#1a2744;color:#e8c97a}'
+    + '.uid-b.go.danger{background:#dc2626;color:#fff}'
+    + '.uid-b.go.ok{background:#16a34a;color:#fff}'
+    + '@media(max-width:360px){.uid-acts{flex-direction:column-reverse}.uid-b{width:100%}}'
+    /* toasts */
+    + '.uid-toasts{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:2147483100;'
+    +   'display:flex;flex-direction:column;gap:8px;width:calc(100% - 32px);max-width:420px;pointer-events:none}'
+    + '.uid-toast{display:flex;align-items:flex-start;gap:10px;background:#1a2744;color:#fff;'
+    +   'border-radius:11px;padding:12px 14px;font-size:13px;line-height:1.6;font-family:Inter,sans-serif;'
+    +   'box-shadow:0 8px 26px rgba(0,0,0,.26);opacity:0;transform:translateY(10px);'
+    +   'transition:opacity .18s,transform .18s;pointer-events:auto;border-left:4px solid #e8c97a}'
+    + '.uid-toast.in{opacity:1;transform:none}'
+    + '.uid-toast.ok{border-left-color:#22c55e}'
+    + '.uid-toast.err{border-left-color:#ef4444}'
+    + '.uid-toast.warn{border-left-color:#f59e0b}'
+    + '.uid-toast-ic{flex-shrink:0;font-size:15px;line-height:1.4}'
+    + '.uid-toast-x{margin-left:auto;flex-shrink:0;background:none;border:none;color:rgba(255,255,255,.5);'
+    +   'font-size:17px;cursor:pointer;padding:0 2px;line-height:1}'
+    + '.uid-toast-x:hover{color:#fff}';
+
+  var st = document.createElement('style');
+  st.textContent = CSS;
+  (document.head || document.documentElement).appendChild(st);
+
+  var ICONS = { info: 'ℹ', ok: '✓', warn: '⚠', danger: '✕', ask: '?' };
+
+  // Text is inserted via textContent, so a customer name or error string can
+  // never inject markup here.
+  function core(opts) {
+    return new Promise(function (resolve) {
+      var kind = opts.kind || 'info';
+      var ov = document.createElement('div');
+      ov.className = 'uid-ov';
+
+      var box = document.createElement('div');
+      box.className = 'uid-box';
+      box.setAttribute('role', 'dialog');
+      box.setAttribute('aria-modal', 'true');
+
+      var scroll = document.createElement('div');
+      scroll.className = 'uid-scroll';
+
+      var top = document.createElement('div');
+      top.className = 'uid-top';
+
+      var ic = document.createElement('div');
+      ic.className = 'uid-ic ' + kind;
+      ic.textContent = opts.icon || ICONS[kind] || ICONS.info;
+      top.appendChild(ic);
+
+      if (opts.title) {
+        var h = document.createElement('div');
+        h.className = 'uid-t';
+        h.textContent = opts.title;
+        top.appendChild(h);
+      }
+      if (opts.message) {
+        var m = document.createElement('div');
+        m.className = 'uid-m';
+        m.textContent = opts.message;
+        top.appendChild(m);
+      }
+      scroll.appendChild(top);
+
+      var input = null;
+      if (opts.input) {
+        var iw = document.createElement('div');
+        iw.className = 'uid-inwrap';
+        if (opts.inputLabel) {
+          var lb = document.createElement('label');
+          lb.className = 'uid-lbl';
+          lb.textContent = opts.inputLabel;
+          iw.appendChild(lb);
+        }
+        input = document.createElement('input');
+        input.className = 'uid-in';
+        input.type = opts.inputType || 'text';
+        input.value = opts.inputValue == null ? '' : String(opts.inputValue);
+        if (opts.placeholder) input.placeholder = opts.placeholder;
+        iw.appendChild(input);
+        if (opts.hint) {
+          var hn = document.createElement('div');
+          hn.className = 'uid-hint';
+          hn.textContent = opts.hint;
+          iw.appendChild(hn);
+        }
+        scroll.appendChild(iw);
+      }
+      box.appendChild(scroll);
+
+      var acts = document.createElement('div');
+      acts.className = 'uid-acts';
+
+      function shut(val) {
+        ov.classList.remove('in');
+        setTimeout(function () {
+          if (ov.parentNode) ov.parentNode.removeChild(ov);
+          document.removeEventListener('keydown', onKey, true);
+          resolve(val);
+        }, 170);
+      }
+
+      if (opts.cancel !== false) {
+        var cb = document.createElement('button');
+        cb.className = 'uid-b cancel';
+        cb.textContent = opts.cancelText || 'Cancel';
+        cb.onclick = function () { shut(opts.input ? null : false); };
+        acts.appendChild(cb);
+      }
+
+      var gb = document.createElement('button');
+      gb.className = 'uid-b go' + (opts.danger ? ' danger' : (kind === 'ok' ? ' ok' : ''));
+      gb.textContent = opts.okText || 'OK';
+      gb.onclick = function () { shut(opts.input ? input.value : true); };
+      acts.appendChild(gb);
+      box.appendChild(acts);
+      ov.appendChild(box);
+
+      // Backdrop click cancels — but never on a destructive prompt, where an
+      // accidental tap outside should not read as a decision.
+      ov.addEventListener('click', function (e) {
+        if (e.target === ov && !opts.danger) shut(opts.input ? null : false);
+      });
+
+      function onKey(e) {
+        if (e.key === 'Escape') { e.preventDefault(); shut(opts.input ? null : false); }
+        else if (e.key === 'Enter' && (opts.input || opts.cancel === false)) {
+          e.preventDefault(); gb.click();
+        }
+      }
+      document.addEventListener('keydown', onKey, true);
+
+      document.body.appendChild(ov);
+      requestAnimationFrame(function () {
+        ov.classList.add('in');
+        if (input) { input.focus(); input.select(); } else gb.focus();
+      });
+    });
+  }
+
+  window.uiAlert = function (message, opts) {
+    opts = opts || {};
+    return core({
+      kind: opts.kind || 'info', title: opts.title || '', message: message,
+      okText: opts.okText || 'Got it', cancel: false
+    });
+  };
+
+  window.uiConfirm = function (message, opts) {
+    opts = opts || {};
+    return core({
+      kind: opts.kind || (opts.danger ? 'danger' : 'warn'),
+      title: opts.title || 'Please confirm', message: message,
+      okText: opts.okText || 'Confirm', cancelText: opts.cancelText || 'Cancel',
+      danger: !!opts.danger
+    });
+  };
+
+  window.uiPrompt = function (message, defaultValue, opts) {
+    opts = opts || {};
+    return core({
+      kind: opts.kind || 'ask', title: opts.title || '', message: message,
+      input: true, inputValue: defaultValue, inputLabel: opts.inputLabel || '',
+      inputType: opts.inputType || 'text', placeholder: opts.placeholder || '',
+      hint: opts.hint || '', okText: opts.okText || 'Continue',
+      cancelText: opts.cancelText || 'Cancel'
+    });
+  };
+
+  // Stacking toasts. Replaces the single-slot toast that used to overwrite
+  // itself when two things happened close together.
+  var TIC = { ok: '✓', err: '✕', warn: '⚠', info: 'ℹ' };
+  window.uiToast = function (msg, kind, ms) {
+    var wrap = document.getElementById('uid-toasts');
+    if (!wrap) {
+      wrap = document.createElement('div');
+      wrap.id = 'uid-toasts';
+      wrap.className = 'uid-toasts';
+      document.body.appendChild(wrap);
+    }
+    kind = kind || 'info';
+    var el = document.createElement('div');
+    el.className = 'uid-toast ' + kind;
+
+    var i = document.createElement('span');
+    i.className = 'uid-toast-ic';
+    i.textContent = TIC[kind] || TIC.info;
+    el.appendChild(i);
+
+    var tx = document.createElement('div');
+    tx.style.flex = '1';
+    tx.textContent = String(msg == null ? '' : msg);
+    el.appendChild(tx);
+
+    var x = document.createElement('button');
+    x.className = 'uid-toast-x';
+    x.textContent = '×';
+    x.setAttribute('aria-label', 'Dismiss');
+    el.appendChild(x);
+
+    var gone = false;
+    function kill() {
+      if (gone) return; gone = true;
+      el.classList.remove('in');
+      setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 200);
+    }
+    x.onclick = kill;
+
+    wrap.appendChild(el);
+    requestAnimationFrame(function () { el.classList.add('in'); });
+    // Errors linger; routine confirmations clear themselves.
+    setTimeout(kill, ms || (kind === 'err' ? 7000 : 4000));
+    return kill;
+  };
+})();
+
 const DATA_API = 'https://ats-data.areymar36.workers.dev';
 const EMAILJS_SVC      = 'service_wog8mwj';
 const EMAILJS_TPL_NOTIF = 'template_3ifoszg';
@@ -1919,7 +2184,7 @@ async function onDoc2Upload(input) {
 
   doc2FileData = await toBase64(file);
   var scanImg2 = await prepImageForScan(file);
-  if (!scanImg2) { alert('Could not read that file. Please try a JPG or PNG photo.'); input.value=''; return; }
+  if (!scanImg2) { await uiAlert('Please try a JPG or PNG photo of the page.', {kind:'warn', title:'Could not read that file'}); input.value=''; return; }
   document.getElementById('doc2-ok').textContent = 'Selected: ' + file.name;
   document.getElementById('doc2-ok').style.display = 'block';
 
@@ -2172,7 +2437,7 @@ async function onDocUpload(input) {
 
   var doctype = document.getElementById('f-doctype').value;
   if (!doctype) {
-    alert('Please select your document type first.');
+    await uiAlert('Choose your document type in section 1 before uploading.', {kind:'warn', title:'Document type needed'});
     input.value = '';
     return;
   }
@@ -2182,7 +2447,7 @@ async function onDocUpload(input) {
   if (doctype === 'Others') {
     var subtype = document.getElementById('f-others-subtype').value;
     if (!subtype) {
-      alert('Please select a document sub-type first.');
+      await uiAlert('Choose the specific document sub-type in section 1 before uploading.', {kind:'warn', title:'Sub-type needed'});
       input.value = '';
       return;
     }
@@ -2622,7 +2887,7 @@ function confirmReview() {
 
 async function doSubmitFinal() {
   if (!document.getElementById('consent-check').checked) {
-    alert('Please agree to the Data Privacy Terms before submitting.');
+    await uiAlert('Please tick the Data Privacy Terms box so we can process your document.', {kind:'warn', title:'Agreement needed'});
     return;
   }
   var btn = document.getElementById('submit-btn');
@@ -2681,23 +2946,23 @@ async function doSubmit() {
   if (doctype === 'Others') {
     var subtype = document.getElementById('f-others-subtype').value;
     if (!subtype) {
-      alert('Please select a document sub-type in section 1.');
+      await uiAlert('Choose the specific document sub-type in section 1.', {kind:'warn', title:'Sub-type needed'});
       return;
     }
     effectiveDoctype = subtype;
   }
 
   if (!document.getElementById('consent-check').checked) {
-    alert('Please agree to the Data Privacy Terms before submitting.');
+    await uiAlert('Please tick the Data Privacy Terms box so we can process your document.', {kind:'warn', title:'Agreement needed'});
     return;
   }
 
   if (!name || !email || !phone || !doctype) {
-    alert('Please fill in all required fields in section 1.');
+    await uiAlert('Your name, email and phone are all needed so we can send your translation.', {kind:'warn', title:'Some details are missing'});
     return;
   }
   if (!docFileData) {
-    alert('Please upload your document in section 2.');
+    await uiAlert('Upload a photo or PDF of your document in section 2 so we can translate it.', {kind:'warn', title:'Document needed'});
     return;
   }
 
@@ -2832,7 +3097,7 @@ async function doSubmit() {
     console.error('Submit error:', e);
     btn.disabled = false;
     btn.textContent = 'Submit request';
-    alert('Submission failed: ' + (e.message || 'Please check your connection and try again.'));
+    await uiAlert((e.message || 'Please check your connection and try again.') + '\n\nNothing was charged. You can safely try again.', {kind:'danger', title:'Submission failed'});
   }
 }
 
@@ -2952,55 +3217,235 @@ async function ppLookup() {
   }
 }
 
-// ── Watermarked preview of the finished translation ────────────────────
-// Shows enough to prove the work is done, but not enough to use: later rows
-// are blurred, text is unselectable, and a repeating watermark sits on top.
-function ppPreviewHtml(s) {
-  var pv = s.preview || {};
-  var rows = pv.rows || [];
-  var total = pv.total || rows.length;
-  var withheld = pv.withheld || 0;
+/* ══════════════════════════════════════════════════════════════════════
+   FULL DOCUMENT PREVIEW — payment portal
+   Renders the COMPLETE translation in the real A4 layout, watermarked.
+   The paywall is the artifact: no Japanese office accepts a page stamped
+   未払い / UNPAID. Nothing here is treated as a secret, because the
+   customer already knows the facts on their own certificate.
+   ══════════════════════════════════════════════════════════════════════ */
+var PP_DOC_CSS = ''
+  + '.ppd-wrap{position:relative;background:#e9e5dc;border-radius:10px;padding:10px;overflow:hidden}'
+  + '.ppd-scroll{max-height:62vh;overflow:auto;-webkit-overflow-scrolling:touch;border-radius:6px}'
+  /* A4 at a fixed width, then scaled to fit the phone. */
+  + '.ppd-page{position:relative;width:640px;min-height:905px;background:#faf8f0;'
+  +   'font-family:"Noto Sans JP","Times New Roman",serif;color:#222;padding:14px 20px 18px;'
+  +   'box-shadow:0 2px 10px rgba(0,0,0,.18);transform-origin:top left;user-select:none;'
+  +   '-webkit-user-select:none;-webkit-touch-callout:none}'
+  + '.ppd-hdr{text-align:center;padding:2px 6px 4px;border-bottom:1.5px solid #999;margin-bottom:3px}'
+  + '.ppd-rep{font-size:9px;color:#555;letter-spacing:.3px}'
+  + '.ppd-off{font-size:11px;font-weight:bold;color:#111;margin:2px 0}'
+  + '.ppd-tit{font-size:15px;font-weight:bold;color:#111;margin:4px 0 1px;letter-spacing:.4px}'
+  + '.ppd-jptit{font-size:13px;font-weight:bold;color:#1a2744;margin:0}'
+  + '.ppd-purp{font-size:9px;color:#555;margin-top:3px}'
+  + '.ppd-sh{background:#1a2744;color:#e8c97a;font-size:9.5px;font-weight:bold;'
+  +   'padding:3px 8px;letter-spacing:.4px;margin-top:4px}'
+  + '.ppd-g1{display:grid;grid-template-columns:1fr;border-left:.5px solid #bbb;border-top:.5px solid #bbb}'
+  + '.ppd-g2{display:grid;grid-template-columns:1fr 1fr;border-left:.5px solid #bbb;border-top:.5px solid #bbb}'
+  + '.ppd-fb{border-right:.5px solid #bbb;border-bottom:.5px solid #bbb;padding:3px 7px 4px;'
+  +   'min-height:26px;background:#faf8f0}'
+  + '.ppd-fb.s{background:#f0ece0}'
+  + '.ppd-fl{font-size:8px;color:#777;line-height:1.25;margin-bottom:1px;text-transform:capitalize}'
+  + '.ppd-fj{font-size:11.5px;font-weight:bold;color:#1a2744;line-height:1.35;word-break:break-word}'
+  + '.ppd-fe{font-size:8.5px;color:#aaa;font-style:italic;line-height:1.3;margin-top:1px}'
+  /* prose */
+  + '.ppd-prose{border:.5px solid #bbb;border-top:none;background:#faf8f0;padding:7px 11px 8px}'
+  + '.ppd-prose.s{background:#f0ece0}'
+  + '.ppd-para{font-size:11px;color:#1a2744;line-height:1.85;text-align:justify;'
+  +   'text-justify:inter-ideograph;margin:0 0 6px;text-indent:1em}'
+  + '.ppd-para:last-child{margin-bottom:0}'
+  + '.ppd-para.ind{margin-left:16px;text-indent:0}'
+  + '.ppd-para.ctr{text-align:center;text-indent:0}'
+  + '.ppd-paraen{font-size:8.5px;color:#666;font-style:italic;line-height:1.6;margin:2px 0 0;text-indent:0}'
+  /* certification + translator block, so it reads as the real deliverable */
+  + '.ppd-cbox{background:#dbeafe;border:.5px solid #93c5fd;margin:4px 0 0;padding:5px 8px;'
+  +   'font-size:8.5px;color:#1e3a8a;line-height:1.5}'
+  + '.ppd-cbox b{display:block;font-size:9.5px;margin-bottom:2px}'
+  + '.ppd-tb{margin-top:5px;border:.5px solid #e5e0d8}'
+  + '.ppd-tb-h{background:#1a2744;padding:4px 9px;display:flex;justify-content:space-between;align-items:center}'
+  + '.ppd-tb-b{background:#fefefe;padding:6px 9px}'
+  + '.ppd-tb-g{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding-top:5px;border-top:.5px solid #e5e0d8}'
+  + '.ppd-tb-l{font-size:7.5px;color:#888;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}'
+  + '.ppd-tb-v{font-size:10px;font-weight:bold;color:#1a2744;border-bottom:1px solid #1a2744;padding-bottom:2px}'
+  + '.ppd-stamp{display:flex;justify-content:space-between;padding:3px 8px;font-size:8px;color:#666;'
+  +   'border-top:.5px solid #aaa;background:#f0ece0;margin-top:4px}'
+  /* ── WATERMARK ── */
+  + '.ppd-wm{position:absolute;inset:0;pointer-events:none;z-index:20;'
+  +   'background:repeating-linear-gradient(-32deg,rgba(220,38,38,.055) 0 44px,rgba(220,38,38,0) 44px 100px)}'
+  + '.ppd-wm-tile{position:absolute;inset:0;overflow:hidden}'
+  + '.ppd-wm-tile span{position:absolute;font-family:Inter,sans-serif;font-size:17px;font-weight:800;'
+  +   'color:rgba(185,28,28,.16);letter-spacing:4px;white-space:nowrap;transform:rotate(-32deg)}'
+  + '.ppd-wm-mid{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-28deg);'
+  +   'border:4px solid rgba(185,28,28,.30);border-radius:12px;padding:11px 26px;text-align:center;'
+  +   'background:rgba(255,255,255,.42)}'
+  + '.ppd-wm-1{font-size:34px;font-weight:800;color:rgba(185,28,28,.5);letter-spacing:6px;line-height:1}'
+  + '.ppd-wm-2{font-size:14px;font-weight:700;color:rgba(185,28,28,.45);letter-spacing:4px;margin-top:3px}'
+  + '.ppd-wm-foot{position:absolute;left:0;right:0;bottom:6px;text-align:center;font-size:9px;'
+  +   'font-weight:700;color:rgba(185,28,28,.5);letter-spacing:.6px}'
+  + '.ppd-bar{display:flex;align-items:center;gap:7px;background:#fef2f2;border:1px solid #fecaca;'
+  +   'border-radius:8px;padding:8px 11px;margin-bottom:9px;font-size:11.5px;color:#b91c1c;line-height:1.55}'
+  + '.ppd-zoom{display:flex;gap:6px;justify-content:center;margin-top:9px}'
+  + '.ppd-zb{padding:7px 13px;background:#fff;border:1px solid var(--border);border-radius:7px;'
+  +   'font-size:12px;font-weight:600;color:var(--navy);cursor:pointer;font-family:Inter,sans-serif}';
 
-  if (!rows.length) {
-    return '<div style="padding:16px;font-size:12px;color:var(--muted);text-align:center">Your translation is ready. A preview will appear here shortly.</div>';
+function ppEsc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// Diagonal repeating watermark text across the whole page.
+function ppWatermark(reqId) {
+  var tiles = '';
+  for (var r = 0; r < 12; r++) {
+    for (var c = 0; c < 4; c++) {
+      tiles += '<span style="top:' + (r * 86 - 20) + 'px;left:' + (c * 210 - 90) + 'px">未払い · UNPAID</span>';
+    }
+  }
+  return '<div class="ppd-wm">' +
+      '<div class="ppd-wm-tile">' + tiles + '</div>' +
+      '<div class="ppd-wm-mid">' +
+        '<div class="ppd-wm-1">UNPAID</div>' +
+        '<div class="ppd-wm-2">未払い・見本</div>' +
+      '</div>' +
+      '<div class="ppd-wm-foot">PREVIEW ONLY · NOT VALID FOR SUBMISSION · ' + ppEsc(reqId) + '</div>' +
+    '</div>';
+}
+
+function ppDocPreview(s) {
+  var pv = s.preview;
+  if (!pv || !pv.blocks || !pv.blocks.length) {
+    return '<div style="padding:16px;font-size:12px;color:var(--muted);text-align:center">' +
+           'Your translation is ready. The preview will appear here shortly.</div>';
   }
 
-  // Only released rows are in the DOM at all — the withheld ones were never
-  // sent, so there is nothing to recover from devtools.
-  var body = rows.map(function(r) {
-    return '<div style="display:grid;grid-template-columns:44% 1fr;gap:8px;padding:6px 12px;border-bottom:1px solid #f0ece0">' +
-      '<div style="font-size:9.5px;color:#9ca3af;text-transform:capitalize;line-height:1.4">' + (r.label || '') + '</div>' +
-      '<div style="font-size:12px;font-weight:700;color:#1a2744;line-height:1.45">' + r.value + '</div>' +
+  var cols = pv.cols === 1 ? 1 : 2;
+  var wrapCls = cols === 1 ? 'ppd-g1' : 'ppd-g2';
+  var out = '', buf = [], shade = true, proseBuf = [], proseShade = false;
+
+  function flushProse() {
+    if (!proseBuf.length) return;
+    out += '<div class="ppd-prose' + (proseShade ? ' s' : '') + '">' + proseBuf.join('') + '</div>';
+    proseBuf = []; proseShade = !proseShade;
+  }
+  function flushFields() {
+    if (!buf.length) return;
+    if (cols === 2 && buf.length % 2 === 1) buf.push('<div class="ppd-fb"></div>');
+    out += '<div class="' + wrapCls + '">' + buf.join('') + '</div>';
+    buf = [];
+  }
+  function flushAll() { flushProse(); flushFields(); }
+
+  pv.blocks.forEach(function (b) {
+    if (b.t === 'sec') {
+      flushAll(); shade = true;
+      out += '<div class="ppd-sh">' + ppEsc(b.text) + '</div>';
+      return;
+    }
+    if (b.t === 'para') {
+      flushFields();
+      proseBuf.push('<p class="ppd-para' + (b.cls ? ' ' + b.cls : '') + '">' + ppEsc(b.jp) + '</p>' +
+        (b.en ? '<p class="ppd-paraen">' + ppEsc(b.en) + '</p>' : ''));
+      return;
+    }
+    flushProse();
+    buf.push('<div class="ppd-fb' + (shade ? ' s' : '') + '">' +
+      (b.label ? '<div class="ppd-fl">' + ppEsc(b.label) + '</div>' : '') +
+      '<div class="ppd-fj">' + (b.jp ? ppEsc(b.jp) : '—') + '</div>' +
+      (b.en ? '<div class="ppd-fe">' + ppEsc(b.en) + '</div>' : '') +
+    '</div>');
+    shade = !shade;
+  });
+  flushAll();
+
+  var titEn = ppEsc(pv.titleEn || s.doctype || 'DOCUMENT').toUpperCase();
+  var titJp = ppEsc(pv.titleJp || '');
+  var iss = pv.issuerEn || pv.issuerJp
+    ? ppEsc(pv.issuerEn || pv.issuerJp) + (pv.issuerEn && pv.issuerJp ? ' · ' + ppEsc(pv.issuerJp) : '')
+    : 'PHILIPPINE STATISTICS AUTHORITY · フィリピン統計局';
+
+  var header =
+    '<div class="ppd-hdr">' +
+      '<div class="ppd-rep">Republic of the Philippines · フィリピン共和国</div>' +
+      '<div class="ppd-off">' + iss + '</div>' +
+      '<div class="ppd-tit">' + titEn + '</div>' +
+      (titJp ? '<div class="ppd-jptit">' + titJp + '　— 日本語翻訳</div>'
+             : '<div class="ppd-jptit">日本語翻訳 / Japanese Translation</div>') +
+      (pv.purpose ? '<div class="ppd-purp">翻訳目的 / Purpose: ' + ppEsc(pv.purpose) + '</div>' : '') +
     '</div>';
-  }).join('');
 
-  var locked = withheld > 0
-    ? '<div style="padding:14px 12px;text-align:center;background:#f4f1e8;border-top:1px dashed #c8c0a0">' +
-        '<div style="font-size:20px;margin-bottom:4px">🔒</div>' +
-        '<div style="font-size:12px;font-weight:700;color:#1a2744">' + withheld + ' more field' + (withheld === 1 ? '' : 's') + ' held back</div>' +
-        '<div style="font-size:11px;color:var(--muted);margin-top:2px">Released with your final PDF once payment is confirmed</div>' +
-      '</div>'
-    : '';
-
-  var stripe = 'repeating-linear-gradient(-32deg,rgba(220,38,38,0.055) 0 42px,rgba(220,38,38,0) 42px 96px)';
-
-  return '' +
-    '<div style="position:relative;background:#faf8f0;border:1px solid #c8c0a0;border-radius:8px;overflow:hidden;user-select:none;-webkit-user-select:none">' +
-      '<div style="pointer-events:none">' + body + '</div>' +
-      locked +
-      '<div style="position:absolute;left:0;right:0;top:0;height:' + (withheld ? '62%' : '100%') + ';background:' + stripe + ';pointer-events:none"></div>' +
-      '<div style="position:absolute;left:0;right:0;top:0;height:' + (withheld ? '62%' : '100%') + ';display:flex;align-items:center;justify-content:center;pointer-events:none">' +
-        '<div style="transform:rotate(-24deg);border:3px solid rgba(220,38,38,0.32);border-radius:10px;padding:9px 20px;text-align:center;background:rgba(255,255,255,0.55)">' +
-          '<div style="font-size:19px;font-weight:800;color:rgba(185,28,28,0.62);letter-spacing:3px">PREVIEW</div>' +
-          '<div style="font-size:11px;font-weight:700;color:rgba(185,28,28,0.55);letter-spacing:2px">見本・未払い</div>' +
+  // The certification and translator block are what make this the deliverable,
+  // so they are shown — under the watermark — to make clear what is being paid for.
+  var cert =
+    '<div class="ppd-cbox"><b>【翻訳証明】</b>' +
+      '本翻訳は原本を正確に日本語に翻訳したものであり、翻訳者はその正確性を保証します。<br>' +
+      '<em>CERTIFICATION: This is a faithful and accurate Japanese translation of the original document. ' +
+      'The translator certifies its accuracy.</em>' +
+    '</div>' +
+    '<div class="ppd-tb">' +
+      '<div class="ppd-tb-h">' +
+        '<div style="color:#e8c97a;font-size:9.5px;font-weight:bold;letter-spacing:.4px">ARROYO TRANSLATION SERVICES</div>' +
+        '<div style="color:rgba(255,255,255,.45);font-size:8px">翻訳者証明</div>' +
+      '</div>' +
+      '<div class="ppd-tb-b">' +
+        '<div class="ppd-tb-g">' +
+          '<div><div class="ppd-tb-l">翻訳者 / Translator</div><div class="ppd-tb-v">レイマー・アロヨ</div></div>' +
+          '<div><div class="ppd-tb-l">翻訳日 / Date</div><div class="ppd-tb-v">' + ppEsc(s.date || '—') + '</div></div>' +
+          '<div><div class="ppd-tb-l">署名 / Signature</div><div class="ppd-tb-v" style="color:#c9a84c">— — —</div></div>' +
         '</div>' +
       '</div>' +
     '</div>' +
+    '<div class="ppd-stamp"><span>受付番号 / Request No. ' + ppEsc(s.id) + '</span>' +
+      '<span>' + (pv.total || 0) + ' 項目 / entries</span></div>';
+
+  return '' +
+    '<div class="ppd-bar"><span style="font-size:15px;flex-shrink:0">🔒</span>' +
+      '<div>This is your <strong>complete translation</strong>, watermarked. ' +
+      'Once payment is confirmed we email the clean, watermark-free A4 PDF — ' +
+      'the stamped version is not accepted for submission.</div></div>' +
+    '<div class="ppd-wrap">' +
+      '<div class="ppd-scroll" id="ppd-scroll">' +
+        '<div class="ppd-page" id="ppd-page" oncontextmenu="return false">' +
+          header + out + cert + ppWatermark(s.id) +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ppd-zoom">' +
+      '<button class="ppd-zb" onclick="ppZoom(-1)">− Smaller</button>' +
+      '<button class="ppd-zb" onclick="ppZoom(0)">Fit width</button>' +
+      '<button class="ppd-zb" onclick="ppZoom(1)">+ Larger</button>' +
+    '</div>' +
     '<div style="font-size:11px;color:var(--muted);text-align:center;margin-top:7px;line-height:1.6">' +
-      'Showing ' + rows.length + ' of ' + total + ' translated field' + (total === 1 ? '' : 's') + '. ' +
-      'The full, watermark-free A4 PDF is released once payment is confirmed.' +
-    '</div>';
+      'Showing all ' + (pv.total || 0) + ' translated entr' + ((pv.total === 1) ? 'y' : 'ies') +
+      ' — scroll inside the page to read it all.</div>';
 }
+
+// Fit the 640px page into whatever width the phone gives us, and let the
+// customer zoom in to check details before paying.
+var ppScale = 0;
+function ppApplyScale() {
+  var page = document.getElementById('ppd-page');
+  var box = document.getElementById('ppd-scroll');
+  if (!page || !box) return;
+  var fit = Math.min(1, (box.clientWidth - 4) / 640);
+  var sc = ppScale === 0 ? fit : Math.max(0.35, Math.min(1.6, fit + ppScale * 0.22));
+  page.style.transform = 'scale(' + sc + ')';
+  // Reserve the scaled footprint so the scroll area sizes correctly.
+  page.style.marginBottom = ((sc - 1) * page.offsetHeight) + 'px';
+  page.style.marginRight = ((sc - 1) * 640) + 'px';
+}
+function ppZoom(dir) {
+  ppScale = dir === 0 ? 0 : ppScale + dir;
+  if (ppScale > 3) ppScale = 3;
+  if (ppScale < -2) ppScale = -2;
+  ppApplyScale();
+}
+
+// Re-fit on rotation or window resize, otherwise the page stays sized for the
+// previous orientation and the customer sees it clipped.
+window.addEventListener('resize', function () {
+  if (document.getElementById('ppd-page')) ppApplyScale();
+});
 
 function ppCard(inner, borderColor) {
   return '<div style="background:#fff;border:1.5px solid ' + (borderColor || 'var(--border)') +
@@ -3077,7 +3522,7 @@ function ppRender(s) {
     html += ppCard(
       '<div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:4px">Your translation is ready 🎉</div>' +
       '<div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.65">Here is a watermarked preview so you can confirm it\'s your document before paying.</div>' +
-      ppPreviewHtml(s),
+      ppDocPreview(s),
       '#c9a84c'
     );
 
@@ -3127,6 +3572,16 @@ function ppRender(s) {
   box.innerHTML = html;
   box.style.display = 'block';
   document.getElementById('pay-portal').scrollTop = 0;
+
+  // Document-preview CSS is injected once, on first use.
+  if (!document.getElementById('ppd-css')) {
+    var stEl = document.createElement('style');
+    stEl.id = 'ppd-css';
+    stEl.textContent = PP_DOC_CSS;
+    document.head.appendChild(stEl);
+  }
+  ppScale = 0;
+  requestAnimationFrame(ppApplyScale);
 
   // Fill the QR from the hidden asset rather than duplicating the base64.
   var qrImg = document.getElementById('pp-qr-img');
