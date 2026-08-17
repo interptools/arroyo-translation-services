@@ -36,12 +36,14 @@ header{background:#1a2744;padding:14px 24px;display:flex;align-items:center;just
 .hdr-admin{background:rgba(201,168,76,0.15);color:#e8c97a}
 .hdr-out{background:transparent;color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.15)!important}
 /* STATS */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:20px 20px 0}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:20px 20px 0}
 .stat{background:#fff;border-radius:12px;padding:16px 18px;border:1px solid #e5e0d8}
 .stat-label{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;margin-bottom:8px}
 .stat-val{font-size:28px;font-weight:600;color:#1a2744}
 .stat-val.orange{color:#f59e0b}
 .stat-val.green{color:#16a34a}
+.stat-val.amber{color:#b45309}
+.stat-val.blue{color:#1d4ed8}
 /* TABLE */
 .table-wrap{margin:16px 20px;background:#fff;border-radius:12px;border:1px solid #e5e0d8;overflow:hidden}
 .table-head{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e5e0d8}
@@ -60,7 +62,10 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
 .pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
 .pill.pending{background:#fef3c7;color:#d97706}
 .pill.approved{background:#dbeafe;color:#1d4ed8}
-.pill.translated{background:#dcfce7;color:#15803d}
+/* translated = work done, money not in yet — amber, because it needs chasing */
+.pill.translated{background:#fef3c7;color:#b45309}
+.pill.paid{background:#dbeafe;color:#1d4ed8}
+.pill.released{background:#dcfce7;color:#15803d}
 .pill.rejected{background:#fee2e2;color:#dc2626}
 .empty{padding:40px;text-align:center;color:#6b7280;font-size:13px;display:none}
 /* MODAL */
@@ -151,7 +156,10 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
     <div class="login-sub">Sign in to manage translation requests</div>
     <label class="login-label">Password</label>
     <input class="login-input" type="password" id="pw-input" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()">
-    <button class="login-btn" onclick="doLogin()">Sign in</button>
+    <label class="login-label" style="margin-top:12px">API Token</label>
+    <input class="login-input" type="password" id="tok-input" placeholder="Worker ADMIN_TOKEN" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
+    <div style="font-size:11px;color:#6b7280;margin-top:6px;line-height:1.6">Remembered for this browser tab only. This is the <code>ADMIN_TOKEN</code> secret from your data worker.</div>
+    <button class="login-btn" onclick="doLogin()" style="margin-top:14px">Sign in</button>
     <div class="login-err" id="login-err">Incorrect password. Please try again.</div>
   </div>
 </div>
@@ -182,10 +190,14 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
 <div id="view-subs">
   <div class="stats">
     <div class="stat"><div class="stat-label">Total</div><div class="stat-val" id="s-total">0</div></div>
-    <div class="stat"><div class="stat-label">Pending</div><div class="stat-val orange" id="s-pending">0</div></div>
-    <div class="stat"><div class="stat-label">Translated</div><div class="stat-val green" id="s-translated">0</div></div>
-    <div class="stat"><div class="stat-label">Revenue ₱</div><div class="stat-val" id="s-revenue">0</div></div>
+    <div class="stat"><div class="stat-label">To Translate</div><div class="stat-val orange" id="s-pending">0</div></div>
+    <div class="stat"><div class="stat-label">Awaiting Payment</div><div class="stat-val amber" id="s-awaiting">0</div></div>
+    <div class="stat"><div class="stat-label">To Verify</div><div class="stat-val blue" id="s-toverify">0</div></div>
+    <div class="stat"><div class="stat-label">Released</div><div class="stat-val green" id="s-released">0</div></div>
+    <div class="stat"><div class="stat-label">Collected ₱</div><div class="stat-val" id="s-revenue">0</div></div>
   </div>
+
+  <div id="bin-meter" style="padding:10px 20px 0"></div>
 
   <div class="table-wrap">
     <div class="table-head">
@@ -193,12 +205,17 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <div class="filters">
           <button class="fbtn active" onclick="setFilter('all',this)">All</button>
-          <button class="fbtn" onclick="setFilter('pending',this)">Pending</button>
-          <button class="fbtn" onclick="setFilter('approved',this)">Approved</button>
-          <button class="fbtn" onclick="setFilter('translated',this)">Translated</button>
+          <button class="fbtn" onclick="setFilter('pending',this)">To Translate</button>
+          <button class="fbtn" onclick="setFilter('translated',this)">Awaiting Payment</button>
+          <button class="fbtn" onclick="setFilter('paid',this)">To Verify</button>
+          <button class="fbtn" onclick="setFilter('released',this)">Released</button>
+          <button class="fbtn" onclick="setFilter('overdue',this)" style="background:#fee2e2;color:#b91c1c">⏰ Overdue</button>
           <button class="fbtn" onclick="setFilter('rejected',this)">Rejected</button>
         </div>
+        <input type="search" id="search-input" placeholder="Search name, ID, email…" oninput="onSearch(this.value)"
+               style="padding:7px 11px;border:1px solid #e5e0d8;border-radius:7px;font-size:12px;font-family:Inter,sans-serif;min-width:180px">
         <button class="refresh-btn" onclick="loadSubs()">↺ Refresh</button>
+        <button class="refresh-btn" onclick="doPurge()" style="background:#fef2f2;color:#b91c1c;border-color:#fecaca">🗑 Purge old</button>
       </div>
     </div>
     <table>
@@ -208,6 +225,7 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
           <th>Document</th>
           <th>Purpose</th>
           <th>Date</th>
+          <th>Payment</th>
           <th>Status</th>
         </tr>
       </thead>
@@ -431,6 +449,10 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
         </div>
       </div>
 
+      <!-- PAYMENT PANEL — payment is collected after translation, so this
+           tracks where the money is rather than assuming it already arrived. -->
+      <div id="m-payment-panel"></div>
+
       <div class="fields-box">
         <div class="fields-box-title">Document Fields — Page 1</div>
         <div class="fields-grid" id="m-fields"></div>
@@ -446,7 +468,9 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
       <div id="m-consent"></div>
 
       <div class="action-row">
-        <button class="abtn abtn-approve" id="b-approve" onclick="doApprove()">✓ Approve</button>
+        <button class="abtn" id="b-request-pay" onclick="doRequestPayment()" style="background:#fef3c7;color:#92400e">📨 Request Payment</button>
+        <button class="abtn abtn-approve" id="b-verify-pay" onclick="doVerifyPayment()">💰 Verify Payment</button>
+        <button class="abtn" id="b-topup" onclick="doRequestTopUp()" style="background:#ffedd5;color:#9a3412">⚖ Partial / Top-up</button>
         <button class="abtn abtn-reject" id="b-reject" onclick="doReject()">✕ Reject</button>
         <button class="abtn abtn-translate" id="b-translate" onclick="doTranslate()">⚡ Translate (AI)</button>
         <button class="abtn abtn-pdf" id="b-pdf" onclick="doDownloadPDF()">↓ Download PDF</button>
@@ -538,58 +562,110 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
 
 <script>
 const PASS   = 'Trainer2026';
-const KEY    = '$2a$10$fO/kBOQ1AEcGiT2YVcQQ0uNmSp/Jn5Lu10yYyEMy5UL6eXY0w4BNG';
-const BIN    = '6a4e1aecf5f4af5e29710ff9';
+// The JSONBin master key now lives only in the worker. Admin calls carry a
+// bearer token entered at login, so nothing sensitive is baked into this file.
+const DATA_API = 'https://ats-data.areymar36.workers.dev';
+var ADMIN_TOKEN = '';
 const WORKER = 'https://gemini-proxy.areymar36.workers.dev';
 const EMAILJS_SVC = 'service_wog8mwj';
 const EMAILJS_TPL = 'template_5l2krhk';
 const EMAILJS_KEY = 'XDm2wGz_tn8DOjWPw';
 
 let subs = [], activeId = null, curFilter = 'all';
+let binBytes = 0, binMax = 90000, searchTerm = '';
 
 // -- AUTH --------------------------------------
 function doLogin() {
   var pw = document.getElementById('pw-input').value;
-  if (pw === PASS) {
-    document.getElementById('login-wrap').style.display = 'none';
-    document.getElementById('main-wrap').style.display = 'block';
-    loadSubs();
-  } else {
+  if (pw !== PASS) {
     document.getElementById('login-err').style.display = 'block';
+    return;
   }
+  // The password only unlocks this page; the API needs its own token. Kept in
+  // sessionStorage so it is gone when the tab closes.
+  var tok = document.getElementById('tok-input').value.trim() ||
+            sessionStorage.getItem('ats_admin_token') || '';
+  if (!tok) {
+    document.getElementById('login-err').textContent = 'API token required — see ADMIN_TOKEN in your worker settings.';
+    document.getElementById('login-err').style.display = 'block';
+    return;
+  }
+  ADMIN_TOKEN = tok;
+  sessionStorage.setItem('ats_admin_token', tok);
+  document.getElementById('login-wrap').style.display = 'none';
+  document.getElementById('main-wrap').style.display = 'block';
+  loadSubs();
 }
 function doLogout() {
+  ADMIN_TOKEN = '';
+  sessionStorage.removeItem('ats_admin_token');
   document.getElementById('login-wrap').style.display = 'flex';
   document.getElementById('main-wrap').style.display = 'none';
   document.getElementById('pw-input').value = '';
 }
 
+function apiHeaders(json) {
+  var h = { 'Authorization': 'Bearer ' + ADMIN_TOKEN };
+  if (json) h['Content-Type'] = 'application/json';
+  return h;
+}
+
+// Restore the token on reload so a refresh does not force a re-paste.
+(function prefillToken() {
+  var go = function() {
+    var saved = sessionStorage.getItem('ats_admin_token');
+    var el = document.getElementById('tok-input');
+    if (saved && el) el.value = saved;
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go);
+  else go();
+})();
+
 // -- DATA --------------------------------------
 async function loadSubs() {
   try {
-    var r = await fetch('https://api.jsonbin.io/v3/b/' + BIN + '/latest', {
-      headers: {'X-Master-Key': KEY}
-    });
-    var d = await r.json();
-    subs = (d.record && d.record.submissions) ? d.record.submissions : [];
-  } catch(e) { subs = []; }
+    var r = await fetch(DATA_API + '/api/admin/requests', { headers: apiHeaders(false) });
+    if (r.status === 401) { toast('API token rejected — sign out and re-enter it.'); subs = []; }
+    else {
+      var d = await r.json();
+      if (!r.ok || !d.ok) throw new Error(d.error || ('HTTP ' + r.status));
+      subs = d.submissions || [];
+      binBytes = d.bytes || 0;
+      binMax = d.maxBytes || 90000;
+    }
+  } catch(e) {
+    console.error('Load failed:', e);
+    toast('Could not load submissions: ' + (e.message || 'check your connection'));
+    subs = [];
+  }
   render();
   updateStats();
+  renderBinMeter();
 }
 
+// NOTE: the previous version did `if (subs.length > 10) subs = subs.slice(0,10)`
+// and then popped the oldest records until the payload fit. That silently and
+// permanently deleted every request past the tenth on EVERY save — including
+// translated-but-unpaid jobs. Trimming is now the worker's job: it sheds
+// thumbnails and archives only settled records, and refuses to save at all if
+// an unsettled record would be lost.
 async function saveSubs() {
-  // Auto-trim: keep max 10 submissions, then trim oldest until under 90KB
-  if (subs.length > 10) {
-    subs = subs.slice(0, 10);
-  }
-  while (JSON.stringify({submissions: subs}).length > 90000 && subs.length > 1) {
-    subs.pop(); // remove oldest
-  }
-  await fetch('https://api.jsonbin.io/v3/b/' + BIN, {
+  var r = await fetch(DATA_API + '/api/admin/requests', {
     method: 'PUT',
-    headers: {'Content-Type':'application/json','X-Master-Key':KEY},
-    body: JSON.stringify({submissions: subs})
+    headers: apiHeaders(true),
+    body: JSON.stringify({ submissions: subs })
   });
+  var d = null;
+  try { d = await r.json(); } catch (e) { d = null; }
+  if (!r.ok || !d || !d.ok) {
+    var msg = (d && d.error) || ('Save failed (' + r.status + ')');
+    toast('⚠ ' + msg);
+    throw new Error(msg);
+  }
+  binBytes = d.bytes || 0;
+  if (d.archived) toast('Saved. ' + d.archived + ' settled record(s) moved to the archive.');
+  renderBinMeter();
+  return d;
 }
 
 // -- RENDER ------------------------------------
@@ -600,14 +676,68 @@ function setFilter(f, btn) {
   render();
 }
 
+// ── PAYMENT LIFECYCLE ────────────────────────────────────────────────
+// Payment is collected AFTER translation:
+//   pending    → submitted, not translated yet. Nothing owed.
+//   translated → work done, payment DUE. Customer has the watermarked preview.
+//   paid       → customer uploaded proof; we still have to verify it.
+//   released   → payment verified, clean PDF sent.
+//   rejected   → declined.
+//   approved   → legacy status from the old pay-first flow. Money was already
+//                collected upfront back then, so read it as 'released'.
+function normStatus(s) {
+  if (!s) return 'pending';
+  if (s.status === 'rejected') return 'rejected';
+  if (s.status === 'released' || s.paymentStatus === 'verified') return 'released';
+  if (s.status === 'approved') return 'released';
+  if (s.status === 'paid' || s.paymentStatus === 'submitted') return 'paid';
+  var hasTranslation = !!((s.translation && s.translation.trim()) || (s.customBody && s.customBody.trim()));
+  if (s.status === 'translated' || hasTranslation) return 'translated';
+  return 'pending';
+}
+
+// Amount owed. Stored on new records; derived for older ones.
+function amountFor(s) {
+  if (s && typeof s.amount === 'number' && s.amount > 0) return s.amount;
+  return (s && s.hasPage2) ? 600 : 300;
+}
+
+// Records from the old pay-first flow carried a proofFile from the moment of
+// submission and never had a paymentStatus field. Those customers already paid,
+// so they must never be chased for money or blocked from delivery — even if the
+// translation itself is still outstanding.
+function isLegacyPrepaid(s) {
+  if (!s || s.paymentStatus) return false;
+  // 'translated' is deliberately NOT excluded: under the old flow that meant
+  // "paid upfront and work finished". New-flow records are ruled out by the
+  // paymentStatus check above, since submission always stamps it 'unpaid'.
+  if (['paid','released','rejected','approved'].indexOf(s.status) !== -1) return false;
+  var pf = s.proofFile;
+  return !!(pf && (pf.name || pf.url || (pf.data && pf.data.length > 100)));
+}
+
+function isPaid(s) {
+  var st = normStatus(s);
+  return st === 'paid' || st === 'released' || isLegacyPrepaid(s);
+}
+
 function statusLabel(s) {
-  return {pending:'Pending', approved:'Approved', translated:'Translated', rejected:'Rejected'}[s] || s;
+  return {
+    pending:'To Translate', translated:'Awaiting Payment',
+    paid:'To Verify', released:'Released', rejected:'Rejected',
+    approved:'Released (legacy)'
+  }[s] || s;
 }
 
 function render() {
   var tbody = document.getElementById('tbody');
   var empty = document.getElementById('empty');
-  var list = curFilter === 'all' ? subs : subs.filter(function(s) { return s.status === curFilter; });
+  var list = subs.filter(function(s) {
+    if (!matchesSearch(s)) return false;
+    if (curFilter === 'all') return true;
+    if (curFilter === 'overdue') return isOverdue(s);
+    return normStatus(s) === curFilter;
+  });
 
   if (!list.length) {
     tbody.innerHTML = '';
@@ -620,12 +750,30 @@ function render() {
   list.forEach(function(s) {
     var tr = document.createElement('tr');
     tr.setAttribute('data-id', s.id);
+    var st = normStatus(s);
+    var amt = amountFor(s);
+    var money = isLegacyPrepaid(s) ? '<span style="color:#15803d;font-weight:600">₱' + amt + ' paid (legacy)</span>'
+              : st === 'released' ? '<span style="color:#15803d;font-weight:600">₱' + amt + ' paid</span>'
+              : st === 'paid'     ? '<span style="color:#1d4ed8;font-weight:600">₱' + amt + ' to verify</span>'
+              : st === 'rejected' ? '<span style="color:#9ca3af">—</span>'
+              : st === 'translated' ? '<span style="color:#b45309;font-weight:700">₱' + amt + ' due</span>'
+              :                     '<span style="color:#9ca3af">₱' + amt + ' quoted</span>';
+    var age = ageOf(s);
+    if (isOverdue(s)) {
+      money += '<div style="font-size:10px;color:#b91c1c;font-weight:700;margin-top:2px">⏰ ' + age + ' days unpaid</div>';
+    } else if (st === 'translated' && age !== null) {
+      money += '<div style="font-size:10px;color:#9ca3af;margin-top:2px">' + age + 'd ago</div>';
+    }
+    if (s.paymentStatus === 'partial' && s.amountShort) {
+      money += '<div style="font-size:10px;color:#b45309;font-weight:700;margin-top:2px">₱' + s.amountShort + ' short</div>';
+    }
     tr.innerHTML =
       '<td><div class="td-name">' + s.name + '</div><div class="td-sub">' + s.email + '</div></td>' +
       '<td>' + s.doctype + '</td>' +
       '<td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#6b7280">' + (s.purpose || '') + '</td>' +
       '<td style="white-space:nowrap;color:#6b7280;font-size:11px">' + s.date + '</td>' +
-      '<td><span class="pill ' + s.status + '">' + statusLabel(s.status) + '</span></td>';
+      '<td style="white-space:nowrap;font-size:11px">' + money + '</td>' +
+      '<td><span class="pill ' + st + '">' + statusLabel(st) + '</span></td>';
     tr.addEventListener('click', function() {
       openModal(s.id);
     });
@@ -634,10 +782,18 @@ function render() {
 }
 
 function updateStats() {
-  document.getElementById('s-total').textContent = subs.length;
-  document.getElementById('s-pending').textContent = subs.filter(function(s){return s.status==='pending';}).length;
-  document.getElementById('s-translated').textContent = subs.filter(function(s){return s.status==='translated';}).length;
-  document.getElementById('s-revenue').textContent = subs.filter(function(s){return s.status!=='rejected';}).reduce(function(total,s){ return total + (s.hasPage2 ? 600 : 300); }, 0).toLocaleString();
+  var count = function(st) { return subs.filter(function(s){ return normStatus(s) === st; }).length; };
+  document.getElementById('s-total').textContent    = subs.length;
+  document.getElementById('s-pending').textContent  = count('pending');
+  document.getElementById('s-awaiting').textContent = count('translated');
+  document.getElementById('s-toverify').textContent = count('paid');
+  document.getElementById('s-released').textContent = count('released');
+  // "Collected" = verified money only. Proof-uploaded-but-unverified is not
+  // revenue yet, and quotes on untranslated jobs certainly are not.
+  document.getElementById('s-revenue').textContent = subs
+    .filter(function(s){ return normStatus(s) === 'released' || isLegacyPrepaid(s); })
+    .reduce(function(total,s){ return total + amountFor(s); }, 0)
+    .toLocaleString();
 }
 
 // -- MODAL -------------------------------------
@@ -653,7 +809,8 @@ function openModal(id) {
   document.getElementById('m-doc').textContent = s.doctype;
   document.getElementById('m-purpose').textContent = s.purpose || '-';
   document.getElementById('m-date').textContent = s.date;
-  document.getElementById('m-status').innerHTML = '<span class="pill ' + s.status + '">' + statusLabel(s.status) + '</span>';
+  var mstate = normStatus(s);
+  document.getElementById('m-status').innerHTML = '<span class="pill ' + mstate + '">' + statusLabel(mstate) + '</span>';
 
   // PSA doc image - use Cloudinary URL if available, fallback to base64
   var docImg = document.getElementById('m-doc-img');
@@ -690,8 +847,12 @@ function openModal(id) {
                  'data:image/jpeg;base64,' + s.proofFile.data : '';
   if (proofSrc) {
     var _img2 = new Image(); _img2.style.cssText='width:100%;display:block;max-height:200px;object-fit:contain'; _img2.onload=function(){proofImg.innerHTML=''; proofImg.appendChild(this);}; _img2.onerror=function(){proofImg.innerHTML='<div class="no-img">Image unavailable</div>';}; _img2.src=proofSrc;
+  } else if (mstate === 'pending') {
+    proofImg.innerHTML = '<div class="no-img">Not due yet — translate first</div>';
+  } else if (mstate === 'translated') {
+    proofImg.innerHTML = '<div class="no-img">Waiting for customer to pay</div>';
   } else {
-    proofImg.innerHTML = '<div class="no-img">No payment proof uploaded</div>';
+    proofImg.innerHTML = '<div class="no-img">No payment proof on file</div>';
   }
 
   // Document fields (Page 1)
@@ -758,8 +919,25 @@ function openModal(id) {
   else { tout.style.display = 'none'; tout.textContent = ''; }
 
   // Button states
-  document.getElementById('b-approve').disabled = s.status === 'approved' || s.status === 'translated';
-  document.getElementById('b-reject').disabled = s.status === 'rejected';
+  var hasTran = !!((s.translation && s.translation.trim()) || (s.customBody && s.customBody.trim()));
+  // Can only ask for money once there is something to sell.
+  var reqBtn = document.getElementById('b-request-pay');
+  reqBtn.disabled = !hasTran || isPaid(s) || mstate === 'rejected';
+  if (isLegacyPrepaid(s)) reqBtn.title = 'Already paid under the old pay-first flow — no request needed.';
+  reqBtn.innerHTML = (mstate === 'translated') ? '📨 Re-send Payment Request' : '📨 Request Payment';
+  // Can only verify once the customer has actually uploaded proof.
+  var verBtn = document.getElementById('b-verify-pay');
+  verBtn.disabled = mstate !== 'paid';
+  verBtn.innerHTML = (mstate === 'released') ? '✓ Payment Verified' : '💰 Verify Payment';
+  document.getElementById('b-reject').disabled = mstate === 'rejected';
+  // Top-up only makes sense once a payment has actually been attempted.
+  var topBtn = document.getElementById('b-topup');
+  topBtn.disabled = !(mstate === 'paid' || s.paymentStatus === 'partial');
+  // Final PDF must not go out before the money is in.
+  var emailBtn = document.getElementById('b-email');
+  emailBtn.style.opacity = isPaid(s) ? '1' : '0.55';
+  emailBtn.title = isPaid(s) ? '' : 'Payment not confirmed yet — you will be warned before sending.';
+  renderPaymentPanel(s, mstate);
   document.getElementById('b-translate').innerHTML =
     (s.translation && s.translation.trim()) ? '⚡ Re-translate (AI)' : '⚡ Translate (AI)';
 
@@ -802,13 +980,244 @@ function toast(msg) {
   setTimeout(function() { t.classList.remove('show'); }, 3000);
 }
 
-async function doApprove() {
+
+// ══════════════════════════════════════════════════════════════════════
+// PAYMENT ACTIONS — money is collected AFTER translation.
+// Normal path:  translate → 📨 Request Payment → customer pays in the
+// portal → 💰 Verify Payment → ✉ Email Customer (final PDF).
+// ══════════════════════════════════════════════════════════════════════
+
+// Public customer-facing site. The payment request email deep-links into it.
+var PORTAL_URL = 'https://interptools.github.io/arroyo-translation-services/';
+
+function payLink(s) {
+  return PORTAL_URL + '?pay=' + encodeURIComponent(s.id);
+}
+
+function renderPaymentPanel(s, state) {
+  var box = document.getElementById('m-payment-panel');
+  if (!box) return;
+  var amt = amountFor(s);
+  var link = payLink(s);
+
+  var cfg = {
+    pending:    { bg:'#f9fafb', bd:'#e5e7eb', fg:'#374151', icon:'⏳',
+                  title:'Nothing owed yet',
+                  body:'Translate the document first. Once a translation exists you can send the payment request.' },
+    translated: { bg:'#fffbeb', bd:'#fde68a', fg:'#92400e', icon:'💳',
+                  title:'PHP ' + amt + ' due — waiting on the customer',
+                  body:'The customer can see a watermarked preview and pay in the portal. Re-send the request if they go quiet.' },
+    paid:       { bg:'#eff6ff', bd:'#bfdbfe', fg:'#1e40af', icon:'🔎',
+                  title:'PHP ' + amt + ' proof uploaded — verify it',
+                  body:'Check the screenshot against your GCash history, then hit <strong>Verify Payment</strong> before emailing the final PDF.' },
+    released:   { bg:'#f0fdf4', bd:'#86efac', fg:'#166534', icon:'✅',
+                  title:'PHP ' + amt + ' collected',
+                  body:'Payment verified. The customer may be emailed the watermark-free PDF.' },
+    rejected:   { bg:'#fef2f2', bd:'#fecaca', fg:'#b91c1c', icon:'✕',
+                  title:'Request rejected',
+                  body:'No payment is owed on this request.' }
+  }[state] || {};
+
+  var paidWhen = '';
+  if (s.paidAtLocal) paidWhen = s.paidAtLocal;
+  else if (s.paidAt) { try { paidWhen = new Date(s.paidAt).toLocaleString('en-PH', {timeZone:'Asia/Manila'}); } catch(e) { paidWhen = s.paidAt; } }
+
+  box.innerHTML =
+    '<div style="background:' + cfg.bg + ';border:1.5px solid ' + cfg.bd + ';border-radius:10px;padding:13px 16px;margin:10px 0">' +
+      '<div style="display:flex;align-items:flex-start;gap:10px">' +
+        '<span style="font-size:17px;flex-shrink:0">' + cfg.icon + '</span>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="font-size:12.5px;font-weight:700;color:' + cfg.fg + ';margin-bottom:3px">' + cfg.title + '</div>' +
+          '<div style="font-size:11.5px;color:' + cfg.fg + ';line-height:1.7">' + cfg.body + '</div>' +
+          (paidWhen ? '<div style="font-size:11px;color:' + cfg.fg + ';margin-top:6px"><strong>Proof uploaded:</strong> ' + paidWhen + '</div>' : '') +
+          (state === 'translated' || state === 'paid' ?
+            '<div style="margin-top:9px;padding-top:9px;border-top:1px solid ' + cfg.bd + '">' +
+              '<div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:' + cfg.fg + ';margin-bottom:3px">Customer payment link</div>' +
+              '<div style="font-size:11px;font-family:monospace;word-break:break-all;color:' + cfg.fg + '">' + link + '</div>' +
+              '<button onclick="copyPayLink()" style="margin-top:7px;padding:5px 11px;background:#fff;border:1px solid ' + cfg.bd + ';border-radius:6px;font-size:11px;font-weight:600;color:' + cfg.fg + ';cursor:pointer;font-family:Inter,sans-serif">📋 Copy link</button>' +
+            '</div>' : '') +
+        '</div>' +
+      '</div>' +
+    '</div>';
+}
+
+function copyPayLink() {
   var s = subs.find(function(x) { return x.id === activeId; });
   if (!s) return;
-  s.status = 'approved';
+  var link = payLink(s);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(link).then(function(){ toast('Payment link copied'); },
+                                            function(){ toast('Copy failed — select the link manually'); });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = link; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); toast('Payment link copied'); }
+    catch(e) { toast('Copy failed — select the link manually'); }
+    ta.remove();
+  }
+}
+
+// ── 📨 REQUEST PAYMENT ────────────────────────────────────────────────
+// Marks the job as awaiting payment and emails the customer the QR
+// instructions plus their portal deep link.
+async function doRequestPayment() {
+  var s = subs.find(function(x) { return x.id === activeId; });
+  if (!s) return;
+
+  var hasTran = !!((s.translation && s.translation.trim()) || (s.customBody && s.customBody.trim()));
+  if (!hasTran) {
+    toast('Translate the document first — there is nothing to charge for yet.');
+    return;
+  }
+
+  var amt  = amountFor(s);
+  var link = payLink(s);
+  var btn  = document.getElementById('b-request-pay');
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Sending…';
+
+  // Record the amount so the portal and the customer see the same figure.
+  s.amount = amt;
+  s.status = 'translated';
+  s.paymentStatus = 'unpaid';
+  s.paymentRequestedAt = new Date().toISOString();
+
+  try {
+    await saveSubs();
+  } catch (e) {
+    btn.disabled = false;
+    btn.innerHTML = '📨 Request Payment';
+    toast('Could not save status: ' + (e.message || 'try again'));
+    return;
+  }
+
+  var plain =
+    'Dear ' + s.name + ',\n\n' +
+    'Good news — your ' + s.doctype + ' translation is finished.\n\n' +
+    'As agreed, payment is only due now that the work is done.\n\n' +
+    '─────────────────────────────\n' +
+    'ORDER DETAILS\n' +
+    '─────────────────────────────\n' +
+    'Request ID    : ' + s.id + '\n' +
+    'Document Type : ' + s.doctype + '\n' +
+    'Amount Due    : PHP ' + amt + (s.hasPage2 ? '  (2 pages x PHP 300)' : '') + '\n\n' +
+    '─────────────────────────────\n' +
+    'HOW TO PAY AND GET YOUR PDF\n' +
+    '─────────────────────────────\n' +
+    '1. Open your payment page:\n' +
+    '   ' + link + '\n' +
+    '2. Review the watermarked preview of your translation\n' +
+    '3. Scan the GCash QR shown there and send exactly PHP ' + amt + '\n' +
+    '4. Upload your GCash screenshot on the same page\n\n' +
+    'As soon as we confirm your payment we will email you the final,\n' +
+    'watermark-free A4 PDF, ready to print and submit.\n\n' +
+    'Prefer not to use the page? Simply reply to this email with your\n' +
+    'GCash screenshot and your Request ID (' + s.id + ') and we will\n' +
+    'process it manually.\n\n' +
+    'Questions? 09063964052 | areymar36@gmail.com\n\n' +
+    'Thank you for choosing Arroyo Translation Services!';
+
+  var html =
+    '<div style="font-family:Arial,sans-serif;color:#1f2937;max-width:600px;margin:0 auto">' +
+      '<div style="background:#1a2744;padding:24px 28px">' +
+        '<h1 style="color:#e2c97e;margin:0;font-size:20px;letter-spacing:.5px">Arroyo Translation Services</h1>' +
+        '<p style="color:rgba(255,255,255,.6);margin:4px 0 0;font-size:12px">PSA Document Translation — English to Japanese</p>' +
+      '</div>' +
+      '<div style="background:#f7f8fc;padding:24px 28px;border-left:1px solid #e5e7eb;border-right:1px solid #e5e7eb">' +
+
+        '<p style="font-size:15px;margin:0 0 8px">Dear <strong>' + s.name + '</strong>,</p>' +
+        '<p style="font-size:13px;line-height:1.8;color:#374151;margin:0 0 20px">' +
+          'Good news — your <strong>' + s.doctype + '</strong> translation is finished. ' +
+          'As agreed, <strong>payment is only due now that the work is done</strong>.' +
+        '</p>' +
+
+        '<div style="background:#fffbeb;border:2px solid #f59e0b;border-radius:10px;padding:18px 20px;margin-bottom:20px;text-align:center">' +
+          '<div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#92400e">Amount due</div>' +
+          '<div style="font-size:34px;font-weight:800;color:#92400e;margin:4px 0">₱' + amt + '</div>' +
+          (s.hasPage2 ? '<div style="font-size:11px;color:#a16207">2 pages × ₱300</div>' : '<div style="font-size:11px;color:#a16207">Flat single-page rate</div>') +
+          '<div style="font-size:11px;color:#a16207;margin-top:6px">Request ID: <strong style="font-family:monospace;letter-spacing:1px">' + s.id + '</strong></div>' +
+          '<a href="' + link + '" style="display:inline-block;margin-top:14px;padding:13px 26px;background:#1a2744;color:#e8c97a;text-decoration:none;border-radius:8px;font-size:14px;font-weight:700">💳 Pay &amp; get my PDF →</a>' +
+        '</div>' +
+
+        '<div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:8px;padding:16px 20px;margin-bottom:20px">' +
+          '<div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;margin-bottom:10px">How it works</div>' +
+          '<ol style="font-size:13px;color:#374151;margin:0;padding-left:19px;line-height:2.1">' +
+            '<li>Open your payment page using the button above</li>' +
+            '<li>Check the <strong>watermarked preview</strong> — confirm it is your document</li>' +
+            '<li>Scan the <strong>GCash QR</strong> and send exactly <strong>₱' + amt + '</strong></li>' +
+            '<li>Upload your GCash screenshot on the same page</li>' +
+          '</ol>' +
+          '<p style="font-size:12px;color:#166534;background:#f0fdf4;border-radius:6px;padding:10px 12px;margin:12px 0 0;line-height:1.7">' +
+            'Once we confirm your payment we email the final <strong>watermark-free A4 PDF</strong>, ready to print and submit.' +
+          '</p>' +
+        '</div>' +
+
+        '<div style="background:#f9fafb;border:1px dashed #d1d5db;border-radius:8px;padding:13px 16px;margin-bottom:20px">' +
+          '<p style="font-size:12px;color:#4b5563;margin:0;line-height:1.75">' +
+            '<strong>Prefer email?</strong> Just reply to this message with your GCash screenshot and your Request ID ' +
+            '(<strong style="font-family:monospace">' + s.id + '</strong>) and we will process it manually.' +
+          '</p>' +
+        '</div>' +
+
+        '<p style="font-size:11.5px;color:#6b7280;line-height:1.8;margin:0 0 20px">' +
+          '翻訳が完了しました。お支払いは作業完了後のみです。上記リンクからプレビューをご確認のうえ、GCashで₱' + amt + 'をお送りし、スクリーンショットをアップロードしてください。確認後、透かしなしの最終PDFをお送りします。' +
+        '</p>' +
+
+        '<div style="border-top:1px solid #e5e7eb;padding-top:16px">' +
+          '<p style="font-size:12px;color:#6b7280;margin:0 0 6px">Questions? Contact us anytime:</p>' +
+          '<p style="font-size:13px;font-weight:700;color:#1a2744;margin:0">&#x1F4F1; 09063964052 &nbsp;|&nbsp; &#x2709; areymar36@gmail.com</p>' +
+          '<p style="font-size:12px;color:#6b7280;margin:8px 0 0">Thank you for choosing Arroyo Translation Services! &#x1F64F;</p>' +
+        '</div>' +
+      '</div>' +
+      '<div style="background:#1a2744;padding:14px 28px;text-align:center">' +
+        '<p style="color:rgba(255,255,255,.4);font-size:11px;margin:0">Arroyo Translation Services &nbsp;&#xB7;&nbsp; Pay only after translation &nbsp;&#xB7;&nbsp; English &#x2192; Japanese</p>' +
+      '</div>' +
+    '</div>';
+
+  try {
+    emailjs.init(EMAILJS_KEY);
+    await emailjs.send(EMAILJS_SVC, EMAILJS_TPL, {
+      to_email:         s.email,
+      to_name:          s.name,
+      customer_name:    s.name,
+      doc_type:         s.doctype,
+      ref_no:           s.id,
+      purpose:          s.purpose || 'Japanese visa application',
+      subject:          'Your ' + s.doctype + ' is ready — PHP ' + amt + ' due (' + s.id + ')',
+      translation_note: plain,
+      html_body:        html
+    });
+    toast('Payment request sent to ' + s.email + ' (₱' + amt + ')');
+  } catch (e) {
+    console.error('Payment request email failed:', e);
+    toast('Status saved, but the email failed: ' + e.message + ' — send the link manually.');
+  }
+
+  render(); updateStats(); openModal(activeId);
+}
+
+// ── 💰 VERIFY PAYMENT ─────────────────────────────────────────────────
+async function doVerifyPayment() {
+  var s = subs.find(function(x) { return x.id === activeId; });
+  if (!s) return;
+
+  if (normStatus(s) !== 'paid') {
+    toast('No payment proof to verify yet.');
+    return;
+  }
+  var amt = amountFor(s);
+  if (!confirm('Confirm you have checked your GCash history and received PHP ' + amt +
+               ' from ' + s.name + '?\n\nThis marks the payment as collected and allows the final PDF to be sent.')) return;
+
+  s.status = 'released';
+  s.paymentStatus = 'verified';
+  s.verifiedAt = new Date().toISOString();
+  s.verifiedAtLocal = new Date().toLocaleString('en-PH', {timeZone:'Asia/Manila'});
+
   await saveSubs();
   render(); updateStats(); openModal(activeId);
-  toast('Approved: ' + s.name);
+  toast('₱' + amt + ' verified — you can now email the final PDF to ' + s.name);
 }
 
 async function doReject() {
@@ -1360,6 +1769,10 @@ function doDownloadPDF() {
     return;
   }
 
+  // Payment is collected after translation, so a PDF generated before the money
+  // lands gets stamped UNPAID on every page. Verify the payment to get a clean one.
+  var wmUnpaid = !isPaid(s);
+
   var f = s.fields || {};
   var today = new Date().toLocaleDateString('en-PH', {year:'numeric',month:'long',day:'numeric'});
   var todayJP = (function(){ var d=new Date(); return d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日'; })();
@@ -1687,7 +2100,14 @@ function doDownloadPDF() {
     '.rot-wrap{position:absolute;top:0;right:0;height:100%;width:11mm;display:flex;align-items:center;justify-content:center;pointer-events:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}',
     '.rot-ann{display:block;white-space:nowrap;transform:rotate(-90deg);transform-origin:center center;background:#c8e6c9;border-top:2px solid #388e3c;border-bottom:2px solid #388e3c;padding:3px 8px;color:#1b5e20;font-family:"Noto Sans JP",sans-serif;width:260mm;text-align:center}',
     '.rot-en{font-size:6px;font-weight:bold;display:block;margin-bottom:1px;letter-spacing:0}',
-    '.rot-jp{font-size:6.5px;font-weight:bold;display:block;letter-spacing:0}'
+    '.rot-jp{font-size:6.5px;font-weight:bold;display:block;letter-spacing:0}',
+    // ── UNPAID WATERMARK ── injected into every .page when payment is not yet
+    // confirmed, so a preview PDF cannot quietly be used as the final article.
+    '.wmk{position:absolute;inset:0;pointer-events:none;z-index:50;background:repeating-linear-gradient(-32deg,rgba(220,38,38,0.05) 0 46px,rgba(220,38,38,0) 46px 104px);-webkit-print-color-adjust:exact;print-color-adjust:exact}',
+    '.wmk-txt{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-30deg);border:5px solid rgba(185,28,28,0.30);border-radius:14px;padding:12px 34px;text-align:center;white-space:nowrap}',
+    '.wmk-1{font-size:44px;font-weight:800;color:rgba(185,28,28,0.30);letter-spacing:8px;line-height:1}',
+    '.wmk-2{font-size:17px;font-weight:700;color:rgba(185,28,28,0.28);letter-spacing:5px;margin-top:4px}',
+    '.wmk-3{position:absolute;left:0;right:0;bottom:6mm;text-align:center;font-size:9px;font-weight:700;color:rgba(185,28,28,0.42);letter-spacing:1px}'
   ].join('');
 
   // ── PSA HEADER (shared) ──
@@ -2876,7 +3296,17 @@ function doDownloadPDF() {
     TOOLBAR+
     '<div class="page">'+editableBody+'</div>'+
     editablePage2+
+    '<script>var WM_UNPAID=' + (wmUnpaid ? 'true' : 'false') + ';var WM_REF=' + JSON.stringify(String(s.id||'')) + ';<\/script>' +
     '<script>document.addEventListener(\'DOMContentLoaded\',function(){' +
+    'if(WM_UNPAID){document.querySelectorAll(".page").forEach(function(pg){' +
+    'var w=document.createElement("div");w.className="wmk";' +
+    'var b=document.createElement("div");b.className="wmk-txt";' +
+    'var l1=document.createElement("div");l1.className="wmk-1";l1.textContent="UNPAID";' +
+    'var l2=document.createElement("div");l2.className="wmk-2";l2.textContent="\u672A\u6255\u3044\u30FB\u898B\u672C";' +
+    'b.appendChild(l1);b.appendChild(l2);w.appendChild(b);' +
+    'var f=document.createElement("div");f.className="wmk-3";' +
+    'f.textContent="PREVIEW ONLY \u00B7 NOT VALID FOR SUBMISSION \u00B7 "+WM_REF;' +
+    'w.appendChild(f);pg.appendChild(w);});}' +
     '[\'.fj\',\'.fe\',\'.fill\',\'.fill-lg\',\'.dval\'].forEach(function(sel){' +
     'document.querySelectorAll(sel).forEach(function(el){' +
     'el.setAttribute(\'contenteditable\',\'true\');' +
@@ -2902,7 +3332,7 @@ function doDownloadPDF() {
 
   // Build a readable filename: ATS-<id>-<Customer>-<Doc>-JP.html
   var safe = function(v) { return String(v||'').replace(/[^A-Za-z0-9\u3040-\u30ff\u4e00-\u9fff]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40); };
-  var fname = 'ATS-' + safe(s.id) + '-' + safe(s.name) + '-' + safe(hasCustom ? (s.customTitleEn || dt) : dt) + '-JP.html';
+  var fname = 'ATS-' + safe(s.id) + '-' + safe(s.name) + '-' + safe(hasCustom ? (s.customTitleEn || dt) : dt) + '-JP' + (wmUnpaid ? '-UNPAID-PREVIEW' : '') + '.html';
 
   if (saveAsFile) {
     var a = document.createElement('a');
@@ -2911,7 +3341,9 @@ function doDownloadPDF() {
     setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
     toast(untranslatedCount
       ? '⚠ Saved ' + fname + ' — but ' + untranslatedCount + ' field(s) are untranslated'
-      : 'Saved ' + fname + ' — open it, then Print → Save as PDF');
+      : (wmUnpaid
+          ? 'Saved ' + fname + ' — stamped UNPAID; verify payment for a clean copy'
+          : 'Saved ' + fname + ' — open it, then Print → Save as PDF'));
     return;
   }
 
@@ -2919,6 +3351,8 @@ function doDownloadPDF() {
   if (!win) { var a2=document.createElement('a'); a2.href=url; a2.download=fname; a2.click(); }
   if (untranslatedCount) {
     toast('⚠ ' + untranslatedCount + ' field(s) untranslated — marked 【未翻訳】 in red');
+  } else if (wmUnpaid) {
+    toast('PDF ready — stamped UNPAID (payment not verified). Verify payment for a clean copy.');
   } else {
     toast('PDF ready — click any field to edit, then Print → Save as PDF');
   }
@@ -3089,6 +3523,15 @@ async function doEmail() {
     toast('Please translate the document first before emailing the customer.');
     return;
   }
+  // This email contains the full translation, so it IS the deliverable.
+  // Payment now comes first — block it by default, but allow an override
+  // for the cases where money arrived outside the portal.
+  if (!isPaid(s)) {
+    if (!confirm('⚠ Payment for ' + s.id + ' is NOT confirmed yet (PHP ' + amountFor(s) + ').\n\n' +
+                 'This email contains the complete translation, so sending it now gives the work away unpaid.\n\n' +
+                 'Use "📨 Request Payment" instead unless you have already received the money another way.\n\n' +
+                 'Send anyway?')) return;
+  }
 
   var includeNotary = document.getElementById('chk-notary') && document.getElementById('chk-notary').checked;
 
@@ -3173,7 +3616,8 @@ async function doEmail() {
     'Document Type : ' + docLabel + '\n' +
     'Purpose       : ' + purpose + '\n' +
     'Date Submitted: ' + dateSubmit + '\n' +
-    'Status        : Translation Complete ✅\n\n' +
+    'Status        : Translation Complete ✅\n' +
+    (isPaid(s) ? 'Payment       : PHP ' + amountFor(s) + ' received — thank you\n' : '') + '\n' +
     '─────────────────────────────\n' +
     'JAPANESE TRANSLATION\n' +
     '─────────────────────────────\n' +
@@ -3247,6 +3691,11 @@ async function doEmail() {
           '<tr><td style="padding:5px 0;color:#6b7280;">Status</td><td style="padding:5px 0;">' +
             '<span style="background:#d1fae5;color:#065f46;padding:3px 12px;border-radius:20px;font-size:11px;font-weight:700;">✅ Translation Complete</span>' +
           '</td></tr>' +
+          (isPaid(s) ?
+          '<tr><td style="padding:5px 0;color:#6b7280;">Payment</td><td style="padding:5px 0;">' +
+            '<span style="font-weight:700;color:#15803d;">₱' + amountFor(s) + ' received</span>' +
+            (s.verifiedAtLocal ? '<span style="color:#6b7280;font-size:11px;"> · ' + s.verifiedAtLocal + '</span>' : '') +
+          '</td></tr>' : '') +
         '</table>' +
       '</div>' +
 
@@ -3336,6 +3785,187 @@ async function doEmail() {
     toast('Email failed: ' + e.message);
     console.error('EmailJS error:', e);
   }
+}
+
+
+// ══════════════════════════════════════════════════════════════════════
+// SEARCH, AGING, STORAGE METER, RETENTION PURGE, PARTIAL PAYMENTS
+// ══════════════════════════════════════════════════════════════════════
+
+function onSearch(v) {
+  searchTerm = String(v || '').trim().toLowerCase();
+  render();
+}
+
+// How long a job has been sitting in its current state. Used to surface jobs
+// that were translated but never paid — the money most likely to be lost.
+function daysSince(iso) {
+  if (!iso) return null;
+  var t = Date.parse(iso);
+  if (isNaN(t)) return null;
+  return Math.floor((Date.now() - t) / 86400000);
+}
+
+function ageOf(s) {
+  // Prefer the moment payment was requested; fall back to creation.
+  return daysSince(s.paymentRequestedAt || s.createdAt);
+}
+
+// A job is overdue when we have asked for money and not received it.
+var OVERDUE_DAYS = 3;
+function isOverdue(s) {
+  if (normStatus(s) !== 'translated') return false;
+  if (isPaid(s)) return false;
+  var d = ageOf(s);
+  return d !== null && d >= OVERDUE_DAYS;
+}
+
+function matchesSearch(s) {
+  if (!searchTerm) return true;
+  var hay = [s.id, s.name, s.email, s.phone, s.doctype, s.purpose]
+    .map(function(x) { return String(x || '').toLowerCase(); }).join(' ');
+  return hay.indexOf(searchTerm) !== -1;
+}
+
+function renderBinMeter() {
+  var el = document.getElementById('bin-meter');
+  if (!el) return;
+  if (!binBytes) { el.innerHTML = ''; return; }
+  var pct = Math.min(100, Math.round((binBytes / binMax) * 100));
+  var color = pct >= 90 ? '#dc2626' : pct >= 70 ? '#f59e0b' : '#16a34a';
+  var warn = pct >= 70
+    ? ' — settled records will be auto-archived; run <strong>Purge old</strong> to free space'
+    : '';
+  el.innerHTML =
+    '<div style="background:#fff;border:1px solid #e5e0d8;border-radius:10px;padding:10px 14px">' +
+      '<div style="display:flex;justify-content:space-between;font-size:11px;color:#6b7280;margin-bottom:6px">' +
+        '<span style="font-weight:600;letter-spacing:.5px;text-transform:uppercase">Storage</span>' +
+        '<span>' + Math.round(binBytes / 1024) + 'KB of ' + Math.round(binMax / 1024) + 'KB (' + pct + '%)' + warn + '</span>' +
+      '</div>' +
+      '<div style="height:6px;background:#f0ede8;border-radius:99px;overflow:hidden">' +
+        '<div style="height:100%;width:' + pct + '%;background:' + color + ';border-radius:99px"></div>' +
+      '</div>' +
+    '</div>';
+}
+
+// ── RETENTION PURGE ───────────────────────────────────────────────────
+// Makes good on the consent text, which promises data is deleted once the
+// translation is complete. Only released jobs past the window are touched;
+// a non-personal stub is archived so revenue history survives.
+async function doPurge() {
+  var days = prompt('Delete personal data for RELEASED jobs older than how many days?\n\n' +
+                    'Revenue totals are preserved via anonymous stubs.\n' +
+                    'Unpaid and unverified jobs are never touched.', '90');
+  if (days === null) return;
+  days = parseInt(days, 10);
+  if (!days || days < 1) { toast('Cancelled — enter a number of days.'); return; }
+
+  try {
+    // Dry run first so the operator sees the blast radius before committing.
+    var pr = await fetch(DATA_API + '/api/admin/purge', {
+      method: 'POST', headers: apiHeaders(true),
+      body: JSON.stringify({ days: days, dryRun: true })
+    });
+    var pd = await pr.json();
+    if (!pr.ok || !pd.ok) throw new Error(pd.error || ('HTTP ' + pr.status));
+
+    if (!pd.count) { toast('Nothing to purge — no released jobs older than ' + days + ' days.'); return; }
+    if (!confirm('Permanently delete personal data for ' + pd.count + ' released job(s) older than ' +
+                 days + ' days?\n\n' + pd.ids.join(', ') + '\n\nThis cannot be undone.')) return;
+
+    var r = await fetch(DATA_API + '/api/admin/purge', {
+      method: 'POST', headers: apiHeaders(true),
+      body: JSON.stringify({ days: days })
+    });
+    var d = await r.json();
+    if (!r.ok || !d.ok) throw new Error(d.error || ('HTTP ' + r.status));
+    toast('Purged ' + d.purged + ' record(s). Personal data deleted, revenue stubs kept.');
+    await loadSubs();
+  } catch (e) {
+    console.error('Purge failed:', e);
+    toast('Purge failed: ' + (e.message || 'try again'));
+  }
+}
+
+// ── PARTIAL PAYMENT / TOP-UP ──────────────────────────────────────────
+// For when someone sends PHP 300 on a PHP 600 two-page job.
+async function doRequestTopUp() {
+  var s = subs.find(function(x) { return x.id === activeId; });
+  if (!s) return;
+  var due = amountFor(s);
+  var got = prompt('How much did they actually send? (PHP)\n\nAmount due: ' + due, String(due));
+  if (got === null) return;
+  got = Number(String(got).replace(/[^0-9.]/g, ''));
+  if (!got || got <= 0) { toast('Cancelled — enter the amount received.'); return; }
+
+  var short = due - got;
+  if (short <= 0) {
+    toast('That covers the full amount — use 💰 Verify Payment instead.');
+    return;
+  }
+
+  s.amountReceived = got;
+  s.amountShort = short;
+  s.status = 'translated';        // back to awaiting payment for the balance
+  s.paymentStatus = 'partial';
+  s.topUpRequestedAt = new Date().toISOString();
+  try { await saveSubs(); } catch (e) { return; }
+
+  var link = payLink(s);
+  var plain =
+    'Dear ' + s.name + ',\n\n' +
+    'Thank you for your payment of PHP ' + got + ' for request ' + s.id + '.\n\n' +
+    'The total for this job is PHP ' + due + (s.hasPage2 ? ' (2 pages x PHP 300)' : '') + ',\n' +
+    'so there is a remaining balance of PHP ' + short + '.\n\n' +
+    'Please send the balance and upload the screenshot here:\n' +
+    '  ' + link + '\n\n' +
+    'As soon as it clears we will email your final watermark-free PDF.\n\n' +
+    'Questions? 09063964052 | areymar36@gmail.com\n\n' +
+    'Arroyo Translation Services';
+
+  var html =
+    '<div style="font-family:Arial,sans-serif;color:#1f2937;max-width:600px;margin:0 auto">' +
+      '<div style="background:#1a2744;padding:24px 28px">' +
+        '<h1 style="color:#e2c97e;margin:0;font-size:20px">Arroyo Translation Services</h1>' +
+      '</div>' +
+      '<div style="background:#f7f8fc;padding:24px 28px;border-left:1px solid #e5e7eb;border-right:1px solid #e5e7eb">' +
+        '<p style="font-size:15px;margin:0 0 8px">Dear <strong>' + s.name + '</strong>,</p>' +
+        '<p style="font-size:13px;line-height:1.8;color:#374151;margin:0 0 18px">' +
+          'Thank you for your payment of <strong>₱' + got + '</strong> for request ' +
+          '<strong style="font-family:monospace">' + s.id + '</strong>.' +
+        '</p>' +
+        '<div style="background:#fffbeb;border:2px solid #f59e0b;border-radius:10px;padding:18px 20px;text-align:center;margin-bottom:20px">' +
+          '<table style="width:100%;font-size:13px;color:#78350f">' +
+            '<tr><td style="text-align:left;padding:3px 0">Total due</td><td style="text-align:right;padding:3px 0">₱' + due + '</td></tr>' +
+            '<tr><td style="text-align:left;padding:3px 0">Received</td><td style="text-align:right;padding:3px 0">−₱' + got + '</td></tr>' +
+            '<tr><td style="text-align:left;padding:7px 0 0;border-top:1px solid #fde68a;font-weight:700">Balance</td>' +
+                '<td style="text-align:right;padding:7px 0 0;border-top:1px solid #fde68a;font-weight:800;font-size:20px">₱' + short + '</td></tr>' +
+          '</table>' +
+          '<a href="' + link + '" style="display:inline-block;margin-top:14px;padding:12px 24px;background:#1a2744;color:#e8c97a;text-decoration:none;border-radius:8px;font-size:14px;font-weight:700">Pay the balance →</a>' +
+        '</div>' +
+        '<p style="font-size:12.5px;color:#374151;line-height:1.8;margin:0">' +
+          'Once the balance clears we will email your final <strong>watermark-free PDF</strong>.' +
+        '</p>' +
+        '<p style="font-size:11.5px;color:#6b7280;line-height:1.8;margin:16px 0 0">' +
+          'ご入金ありがとうございます。残額 ₱' + short + ' のお支払いをお願いいたします。確認後、最終PDFをお送りします。' +
+        '</p>' +
+        '<p style="font-size:13px;font-weight:700;color:#1a2744;margin:18px 0 0">&#x1F4F1; 09063964052 &nbsp;|&nbsp; &#x2709; areymar36@gmail.com</p>' +
+      '</div>' +
+    '</div>';
+
+  try {
+    emailjs.init(EMAILJS_KEY);
+    await emailjs.send(EMAILJS_SVC, EMAILJS_TPL, {
+      to_email: s.email, to_name: s.name, customer_name: s.name,
+      doc_type: s.doctype, ref_no: s.id, purpose: s.purpose || '',
+      subject: 'Balance of PHP ' + short + ' outstanding — ' + s.id,
+      translation_note: plain, html_body: html
+    });
+    toast('Top-up request sent — balance ₱' + short);
+  } catch (e) {
+    toast('Saved, but the email failed: ' + e.message);
+  }
+  render(); updateStats(); openModal(activeId);
 }
 
 // -- EDIT --------------------------------------
