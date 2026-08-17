@@ -207,6 +207,7 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
   <div class="vtabs">
     <button class="vtab active" id="vt-subs"   onclick="showView('subs')">📋 Submissions</button>
     <button class="vtab"        id="vt-custom" onclick="showView('custom')">📝 Custom Translation</button>
+    <button class="vtab"        id="vt-test"   onclick="stOpen()" style="margin-left:auto">🧪 Self-Test</button>
   </div>
 
 <div id="view-subs">
@@ -587,6 +588,46 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
       </div>
 
 
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ SELF-TEST PANEL ══════════════════════════════════════════════════
+     Checks configuration, worker connectivity, the paywall rules, internal
+     logic and UI wiring. Quick mode is read-only. Full mode creates one
+     throwaway request, walks it through the whole lifecycle, then deletes it.
+     ═════════════════════════════════════════════════════════════════════ -->
+<div id="st-overlay" style="display:none;position:fixed;inset:0;background:rgba(16,20,32,.6);z-index:2147482000;padding:16px;overflow-y:auto">
+  <div style="background:#fff;border-radius:14px;max-width:760px;margin:0 auto;overflow:hidden;font-family:Inter,sans-serif">
+
+    <div style="background:#1a2744;padding:15px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:5">
+      <div style="flex:1;min-width:0">
+        <div style="color:#e8c97a;font-size:15px;font-weight:700">🧪 System Self-Test</div>
+        <div style="color:rgba(255,255,255,.55);font-size:11px" id="st-sub">Checks both workers, the paywall and every internal rule.</div>
+      </div>
+      <button onclick="stClose()" style="background:rgba(255,255,255,.12);color:#e8c97a;border:1px solid rgba(232,201,122,.35);border-radius:7px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;flex-shrink:0">Close</button>
+    </div>
+
+    <div style="padding:16px 20px 20px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+        <button onclick="runSelfTest(false)" id="st-run"
+          style="flex:1;min-width:150px;padding:12px;background:#1a2744;color:#e8c97a;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+          ▶ Run quick test <span style="opacity:.6;font-weight:500">(read-only)</span>
+        </button>
+        <button onclick="runSelfTest(true)" id="st-run-deep"
+          style="flex:1;min-width:150px;padding:12px;background:#fef3c7;color:#92400e;border:1.5px solid #fde68a;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+          ▶▶ Run full test <span style="opacity:.7;font-weight:500">(makes a test record)</span>
+        </button>
+      </div>
+
+      <div id="st-summary" style="display:none;margin-bottom:12px"></div>
+      <div id="st-results" style="font-size:12.5px"></div>
+
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid #f0ede8;font-size:11px;color:#6b7280;line-height:1.7">
+        <strong>Quick</strong> reads only — safe any time.<br>
+        <strong>Full</strong> also creates one request named “ZZ SELF-TEST”, drives it through translate → request payment → pay → verify, then deletes it. No email is sent. If it is interrupted, search <code>SELF-TEST</code> and delete the leftover by hand. Full mode also tests document OCR.<br>Both modes make one small Gemini call (a few tokens) to confirm translation still works.
+      </div>
     </div>
   </div>
 </div>
@@ -6132,6 +6173,514 @@ async function saveTranslation() {
   closeTranslationEditor();
   render(); updateStats();
   toast('Translation updated for ' + s.name);
+}
+
+
+// ══════════════════════════════════════════════════════════════════════
+// SELF-TEST SUITE
+// Grouped checks over configuration, the worker, the paywall rules, the
+// internal status/pricing logic, the renderers and the UI wiring.
+// ══════════════════════════════════════════════════════════════════════
+
+var stGroups = [], stBusy = false;
+
+function stOpen() {
+  document.getElementById('st-overlay').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+function stClose() {
+  if (stBusy && !confirm('A test is still running. Close anyway?')) return;
+  document.getElementById('st-overlay').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function stRender() {
+  var pass = 0, fail = 0, warn = 0;
+  stGroups.forEach(function (g) {
+    g.rows.forEach(function (r) {
+      if (r.s === 'pass') pass++; else if (r.s === 'fail') fail++; else if (r.s === 'warn') warn++;
+    });
+  });
+
+  var icon = { pass: '✓', fail: '✕', warn: '!', run: '⋯', skip: '–' };
+  var col = { pass: '#15803d', fail: '#b91c1c', warn: '#b45309', run: '#6b7280', skip: '#9ca3af' };
+  var bg = { pass: '#f0fdf4', fail: '#fef2f2', warn: '#fffbeb', run: '#f9fafb', skip: '#f9fafb' };
+
+  var html = '';
+  stGroups.forEach(function (g) {
+    var gf = g.rows.filter(function (r) { return r.s === 'fail'; }).length;
+    var gw = g.rows.filter(function (r) { return r.s === 'warn'; }).length;
+    var badge = gf ? '<span style="color:#b91c1c;font-weight:700">' + gf + ' failed</span>'
+              : gw ? '<span style="color:#b45309;font-weight:700">' + gw + ' warning</span>'
+              : '<span style="color:#15803d;font-weight:700">all clear</span>';
+    html += '<div style="margin-bottom:11px;border:1px solid #e5e0d8;border-radius:9px;overflow:hidden">' +
+      '<div style="background:#faf8f0;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#1a2744">' +
+        '<span>' + g.name + '</span>' + badge +
+      '</div>';
+    g.rows.forEach(function (r) {
+      html += '<div style="display:flex;gap:9px;padding:7px 12px;border-top:1px solid #f4f1e8;background:' + bg[r.s] + '">' +
+        '<span style="flex-shrink:0;width:15px;text-align:center;font-weight:800;color:' + col[r.s] + '">' + icon[r.s] + '</span>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="color:#1f2937">' + r.n + '</div>' +
+          (r.d ? '<div style="font-size:11px;color:' + col[r.s] + ';margin-top:2px;word-break:break-word">' + r.d + '</div>' : '') +
+        '</div>' +
+        (r.ms != null ? '<span style="flex-shrink:0;font-size:10px;color:#9ca3af">' + r.ms + 'ms</span>' : '') +
+      '</div>';
+    });
+    html += '</div>';
+  });
+  document.getElementById('st-results').innerHTML = html;
+
+  var sum = document.getElementById('st-summary');
+  sum.style.display = 'block';
+  var tone = fail ? ['#fef2f2', '#fecaca', '#b91c1c'] : warn ? ['#fffbeb', '#fde68a', '#92400e'] : ['#f0fdf4', '#86efac', '#166534'];
+  sum.innerHTML = '<div style="background:' + tone[0] + ';border:1.5px solid ' + tone[1] + ';border-radius:9px;padding:11px 14px;color:' + tone[2] + ';font-size:13px;font-weight:700">' +
+    (fail ? '✕ ' + fail + ' check(s) failed' : warn ? '! ' + warn + ' warning(s)' : '✓ Everything passed') +
+    ' <span style="font-weight:500;opacity:.85">— ' + pass + ' passed' +
+    (warn ? ', ' + warn + ' warning' : '') + (fail ? ', ' + fail + ' failed' : '') + '</span></div>';
+}
+
+function stGroup(name) {
+  var g = { name: name, rows: [] };
+  stGroups.push(g);
+  return {
+    // status: pass | fail | warn | skip
+    add: function (n, status, detail, ms) {
+      g.rows.push({ n: n, s: status, d: detail || '', ms: ms });
+      stRender();
+    },
+    // Wrap a boolean assertion.
+    ok: function (n, cond, detailOnFail) {
+      g.rows.push({ n: n, s: cond ? 'pass' : 'fail', d: cond ? '' : (detailOnFail || 'expected true') });
+      stRender();
+      return cond;
+    },
+    eq: function (n, actual, expected) {
+      var same = String(actual) === String(expected);
+      g.rows.push({ n: n, s: same ? 'pass' : 'fail', d: same ? '' : 'got "' + actual + '", expected "' + expected + '"' });
+      stRender();
+      return same;
+    }
+  };
+}
+
+async function stTimed(fn) {
+  var t0 = Date.now();
+  var out = await fn();
+  return { out: out, ms: Date.now() - t0 };
+}
+
+async function runSelfTest(deep) {
+  if (stBusy) return;
+  if (deep && !await uiConfirm(
+      'This creates a real request named "ZZ SELF-TEST" in your live data, drives it through the whole payment lifecycle, then deletes it.\n\n' +
+      'No email is sent. Your real records are not modified.',
+      { title: 'Run the full test?', okText: 'Run it' })) return;
+
+  stBusy = true;
+  stGroups = [];
+  var runBtn = document.getElementById('st-run'), deepBtn = document.getElementById('st-run-deep');
+  runBtn.disabled = deepBtn.disabled = true;
+  runBtn.style.opacity = deepBtn.style.opacity = '.6';
+  document.getElementById('st-sub').textContent = 'Running…';
+
+  try {
+    // ── 1. CONFIGURATION ──
+    var g = stGroup('1 · Configuration');
+    g.ok('Data API URL is set', typeof DATA_API === 'string' && /^https:\/\/.+/.test(DATA_API), 'DATA_API = ' + DATA_API);
+    g.add('Data API', 'pass', DATA_API);
+    g.ok('Admin token present in this session', !!ADMIN_TOKEN, 'Sign in again — no token held');
+    g.ok('Customer portal URL is set', typeof PORTAL_URL === 'string' && /^https?:\/\/.+/.test(PORTAL_URL), 'PORTAL_URL = ' + PORTAL_URL);
+    g.add('Portal URL (payment links point here)', 'pass', PORTAL_URL);
+    g.ok('EmailJS service configured', !!(EMAILJS_SVC && EMAILJS_TPL && EMAILJS_KEY), 'One of EMAILJS_SVC / TPL / KEY is empty');
+    g.ok('No JSONBin key embedded in this page',
+      !/\$2a\$10\$/.test(document.documentElement.innerHTML),
+      'A master key string was found in the page — it must live only in the worker');
+
+    // ── 2. WORKER ──
+    g = stGroup('2 · Worker connectivity');
+    var health = null;
+    try {
+      var h = await stTimed(function () {
+        return fetch(DATA_API + '/api/health?t=' + Date.now()).then(function (r) { return r.json(); });
+      });
+      health = h.out;
+      g.add('Health endpoint reachable', health && health.ok ? 'pass' : 'fail',
+        health && health.ok ? 'service: ' + health.service : 'response: ' + JSON.stringify(health), h.ms);
+      g.add('Archive bin configured', health && health.archive ? 'pass' : 'warn',
+        health && health.archive ? '' : 'JSONBIN_ARCHIVE_BIN is not set — saves will FAIL once the bin fills instead of losing data');
+    } catch (e) {
+      g.add('Health endpoint reachable', 'fail', e.message + ' — worker not deployed, wrong URL, or blocked by an extension');
+    }
+
+
+    // ── 2b. AI WORKER (translation + OCR) ──
+    // The Gemini proxy is a separate worker from the data API. It fails in its
+    // own ways — quota exhaustion, a revoked key, safety blocks, truncation —
+    // and none of those show up in the data-worker checks.
+    g = stGroup('2b · AI worker (Gemini proxy)');
+    g.ok('AI worker URL is set', typeof WORKER === 'string' && /^https:\/\/.+/.test(WORKER), 'WORKER = ' + WORKER);
+    g.add('AI worker', 'pass', WORKER);
+    g.ok('AI worker is separate from the data API', WORKER !== DATA_API,
+      'both point at the same URL — one of them is misconfigured');
+
+    var aiOk = false;
+    try {
+      // Same request shape doTranslate() uses, kept deliberately tiny so the
+      // check costs almost nothing against your quota.
+      var ai = await stTimed(function () {
+        return fetch(WORKER, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text:
+              'Translate to Japanese. Reply with ONLY the translation, no explanation.\n' +
+              'Output exactly one line in the form: greeting|<Japanese>\n' +
+              'English: Certificate of Live Birth' }] }],
+            generationConfig: { temperature: 0, topK: 1, topP: 1, candidateCount: 1, maxOutputTokens: 60 }
+          })
+        });
+      });
+      var res = ai.out;
+
+      if (res.status === 429) {
+        g.add('AI worker responds', 'fail', 'HTTP 429 — Gemini quota exhausted. Translation will fail until it resets.', ai.ms);
+      } else if (!res.ok) {
+        g.add('AI worker responds', 'fail', 'HTTP ' + res.status + ' — worker down, or the Gemini key is missing/revoked', ai.ms);
+      } else {
+        g.add('AI worker responds', 'pass', 'HTTP 200', ai.ms);
+        var dd = await res.json();
+
+        if (dd.error) {
+          g.add('Gemini accepted the request', 'fail', dd.error.message || JSON.stringify(dd.error));
+        } else {
+          g.add('Gemini accepted the request', 'pass', '');
+          var cand = dd.candidates && dd.candidates[0];
+          g.ok('Response has a candidate', !!cand, 'no candidates returned: ' + JSON.stringify(dd).slice(0, 160));
+
+          if (cand) {
+            var fr = cand.finishReason;
+            g.add('Finished cleanly', (!fr || fr === 'STOP') ? 'pass' : 'fail',
+              (!fr || fr === 'STOP') ? '' : 'finishReason = ' + fr +
+                (fr === 'MAX_TOKENS' ? ' (output truncated)' : fr === 'SAFETY' ? ' (safety filter)' : ''));
+
+            var txt = cand.content && cand.content.parts && cand.content.parts[0]
+                      ? cand.content.parts[0].text : '';
+            g.ok('Returned non-empty text', !!(txt && String(txt).trim()), 'empty text part');
+            g.ok('Returned Japanese characters', hasJapanese(txt || ''),
+              'no kana or kanji in: "' + String(txt || '').slice(0, 80) + '"');
+
+            // The whole translation pipeline depends on this line format.
+            var parsed = parseTranslationLines(txt || '');
+            g.ok('Output parses in FIELD|Japanese format', Object.keys(parsed).length >= 1,
+              'could not parse a pipe line from: "' + String(txt || '').slice(0, 80) + '"');
+            if (txt) g.add('Sample output', 'pass', String(txt).trim().slice(0, 90));
+            aiOk = true;
+          }
+        }
+      }
+    } catch (e) {
+      g.add('AI worker responds', 'fail', e.message +
+        ' — worker not deployed, wrong URL, or blocked by a browser extension');
+    }
+
+    // Vision / OCR path. Only in the full test: it costs a second call and is
+    // used by the CUSTOMER page to auto-read uploaded documents, so a failure
+    // here means customers must type everything by hand.
+    if (deep && aiOk) {
+      try {
+        // Render a known word to a canvas and ask the model to read it back.
+        var cv = document.createElement('canvas');
+        cv.width = 320; cv.height = 90;
+        var cx = cv.getContext('2d');
+        cx.fillStyle = '#fff'; cx.fillRect(0, 0, 320, 90);
+        cx.fillStyle = '#000'; cx.font = 'bold 46px serif';
+        cx.fillText('MANILA', 22, 60);
+        var b64 = cv.toDataURL('image/jpeg', 0.9).split(',')[1];
+
+        var ocr = await stTimed(function () {
+          return fetch(WORKER, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [
+                { text: 'Reply with ONLY the single word visible in this image, in capital letters.' },
+                { inline_data: { mime_type: 'image/jpeg', data: b64 } }
+              ] }],
+              generationConfig: { temperature: 0, topK: 1, topP: 1, maxOutputTokens: 20 }
+            })
+          });
+        });
+        if (!ocr.out.ok) {
+          g.add('Vision / OCR reads an image', 'fail', 'HTTP ' + ocr.out.status, ocr.ms);
+        } else {
+          var od = await ocr.out.json();
+          var otxt = od.candidates && od.candidates[0] && od.candidates[0].content &&
+                     od.candidates[0].content.parts && od.candidates[0].content.parts[0]
+                     ? String(od.candidates[0].content.parts[0].text || '') : '';
+          var read = otxt.toUpperCase().indexOf('MANILA') > -1;
+          g.add('Vision / OCR reads an image', read ? 'pass' : 'fail',
+            read ? 'read "MANILA" correctly' :
+              'expected MANILA, got "' + otxt.trim().slice(0, 60) + '" — customer document auto-fill may not work',
+            ocr.ms);
+        }
+      } catch (e) {
+        g.add('Vision / OCR reads an image', 'fail', e.message);
+      }
+    } else if (deep) {
+      g.add('Vision / OCR reads an image', 'skip', 'skipped because the text call already failed');
+    } else {
+      g.add('Vision / OCR reads an image', 'skip', 'Run the full test to include this');
+    }
+
+    // ── 3. AUTHENTICATION ──
+    g = stGroup('3 · Authentication');
+    try {
+      var a1 = await stTimed(function () {
+        return fetch(DATA_API + '/api/admin/requests', { headers: apiHeaders(false) });
+      });
+      g.add('Admin endpoint accepts your token', a1.out.status === 200 ? 'pass' : 'fail',
+        a1.out.status === 200 ? '' : 'HTTP ' + a1.out.status + ' — token does not match ADMIN_TOKEN in Cloudflare', a1.ms);
+    } catch (e) {
+      g.add('Admin endpoint accepts your token', 'fail', e.message);
+    }
+    try {
+      var a2 = await fetch(DATA_API + '/api/admin/requests', { headers: { Authorization: 'Bearer definitely-not-the-token' } });
+      // A wrong token MUST be refused, otherwise the API is effectively open.
+      g.add('Wrong token is refused (401)', a2.status === 401 ? 'pass' : 'fail',
+        a2.status === 401 ? '' : 'Returned HTTP ' + a2.status + ' — the admin API is NOT protected');
+    } catch (e) {
+      g.add('Wrong token is refused (401)', 'warn', 'could not test: ' + e.message);
+    }
+    try {
+      var a3 = await fetch(DATA_API + '/api/admin/requests');
+      g.add('Missing token is refused (401)', a3.status === 401 ? 'pass' : 'fail',
+        a3.status === 401 ? '' : 'Returned HTTP ' + a3.status);
+    } catch (e) {
+      g.add('Missing token is refused (401)', 'warn', 'could not test: ' + e.message);
+    }
+
+    // ── 4. DATA ──
+    g = stGroup('4 · Data');
+    try {
+      var d = await stTimed(function () {
+        return fetch(DATA_API + '/api/admin/requests', { headers: apiHeaders(false) }).then(function (r) { return r.json(); });
+      });
+      var body = d.out;
+      if (body && body.ok) {
+        g.add('Records load', 'pass', body.submissions.length + ' record(s)', d.ms);
+        var pct = body.maxBytes ? Math.round((body.bytes / body.maxBytes) * 100) : 0;
+        g.add('Storage headroom', pct >= 90 ? 'fail' : pct >= 70 ? 'warn' : 'pass',
+          Math.round(body.bytes / 1024) + 'KB of ' + Math.round(body.maxBytes / 1024) + 'KB (' + pct + '%)' +
+          (pct >= 70 ? ' — run “Purge old” to free space' : ''));
+        // Every record must price and classify without throwing.
+        var bad = [];
+        body.submissions.forEach(function (s) {
+          try {
+            var st = normStatus(s), amt = amountFor(s);
+            if (!st || !(amt > 0)) bad.push(s.id);
+          } catch (e) { bad.push(s.id + ' (' + e.message + ')'); }
+        });
+        g.ok('Every record classifies and prices cleanly', bad.length === 0, 'problem records: ' + bad.join(', '));
+        var owed = body.submissions.filter(function (s) { return normStatus(s) === 'translated' && !isPaid(s); });
+        g.add('Unpaid-but-delivered jobs', owed.length ? 'warn' : 'pass',
+          owed.length ? owed.length + ' awaiting payment: ' + owed.map(function (s) { return s.id; }).join(', ') : 'none outstanding');
+      } else {
+        g.add('Records load', 'fail', (body && body.error) || 'unexpected response');
+      }
+    } catch (e) {
+      g.add('Records load', 'fail', e.message);
+    }
+
+    // ── 5. PAYWALL RULES (public endpoints) ──
+    g = stGroup('5 · Paywall rules');
+    try {
+      var nf = await fetch(DATA_API + '/api/requests/REQ-000000');
+      g.add('Unknown Request ID returns 404', nf.status === 404 ? 'pass' : 'fail', 'HTTP ' + nf.status);
+    } catch (e) { g.add('Unknown Request ID returns 404', 'warn', e.message); }
+    try {
+      var pf = await fetch(DATA_API + '/api/requests/REQ-000000/proof', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ proof: { name: 't.jpg', data: 'x'.repeat(200) } })
+      });
+      g.add('Proof on an unknown ID is rejected', pf.status === 404 ? 'pass' : 'fail', 'HTTP ' + pf.status);
+    } catch (e) { g.add('Proof on an unknown ID is rejected', 'warn', e.message); }
+
+    // ── 6. STATUS AND PRICING LOGIC ──
+    g = stGroup('6 · Status & pricing logic');
+    var F = {
+      fresh:     { status: 'pending', paymentStatus: 'unpaid', amount: 300 },
+      done:      { status: 'translated', translation: 'a|あ', paymentStatus: 'unpaid', amount: 300 },
+      proof:     { status: 'paid', paymentStatus: 'submitted', amount: 600, hasPage2: true },
+      cleared:   { status: 'released', paymentStatus: 'verified', amount: 300 },
+      refused:   { status: 'rejected' },
+      legacyOld: { status: 'approved', proofFile: { name: 'p.jpg' } },
+      legacyPre: { status: 'pending', proofFile: { name: 'p.jpg', data: 'z'.repeat(400) } },
+      legacyDone:{ status: 'translated', translation: 'a|あ', proofFile: { name: 'p.jpg' } }
+    };
+    g.eq('new request → To Translate', statusLabel(normStatus(F.fresh)), 'To Translate');
+    g.eq('translated → Awaiting Payment', statusLabel(normStatus(F.done)), 'Awaiting Payment');
+    g.eq('proof uploaded → To Verify', statusLabel(normStatus(F.proof)), 'To Verify');
+    g.eq('verified → Released', statusLabel(normStatus(F.cleared)), 'Released');
+    g.eq('two-page job prices at 600', amountFor(F.proof), 600);
+    g.eq('one-page job prices at 300', amountFor(F.fresh), 300);
+    g.ok('unpaid job is not treated as paid', !isPaid(F.done), 'isPaid returned true for an unpaid job');
+    g.ok('verified job is treated as paid', isPaid(F.cleared));
+    g.ok('legacy "approved" counts as paid', isPaid(F.legacyOld), 'old pay-first records would be chased for money again');
+    g.ok('legacy prepaid + untranslated counts as paid', isPaid(F.legacyPre));
+    g.ok('legacy prepaid + translated counts as paid', isPaid(F.legacyDone));
+    g.ok('rejected job owes nothing', !isPaid(F.refused));
+    g.ok('overdue needs an unpaid, aged job', (function () {
+      var old = { status: 'translated', translation: 'a|あ', paymentRequestedAt: new Date(Date.now() - 9 * 86400000).toISOString() };
+      var recent = { status: 'translated', translation: 'a|あ', paymentRequestedAt: new Date().toISOString() };
+      return isOverdue(old) && !isOverdue(recent) && !isOverdue(F.cleared);
+    })(), 'overdue detection is wrong');
+
+    // ── 7. RENDERERS ──
+    g = stGroup('7 · Renderers');
+    try {
+      var lines = parseTranslationLines('child_name|山田\nbad line\nchild_dob|1990年');
+      g.ok('translation line parser', lines.child_name === '山田' && lines.child_dob === '1990年' && Object.keys(lines).length === 2);
+    } catch (e) { g.add('translation line parser', 'fail', e.message); }
+    g.ok('Japanese detection', hasJapanese('山田') && hasJapanese('やまだ') && !hasJapanese('Yamada'));
+    try {
+      // Prose rendering: consecutive paragraphs must group into one block.
+      var pv = document.getElementById('cus-body');
+      g.ok('custom-translation editor present', !!pv, 'cus-body textarea missing');
+      g.ok('affidavit preset available', !!(CUSTOM_PRESETS && CUSTOM_PRESETS.affidavit_general), 'General Affidavit preset missing');
+    } catch (e) { g.add('prose renderer', 'fail', e.message); }
+    g.ok('dialog helpers loaded', typeof uiAlert === 'function' && typeof uiConfirm === 'function' && typeof uiPrompt === 'function');
+    g.ok('toast system loaded', typeof uiToast === 'function');
+
+    // ── 8. UI WIRING ──
+    g = stGroup('8 · UI wiring');
+    var needIds = ['tbody', 's-total', 's-pending', 's-awaiting', 's-toverify', 's-released', 's-revenue',
+      'bin-meter', 'search-input', 'overlay', 'm-payment-panel', 'b-request-pay', 'b-verify-pay',
+      'b-topup', 'b-reject', 'b-translate', 'b-pdf', 'b-email', 'cus-body', 'cus-preview'];
+    var missIds = needIds.filter(function (id) { return !document.getElementById(id); });
+    g.ok('all required elements exist', missIds.length === 0, 'missing: ' + missIds.join(', '));
+    var needFns = ['doRequestPayment', 'doVerifyPayment', 'doRequestTopUp', 'doReject', 'doDelete',
+      'doTranslate', 'doDownloadPDF', 'doEmail', 'doPurge', 'loadSubs', 'saveSubs', 'render',
+      'updateStats', 'renderBinMeter', 'onSearch', 'openModal', 'cusRenderPreview', 'payLink'];
+    var missFns = needFns.filter(function (n) { return typeof window[n] !== 'function'; });
+    g.ok('all required functions defined', missFns.length === 0, 'missing: ' + missFns.join(', '));
+    g.ok('payment link builds correctly', (function () {
+      var l = payLink({ id: 'REQ-123456' });
+      return l.indexOf(PORTAL_URL) === 0 && l.indexOf('pay=REQ-123456') > -1;
+    })(), 'payLink() output looks wrong');
+
+    // ── 9. FULL LIFECYCLE (opt-in) ──
+    g = stGroup('9 · Full lifecycle' + (deep ? '' : ' (skipped)'));
+    if (!deep) {
+      g.add('End-to-end create → pay → verify → delete', 'skip', 'Run the full test to include this');
+    } else {
+      var testId = null;
+      try {
+        // create via the PUBLIC endpoint, exactly as a customer would
+        var c = await fetch(DATA_API + '/api/requests', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ request: {
+            name: 'ZZ SELF-TEST', email: 'selftest@example.invalid', phone: '0000',
+            doctype: 'Birth Certificate', purpose: 'self-test',
+            // Deliberately try to cheat: claim it is already paid.
+            status: 'released', paymentStatus: 'verified', amount: 1
+          }})
+        });
+        var cb = await c.json();
+        testId = cb.id;
+        g.add('Customer can create a request', c.status === 201 && !!testId ? 'pass' : 'fail',
+          testId ? 'created ' + testId : JSON.stringify(cb));
+
+        g.eq('Server sets the price, not the client', cb.amount, 300);
+
+        // The forged "already paid" claim must have been ignored.
+        var st1 = await (await fetch(DATA_API + '/api/requests/' + testId)).json();
+        g.eq('Forged paid status ignored', st1.request.status, 'pending');
+        g.ok('No preview served before translation', st1.request.preview === null,
+          'a preview was served for an untranslated job');
+
+        // Customer cannot pay before the work exists.
+        var early = await fetch(DATA_API + '/api/requests/' + testId + '/proof', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ proof: { name: 't.jpg', data: 'x'.repeat(200) } })
+        });
+        g.add('Payment blocked before translation', early.status === 409 ? 'pass' : 'fail', 'HTTP ' + early.status);
+
+        // Translate it (as the admin would), then save.
+        await loadSubs();
+        var rec = subs.find(function (x) { return x.id === testId; });
+        g.ok('New request appears in the dashboard', !!rec, 'record not found after reload');
+        if (rec) {
+          rec.translation = ['child_name|自己診断テスト', 'child_dob|2026年8月17日', 'reg_number|TEST-0001'].join('\n');
+          rec.status = 'translated';
+          rec.amount = amountFor(rec);
+          rec.paymentRequestedAt = new Date().toISOString();
+          await saveSubs();
+          g.add('Admin can save a translation', 'pass', '3 fields written');
+
+          // Full watermarked preview should now be served.
+          var st2 = await (await fetch(DATA_API + '/api/requests/' + testId)).json();
+          var pvw = st2.request.preview;
+          g.ok('Full preview served once translated', !!(pvw && pvw.blocks && pvw.blocks.length === 3),
+            'preview: ' + JSON.stringify(pvw && pvw.total));
+          g.ok('Preview contains the whole translation',
+            JSON.stringify(pvw).indexOf('自己診断テスト') > -1 && JSON.stringify(pvw).indexOf('TEST-0001') > -1);
+          g.eq('Amount due shown to customer', st2.request.amount, 300);
+          g.ok('Customer email is masked in the public view',
+            !!st2.request.emailMasked && st2.request.emailMasked.indexOf('selftest@') !== 0,
+            'got: ' + st2.request.emailMasked);
+          g.ok('Document fields never sent to the customer', !('fields' in st2.request));
+
+          // Customer pays.
+          var pay = await fetch(DATA_API + '/api/requests/' + testId + '/proof', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ proof: { name: 'selftest.jpg', data: 'y'.repeat(300) } })
+          });
+          var payb = await pay.json();
+          g.add('Customer can upload payment proof', pay.status === 200 ? 'pass' : 'fail', 'HTTP ' + pay.status);
+          g.eq('Status moves to To Verify', payb.request && payb.request.status, 'paid');
+
+          // Preview must be withdrawn now the customer is paying.
+          var st3 = await (await fetch(DATA_API + '/api/requests/' + testId)).json();
+          g.ok('Preview withdrawn after payment', st3.request.preview === null);
+
+          // Admin verifies.
+          await loadSubs();
+          var rec2 = subs.find(function (x) { return x.id === testId; });
+          g.ok('Proof visible to admin', !!(rec2 && rec2.proofFile && rec2.proofFile.data));
+          g.eq('Admin sees To Verify', statusLabel(normStatus(rec2)), 'To Verify');
+          rec2.status = 'released';
+          rec2.paymentStatus = 'verified';
+          rec2.verifiedAt = new Date().toISOString();
+          await saveSubs();
+          g.eq('Verifying releases the job', statusLabel(normStatus(rec2)), 'Released');
+          g.ok('Released job counts as paid', isPaid(rec2));
+        }
+      } catch (e) {
+        g.add('Lifecycle test', 'fail', e.message);
+      } finally {
+        // Always clean up, even if an assertion above threw.
+        if (testId) {
+          try {
+            await loadSubs();
+            subs = subs.filter(function (x) { return x.id !== testId; });
+            await saveSubs();
+            await loadSubs();
+            var still = subs.some(function (x) { return x.id === testId; });
+            g.add('Test record deleted', still ? 'fail' : 'pass',
+              still ? 'LEFTOVER: delete ' + testId + ' by hand' : testId + ' removed');
+          } catch (e) {
+            g.add('Test record deleted', 'fail', 'cleanup failed — delete ' + testId + ' by hand (' + e.message + ')');
+          }
+        }
+      }
+    }
+
+    document.getElementById('st-sub').textContent = 'Finished ' + new Date().toLocaleTimeString('en-PH');
+  } finally {
+    stBusy = false;
+    runBtn.disabled = deepBtn.disabled = false;
+    runBtn.style.opacity = deepBtn.style.opacity = '1';
+    render(); updateStats();
+  }
 }
 
 // Init — nothing loads until a token is present. The previous bare
