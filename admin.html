@@ -959,12 +959,30 @@ function restoreSession() {
 
 // -- DATA --------------------------------------
 async function loadSubs() {
+  // Refuse to call the API without a token: an empty-token request only ever
+  // returns 401 and used to cost the user their saved session.
+  if (!ADMIN_TOKEN) {
+    document.getElementById('login-wrap').style.display = 'flex';
+    document.getElementById('main-wrap').style.display = 'none';
+    return;
+  }
   try {
     var r = await fetch(DATA_API + '/api/admin/requests', { headers: apiHeaders(false) });
     if (r.status === 401) {
-      toast('API token rejected — please sign in again.');
+      if (!ADMIN_TOKEN) {
+        // No token was sent, so this says nothing about whether the stored
+        // one is valid. Leave the session alone and show the login card.
+        document.getElementById('login-wrap').style.display = 'flex';
+        document.getElementById('main-wrap').style.display = 'none';
+        subs = [];
+        return;
+      }
+      toast('API token rejected — please sign in again.', 'err');
       sessionStorage.removeItem(SESS_KEY);
       sessionStorage.removeItem('ats_admin_token');
+      ADMIN_TOKEN = '';
+      document.getElementById('login-wrap').style.display = 'flex';
+      document.getElementById('main-wrap').style.display = 'none';
       subs = [];
     }
     else {
@@ -6116,8 +6134,11 @@ async function saveTranslation() {
   toast('Translation updated for ' + s.name);
 }
 
-// Init
-loadSubs();
+// Init — nothing loads until a token is present. The previous bare
+// loadSubs() call here predated authentication: on refresh it fired with an
+// empty token, took a 401, and the 401 handler cleared the saved session,
+// so a working login was destroyed by the reload.
+// restoreSession() is the only entry point now.
 </script>
 </body>
 </html>
