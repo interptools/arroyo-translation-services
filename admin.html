@@ -1172,29 +1172,81 @@ async function loadSubs() {
   renderBinMeter();
 }
 
+// Pull in anything the server has that we do not, WITHOUT touching our own
+// pending edits. Only additions are adopted: a record we already hold keeps
+// the local copy, because that is the one carrying the change being saved.
+// Returns how many records were adopted.
+async function adoptRemoteRecords() {
+  try {
+    var r = await fetch(DATA_API + '/api/admin/requests', { headers: apiHeaders(false) });
+    if (!r.ok) return 0;
+    var d = await r.json();
+    if (!d || !d.ok || !Array.isArray(d.submissions)) return 0;
+
+    var have = {};
+    subs.forEach(function(s) { have[String(s.id)] = true; });
+    var incoming = d.submissions.filter(function(s) { return !have[String(s.id)]; });
+    if (!incoming.length) return 0;
+
+    // Newest first, matching how the worker orders the bin.
+    subs = incoming.concat(subs);
+    binBytes = d.bytes || binBytes;
+    binMax   = d.maxBytes || binMax;
+    return incoming.length;
+  } catch (e) {
+    console.error('reconcile failed:', e);
+    return 0;
+  }
+}
+
 // NOTE: the previous version did `if (subs.length > 10) subs = subs.slice(0,10)`
 // and then popped the oldest records until the payload fit. That silently and
 // permanently deleted every request past the tenth on EVERY save — including
 // translated-but-unpaid jobs. Trimming is now the worker's job: it sheds
 // thumbnails and archives only settled records, and refuses to save at all if
 // an unsettled record would be lost.
+//
+// That refusal is a 409, and it used to be fatal: if a customer submitted a
+// request after this page loaded, our array no longer matched the bin and
+// EVERY write action — reject, verify, translate, delete, edit — failed until
+// the operator happened to reload. We now merge the new record in and retry
+// once, so a submission arriving mid-edit is invisible rather than blocking.
 async function saveSubs() {
-  var r = await fetch(DATA_API + '/api/admin/requests', {
-    method: 'PUT',
-    headers: apiHeaders(true),
-    body: JSON.stringify({ submissions: subs })
-  });
-  var d = null;
-  try { d = await r.json(); } catch (e) { d = null; }
-  if (!r.ok || !d || !d.ok) {
+  for (var attempt = 0; attempt < 2; attempt++) {
+    var r = await fetch(DATA_API + '/api/admin/requests', {
+      method: 'PUT',
+      headers: apiHeaders(true),
+      body: JSON.stringify({ submissions: subs })
+    });
+    var d = null;
+    try { d = await r.json(); } catch (e) { d = null; }
+
+    if (r.ok && d && d.ok) {
+      binBytes = d.bytes || 0;
+      if (d.archived) toast('Saved. ' + d.archived + ' settled record(s) moved to the archive.');
+      renderBinMeter();
+      return d;
+    }
+
     var msg = (d && d.error) || ('Save failed (' + r.status + ')');
+
+    // Stale snapshot: adopt whatever arrived while we were working, then retry.
+    if (r.status === 409 && attempt === 0 && /would drop/i.test(msg)) {
+      var adopted = await adoptRemoteRecords();
+      if (adopted) {
+        toast(adopted + ' new request' + (adopted === 1 ? '' : 's') +
+              ' arrived while you were working — merged in.');
+        render(); updateStats();
+        continue;                       // retry the save with the merged array
+      }
+      // Nothing to adopt, so the 409 means something we cannot auto-resolve.
+      toast('⚠ Save blocked — please reload the page before trying again.');
+      throw new Error(msg);
+    }
+
     toast('⚠ ' + msg);
     throw new Error(msg);
   }
-  binBytes = d.bytes || 0;
-  if (d.archived) toast('Saved. ' + d.archived + ' settled record(s) moved to the archive.');
-  renderBinMeter();
-  return d;
 }
 
 // -- RENDER ------------------------------------
@@ -2330,17 +2382,38 @@ async function doTranslate() {
 
 // ── CORRECTION ANNOTATION FUNCTIONS ──────────────────────────────
 
+// The edit panel, the translation editor and the correction panel all render
+// into the same region of the modal. Nothing stopped all three being open at
+// once, which pushed the action buttons off-screen and read as a dead UI.
+// Opening any one now closes the others.
+var MODAL_PANELS = ['edit-panel', 'translation-editor', 'correction-panel'];
+
+function closeModalPanels(except) {
+  MODAL_PANELS.forEach(function(id) {
+    if (id === except) return;
+    var el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+}
+
+// Robust open test: a panel that has never been touched reports '' rather
+// than 'none', which made the first click on some panels do nothing.
+function panelIsOpen(id) {
+  var el = document.getElementById(id);
+  return !!el && el.style.display === 'block';
+}
+
 function toggleCorrectionPanel() {
-  var p = document.getElementById('correction-panel');
-  if (p.style.display === 'none') {
-    p.style.display = 'block';
-    // Pre-fill if already saved on this submission
-    var s = subs.find(function(x) { return x.id === activeId; });
-    if (s && s.correctionEn) document.getElementById('corr-en').value = s.correctionEn;
-    if (s && s.correctionJp) document.getElementById('corr-jp').value = s.correctionJp;
-  } else {
-    p.style.display = 'none';
+  if (panelIsOpen('correction-panel')) {
+    document.getElementById('correction-panel').style.display = 'none';
+    return;
   }
+  closeModalPanels('correction-panel');
+  document.getElementById('correction-panel').style.display = 'block';
+  // Pre-fill if already saved on this submission
+  var s = subs.find(function(x) { return x.id === activeId; });
+  if (s && s.correctionEn) document.getElementById('corr-en').value = s.correctionEn;
+  if (s && s.correctionJp) document.getElementById('corr-jp').value = s.correctionJp;
 }
 
 async function translateCorrection() {
@@ -4969,18 +5042,43 @@ var PAGE2_FIELDS_ADMIN = [
   {id:'p2_del_remarks',    label:'[Delayed] Remarks', section:'p2'},
 ];
 
+// Which fields the edit panel should offer for a record.
+//
+// DOC_FIELDS_ADMIN only carries schemas for the 13 PSA and financial types.
+// The customer form can submit a dozen more — Driver's License, NBI Clearance,
+// Diploma, Land Title and the rest — and for those the lookup returned [],
+// so "Edit Details" opened a completely blank panel and looked broken.
+//
+// Fallback: derive the field list from whatever the record actually holds, so
+// every document type is editable. Labels are humanised from the field ids.
+function editSchemaFor(s) {
+  var schema = DOC_FIELDS_ADMIN[s && s.doctype];
+  if (schema && schema.length) return schema;
+
+  var data = (s && s.fields && typeof s.fields === 'object') ? s.fields : {};
+  return Object.keys(data).map(function(id) {
+    return {
+      id: id,
+      label: id.replace(/_/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); }),
+      type: 'text'
+    };
+  });
+}
+
 function toggleEdit() {
   var s = subs.find(function(x) { return x.id === activeId; });
   if (!s) return;
   var panel = document.getElementById('edit-panel');
-  var isOpen = panel.style.display === 'block';
-  if (isOpen) { panel.style.display = 'none'; return; }
+  if (panelIsOpen('edit-panel')) { panel.style.display = 'none'; return; }
+  closeModalPanels('edit-panel');
 
-  var fields = DOC_FIELDS_ADMIN[s.doctype] || [];
+  var fields = editSchemaFor(s);
   var grid = document.getElementById('edit-fields-grid');
   var fieldData = (s.fields && typeof s.fields === 'object') ? s.fields : {};
   var html = fields.map(function(f) {
-    var val = fieldData[f.id] || '';
+    // String() matters: an OCR-filled numeric value has no .replace, and the
+    // TypeError used to abort the whole function so the panel never opened.
+    var val = String(fieldData[f.id] == null ? '' : fieldData[f.id]);
     return '<div class="edit-field"><label>' + f.label + '</label>' +
       '<input type="' + (f.type || 'text') + '" id="ef-' + f.id + '" value="' + val.replace(/"/g,'&quot;') + '"></div>';
   }).join('');
@@ -4990,10 +5088,18 @@ function toggleEdit() {
     var p2Data = (s.page2Fields && typeof s.page2Fields === 'object') ? s.page2Fields : {};
     html += '<div style="grid-column:1/-1;margin-top:12px;padding-top:10px;border-top:2px solid #c9a84c;font-size:11px;font-weight:700;color:#c9a84c;letter-spacing:0.5px">📄 PAGE 2 — AFFIDAVIT FIELDS</div>';
     html += PAGE2_FIELDS_ADMIN.map(function(f) {
-      var val = p2Data[f.id] || '';
+      var val = String(p2Data[f.id] == null ? '' : p2Data[f.id]);
       return '<div class="edit-field"><label>' + f.label + '</label>' +
         '<input type="text" id="p2ef-' + f.id + '" value="' + val.replace(/"/g,'&quot;') + '"></div>';
     }).join('');
+  }
+
+  // A record with no recognised schema AND no stored fields would otherwise
+  // open an empty box that reads as a broken button.
+  if (!html) {
+    html = '<div style="grid-column:1/-1;font-size:12px;color:#6b7280;line-height:1.6">' +
+      'No document fields are stored for this ' + (s.doctype || 'document') + '. ' +
+      'Use <strong>Custom Translation</strong> to build the output by hand.</div>';
   }
 
   grid.innerHTML = html;
@@ -5004,7 +5110,7 @@ async function saveEdit() {
   var s = subs.find(function(x) { return x.id === activeId; });
   if (!s) return;
   if (!s.fields || typeof s.fields !== 'object') s.fields = {};
-  var fields = DOC_FIELDS_ADMIN[s.doctype] || [];
+  var fields = editSchemaFor(s);
   fields.forEach(function(f) {
     var el = document.getElementById('ef-' + f.id);
     if (el) s.fields[f.id] = el.value.trim();
@@ -6481,11 +6587,8 @@ function toggleTranslationEditor() {
   var s = subs.find(function(x) { return x.id === activeId; });
   if (!s) return;
   var editor = document.getElementById('translation-editor');
-  var isOpen = editor.style.display === 'block';
-  if (isOpen) { closeTranslationEditor(); return; }
-
-  // Close edit panel if open
-  document.getElementById('edit-panel').style.display = 'none';
+  if (panelIsOpen('translation-editor')) { closeTranslationEditor(); return; }
+  closeModalPanels('translation-editor');
 
   var ta = document.getElementById('translation-textarea');
   ta.value = s.translation || '';
@@ -6967,7 +7070,9 @@ async function runSelfTest(deep) {
     var needFns = ['doRequestPayment', 'doVerifyPayment', 'doRequestTopUp', 'doReject', 'doDelete',
       'doTranslate', 'doDownloadPDF', 'doEmail', 'doPurge', 'loadSubs', 'saveSubs', 'render',
       'updateStats', 'renderBinMeter', 'onSearch', 'openModal', 'cusRenderPreview', 'payLink',
-      'deleteImage', 'copyReqId', 'doStripThumbs', 'stripPlan'];
+      'deleteImage', 'copyReqId', 'doStripThumbs', 'stripPlan', 'adoptRemoteRecords',
+      'editSchemaFor', 'closeModalPanels', 'panelIsOpen', 'toggleEdit',
+      'toggleTranslationEditor', 'toggleCorrectionPanel'];
     var missFns = needFns.filter(function (n) { return typeof window[n] !== 'function'; });
     g.ok('all required functions defined', missFns.length === 0, 'missing: ' + missFns.join(', '));
     g.ok('payment link builds correctly', (function () {
