@@ -62,6 +62,8 @@ thead th{font-size:11px;font-weight:600;letter-spacing:1px;text-transform:upperc
 tbody tr{border-bottom:1px solid #f0ede8;cursor:pointer;transition:background .15s}
 tbody tr:hover{background:#faf8f4}
 tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
+.td-id{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;font-weight:600;letter-spacing:.5px;color:#1a2744;background:#f3f1ec;border:1px solid #e5e0d8;border-radius:5px;padding:3px 7px;white-space:nowrap;cursor:copy;display:inline-block}
+.td-id:hover{background:#fef3c7;border-color:#fcd34d}
 .td-name{font-weight:500}
 .td-sub{font-size:11px;color:#6b7280;margin-top:2px}
 .pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
@@ -85,7 +87,9 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
 .mfield span{font-size:13px;color:#1a2744;font-weight:500}
 .img-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
 .img-box{border:1px solid #e5e0d8;border-radius:8px;overflow:hidden}
-.img-box-label{font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:1px;padding:8px 12px;background:#faf8f4;border-bottom:1px solid #e5e0d8}
+.img-box-label{font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:1px;padding:8px 12px;background:#faf8f4;border-bottom:1px solid #e5e0d8;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.img-del{border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;font-family:Inter,sans-serif;font-size:10px;font-weight:700;letter-spacing:.5px;padding:2px 7px;border-radius:5px;cursor:pointer;white-space:nowrap;display:none}
+.img-del:hover{background:#fee2e2;border-color:#fca5a5}
 .img-box img{width:100%;display:block;max-height:200px;object-fit:contain;background:#f5f5f5}
 .img-box .no-img{padding:20px;text-align:center;font-size:12px;color:#6b7280}
 .fields-box{background:#faf8f4;border:1px solid #e5e0d8;border-radius:8px;padding:14px;margin-bottom:16px}
@@ -238,12 +242,14 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
         <input type="search" id="search-input" placeholder="Search name, ID, email…" oninput="onSearch(this.value)"
                style="padding:7px 11px;border:1px solid #e5e0d8;border-radius:7px;font-size:12px;font-family:Inter,sans-serif;min-width:180px">
         <button class="refresh-btn" onclick="loadSubs()">↺ Refresh</button>
+        <button class="refresh-btn" onclick="doStripThumbs()" style="background:#fffbeb;color:#92400e;border-color:#fde68a">🧹 Free space</button>
         <button class="refresh-btn" onclick="doPurge()" style="background:#fef2f2;color:#b91c1c;border-color:#fecaca">🗑 Purge old</button>
       </div>
     </div>
     <table>
       <thead>
         <tr>
+          <th>Request ID</th>
           <th>Customer</th>
           <th>Document</th>
           <th>Purpose</th>
@@ -470,15 +476,24 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
 
       <div class="img-row">
         <div class="img-box">
-          <div class="img-box-label">PSA Document — Page 1</div>
+          <div class="img-box-label">
+            <span>PSA Document — Page 1</span>
+            <button class="img-del" id="m-doc-del" onclick="deleteImage('docFile')" title="Delete this image to free storage">🗑 Delete</button>
+          </div>
           <div id="m-doc-img"></div>
         </div>
         <div class="img-box" id="m-doc2-box" style="display:none">
-          <div class="img-box-label" style="color:#c9a84c;font-weight:700">📄 Page 2 — Affidavits</div>
+          <div class="img-box-label" style="color:#c9a84c;font-weight:700">
+            <span>📄 Page 2 — Affidavits</span>
+            <button class="img-del" id="m-doc2-del" onclick="deleteImage('doc2File')" title="Delete this image to free storage">🗑 Delete</button>
+          </div>
           <div id="m-doc2-img"></div>
         </div>
         <div class="img-box">
-          <div class="img-box-label">Payment Proof</div>
+          <div class="img-box-label">
+            <span>Payment Proof</span>
+            <button class="img-del" id="m-proof-del" onclick="deleteImage('proofFile')" title="Delete this image to free storage">🗑 Delete</button>
+          </div>
           <div id="m-proof-img"></div>
         </div>
       </div>
@@ -1173,6 +1188,7 @@ function render() {
       money += '<div style="font-size:10px;color:#b45309;font-weight:700;margin-top:2px">₱' + s.amountShort + ' short</div>';
     }
     tr.innerHTML =
+      '<td><span class="td-id" title="Click to copy" onclick="copyReqId(event,\'' + String(s.id || '').replace(/'/g, "\\'") + '\')">' + (s.id || '—') + '</span></td>' +
       '<td><div class="td-name">' + s.name + '</div><div class="td-sub">' + s.email + '</div></td>' +
       '<td>' + s.doctype + '</td>' +
       '<td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#6b7280">' + (s.purpose || '') + '</td>' +
@@ -1259,6 +1275,11 @@ function openModal(id) {
   } else {
     proofImg.innerHTML = '<div class="no-img">No payment proof on file</div>';
   }
+
+  // Show a delete button only where there is actually something to erase.
+  toggleImgDel('m-doc-del',   s.docFile);
+  toggleImgDel('m-doc2-del',  s.doc2File);
+  toggleImgDel('m-proof-del', s.proofFile);
 
   // Document fields (Page 1)
   var fieldsHtml = '';
@@ -1453,6 +1474,22 @@ function renderPaymentPanel(s, state) {
     '</div>';
 }
 
+function copyReqId(ev, id) {
+  if (ev) { ev.stopPropagation(); ev.preventDefault(); }
+  if (!id) return;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(id).then(function(){ toast('Request ID copied: ' + id); },
+                                           function(){ toast('Copy failed'); });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = id; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); toast('Request ID copied: ' + id); }
+    catch(e) { toast('Copy failed'); }
+    document.body.removeChild(ta);
+  }
+}
+
 function copyPayLink() {
   var s = subs.find(function(x) { return x.id === activeId; });
   if (!s) return;
@@ -1643,6 +1680,72 @@ async function doReject() {
   await saveSubs();
   render(); updateStats(); openModal(activeId);
   toast('Rejected: ' + s.name);
+}
+
+// ── IMAGE DELETION (STORAGE RECLAIM) ─────────────────────────────────
+// Base64 thumbnails are by far the biggest thing in the bin, so dropping one
+// is the fastest way to bring the storage meter back down. Cloudinary URLs
+// cost almost nothing, so if a hosted copy exists we keep the URL and only
+// throw away the inline data — the image still displays, the bytes go away.
+
+// Rough byte cost of a stored file object.
+function fileBytes(f) {
+  if (!f) return 0;
+  try { return JSON.stringify(f).length; } catch (e) { return 0; }
+}
+
+function toggleImgDel(btnId, f) {
+  var btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.style.display = fileBytes(f) > 60 ? 'inline-block' : 'none';
+}
+
+var IMG_LABELS = {
+  docFile:   'Page 1 document image',
+  doc2File:  'Page 2 document image',
+  proofFile: 'payment proof image'
+};
+
+async function deleteImage(kind) {
+  var s = subs.find(function(x) { return x.id === activeId; });
+  if (!s || !s[kind]) return;
+
+  var label   = IMG_LABELS[kind] || 'image';
+  var before  = fileBytes(s[kind]);
+  var hasUrl  = !!(s[kind].url);
+  var inline  = String(s[kind].data || '').length;
+
+  var msg = hasUrl
+    ? 'The inline copy of the ' + label + ' will be erased, freeing about ' +
+      Math.max(1, Math.round(inline / 1024)) + 'KB. The hosted copy stays, so the image still displays.'
+    : 'The ' + label + ' will be erased permanently, freeing about ' +
+      Math.max(1, Math.round(before / 1024)) + 'KB. There is no hosted copy — this cannot be undone.';
+
+  if (!await uiConfirm(msg, {
+        title: hasUrl ? 'Free up storage?' : 'Delete this image?',
+        okText: hasUrl ? 'Drop inline copy' : 'Delete forever',
+        danger: !hasUrl })) return;
+
+  // Keep the record shape intact so nothing downstream trips over a missing key.
+  var backup = s[kind];
+  if (hasUrl) {
+    s[kind] = { url: s[kind].url, name: s[kind].name || '', deletedInline: true };
+  } else {
+    delete s[kind];
+    if (kind === 'doc2File') s.hasPage2 = s.hasPage2 || false;
+  }
+
+  try {
+    await saveSubs();
+  } catch (e) {
+    s[kind] = backup;              // put it back if the save was rejected
+    return;
+  }
+
+  var freed = before - fileBytes(s[kind]);
+  toast('Deleted — about ' + Math.max(1, Math.round(freed / 1024)) + 'KB freed.');
+  render(); updateStats(); renderBinMeter();
+  openModal(activeId);
 }
 
 async function doDelete() {
@@ -4312,6 +4415,110 @@ function renderBinMeter() {
 // Makes good on the consent text, which promises data is deleted once the
 // translation is complete. Only released jobs past the window are touched;
 // a non-personal stub is archived so revenue history survives.
+// ── BULK THUMBNAIL RECLAIM ────────────────────────────────────────────
+// One pass over every record instead of opening each one. Two tiers, because
+// they carry very different risk:
+//
+//   SAFE      — a Cloudinary URL exists, so the inline base64 is a duplicate.
+//               Dropping it costs nothing: the image still displays. Applied
+//               to records of ANY status.
+//   SETTLED   — no hosted copy, so the base64 IS the image. Only touched on
+//               released/rejected jobs, which are finished and whose data the
+//               consent text already promises to delete.
+//
+// Unpaid, unverified, and untranslated jobs never lose an image they can't
+// get back.
+var STRIP_KINDS = ['docFile', 'doc2File', 'proofFile'];
+
+function stripPlan() {
+  var plan = { safe: [], settled: [], safeBytes: 0, settledBytes: 0 };
+  subs.forEach(function(s) {
+    var st = normStatus(s);
+    var isSettled = (st === 'released' || st === 'rejected') && !isLegacyPrepaid(s);
+    STRIP_KINDS.forEach(function(kind) {
+      var f = s[kind];
+      if (!f) return;
+      var inline = String(f.data || '').length;
+      if (inline <= 100) return;               // nothing meaningful stored inline
+      if (f.url) {
+        plan.safe.push({ id: s.id, kind: kind });
+        plan.safeBytes += inline;
+      } else if (isSettled) {
+        plan.settled.push({ id: s.id, kind: kind });
+        plan.settledBytes += fileBytes(f);
+      }
+    });
+  });
+  return plan;
+}
+
+async function doStripThumbs() {
+  var plan = stripPlan();
+  var total = plan.safe.length + plan.settled.length;
+
+  if (!total) {
+    toast('Nothing to reclaim — no inline images are safe to drop right now.');
+    return;
+  }
+
+  var kb = function(b) { return Math.max(1, Math.round(b / 1024)) + 'KB'; };
+  var lines = [];
+  if (plan.safe.length) {
+    lines.push('• ' + plan.safe.length + ' duplicate inline cop' +
+      (plan.safe.length === 1 ? 'y' : 'ies') + ' (' + kb(plan.safeBytes) +
+      ') — hosted copies remain, images still display.');
+  }
+  if (plan.settled.length) {
+    lines.push('• ' + plan.settled.length + ' image' + (plan.settled.length === 1 ? '' : 's') +
+      ' (' + kb(plan.settledBytes) + ') on released or rejected jobs — no hosted copy, ' +
+      'these are gone for good.');
+  }
+  lines.push('');
+  lines.push('Unpaid, unverified, and untranslated jobs are not touched.');
+
+  if (!await uiConfirm(lines.join('\n'), {
+        title: 'Free about ' + kb(plan.safeBytes + plan.settledBytes) + '?',
+        okText: 'Free up space',
+        danger: plan.settled.length > 0 })) return;
+
+  // Snapshot so a rejected save can be rolled back cleanly.
+  var backup = {};
+  var touch = function(item) {
+    backup[item.id + ':' + item.kind] = subs.find(function(x){ return x.id === item.id; })[item.kind];
+  };
+  plan.safe.forEach(touch);
+  plan.settled.forEach(touch);
+
+  plan.safe.forEach(function(item) {
+    var s = subs.find(function(x){ return x.id === item.id; });
+    var f = s[item.kind];
+    s[item.kind] = { url: f.url, name: f.name || '', deletedInline: true };
+  });
+  plan.settled.forEach(function(item) {
+    var s = subs.find(function(x){ return x.id === item.id; });
+    delete s[item.kind];
+  });
+
+  var beforeBytes = binBytes;
+  try {
+    await saveSubs();
+  } catch (e) {
+    Object.keys(backup).forEach(function(key) {
+      var split = key.lastIndexOf(':');
+      var id = key.slice(0, split), kind = key.slice(split + 1);
+      var s = subs.find(function(x){ return x.id === id; });
+      if (s) s[kind] = backup[key];
+    });
+    return;
+  }
+
+  var freed = beforeBytes - binBytes;
+  toast('Freed ' + kb(freed > 0 ? freed : plan.safeBytes + plan.settledBytes) +
+        ' across ' + total + ' image' + (total === 1 ? '' : 's') + '.');
+  render(); updateStats(); renderBinMeter();
+  if (activeId) openModal(activeId);
+}
+
 async function doPurge() {
   var days = await uiPrompt('Only RELEASED jobs past this age are affected. Unpaid and unverified ' +
       'jobs are never touched, and revenue totals survive as anonymous stubs.',
@@ -6628,12 +6835,14 @@ async function runSelfTest(deep) {
     g = stGroup('8 · UI wiring');
     var needIds = ['tbody', 's-total', 's-pending', 's-awaiting', 's-toverify', 's-released', 's-revenue',
       'bin-meter', 'search-input', 'overlay', 'm-payment-panel', 'b-request-pay', 'b-verify-pay',
-      'b-topup', 'b-reject', 'b-translate', 'b-pdf', 'b-email', 'cus-body', 'cus-preview'];
+      'b-topup', 'b-reject', 'b-translate', 'b-pdf', 'b-email', 'cus-body', 'cus-preview',
+      'm-doc-del', 'm-doc2-del', 'm-proof-del'];
     var missIds = needIds.filter(function (id) { return !document.getElementById(id); });
     g.ok('all required elements exist', missIds.length === 0, 'missing: ' + missIds.join(', '));
     var needFns = ['doRequestPayment', 'doVerifyPayment', 'doRequestTopUp', 'doReject', 'doDelete',
       'doTranslate', 'doDownloadPDF', 'doEmail', 'doPurge', 'loadSubs', 'saveSubs', 'render',
-      'updateStats', 'renderBinMeter', 'onSearch', 'openModal', 'cusRenderPreview', 'payLink'];
+      'updateStats', 'renderBinMeter', 'onSearch', 'openModal', 'cusRenderPreview', 'payLink',
+      'deleteImage', 'copyReqId', 'doStripThumbs', 'stripPlan'];
     var missFns = needFns.filter(function (n) { return typeof window[n] !== 'function'; });
     g.ok('all required functions defined', missFns.length === 0, 'missing: ' + missFns.join(', '));
     g.ok('payment link builds correctly', (function () {
