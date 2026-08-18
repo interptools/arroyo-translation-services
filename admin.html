@@ -1116,10 +1116,26 @@ function normStatus(s) {
   return 'pending';
 }
 
+// Price tiers — must stay in sync with index.html and the Worker.
+// Records normally carry a server-set `amount`; this table only backfills
+// older records that predate it.
+var PRICE_TIERS = {
+  "Driver's License":  200,
+  'Philippine Payslip': 200,
+  'Japanese Payslip':   200
+};
+var DEFAULT_PRICE = 300;
+
+function basePrice(doctype) {
+  var p = PRICE_TIERS[doctype];
+  return typeof p === 'number' ? p : DEFAULT_PRICE;
+}
+
 // Amount owed. Stored on new records; derived for older ones.
 function amountFor(s) {
   if (s && typeof s.amount === 'number' && s.amount > 0) return s.amount;
-  return (s && s.hasPage2) ? 600 : 300;
+  var base = basePrice(s && s.doctype);
+  return (s && s.hasPage2) ? base * 2 : base;
 }
 
 // Records from the old pay-first flow carried a proofFile from the moment of

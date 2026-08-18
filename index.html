@@ -190,7 +190,7 @@ footer{text-align:center;padding:20px;font-size:11px;color:var(--muted);border-t
   <div class="hero-label">Official Document Translation</div>
   <h1>PSA Documents,<br><span>translated to Japanese.</span></h1>
   <p class="hero-sub">Fast, accurate English-to-Japanese translation of PSA civil registry documents. Submit your document and receive your translated PDF by email.</p>
-  <div class="price-pill"><strong>PHP 300</strong> flat rate &middot; any PSA document</div>
+  <div class="price-pill"><strong>PHP 300</strong> PSA documents &middot; <strong>PHP 200</strong> IDs &amp; payslips</div>
   <div class="trust-row">
     <div class="trust-item">
       <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -2254,13 +2254,44 @@ async function onDoc2Upload(input) {
   }
 }
 
+// ── PRICING ───────────────────────────────────────────────────────────
+// One table, used by the quote, the confirmation screen, and the payment
+// portal fallback. Anything not listed falls back to DEFAULT_PRICE.
+//
+// IMPORTANT: the Worker prices the job independently on submission and its
+// number is the one the customer actually pays. This table must be mirrored
+// there or the quote shown here will not match the amount due.
+var PRICE_TIERS = {
+  "Driver's License":  200,
+  'Philippine Payslip': 200,
+  'Japanese Payslip':   200
+};
+var DEFAULT_PRICE = 300;
+
+// Resolve what the document really is. Under "Others" the meaningful type
+// lives in the sub-dropdown, so pricing has to read that instead.
+function effectiveDoctype() {
+  var dt = (document.getElementById('f-doctype') || {}).value || '';
+  if (dt === 'Others') {
+    var sub = (document.getElementById('f-others-subtype') || {}).value || '';
+    return sub || dt;
+  }
+  return dt;
+}
+
+function basePrice(doctype) {
+  var p = PRICE_TIERS[doctype];
+  return typeof p === 'number' ? p : DEFAULT_PRICE;
+}
+
 // Price is a QUOTE now, not a charge — nothing is collected until the
 // translation is finished and the customer opens the payment portal.
 function quoteAmount() {
   var doctype = (document.getElementById('f-doctype') || {}).value || '';
   var doc2File = document.getElementById('f-doc2');
   var hasPage2 = doctype === 'Birth Certificate' && doc2File && doc2File.files && doc2File.files.length > 0;
-  return hasPage2 ? 600 : 300;
+  var base = basePrice(effectiveDoctype());
+  return hasPage2 ? base * 2 : base;
 }
 
 function updatePrice() {
@@ -2268,14 +2299,17 @@ function updatePrice() {
   var doctype = (document.getElementById('f-doctype') || {}).value || '';
   var doc2File = document.getElementById('f-doc2');
   var hasPage2 = doctype === 'Birth Certificate' && doc2File && doc2File.files && doc2File.files.length > 0;
+  var base = basePrice(effectiveDoctype());
 
   var qAmt = document.getElementById('quote-amount');
   if (qAmt) qAmt.innerHTML = '<span>PHP</span> ' + amount;
   var qNote = document.getElementById('quote-note');
   if (qNote) {
     qNote.textContent = hasPage2
-      ? 'PHP 300 per page × 2 pages (main certificate + affidavit page).'
-      : 'Flat rate for a single-page document.';
+      ? 'PHP ' + base + ' per page × 2 pages (main certificate + affidavit page).'
+      : (base < DEFAULT_PRICE
+          ? 'Reduced rate for IDs and payslips — single page.'
+          : 'Flat rate for a single-page document.');
   }
   var modalEl = document.getElementById('gcash-modal-amount');
   if (modalEl) modalEl.textContent = 'PHP ' + amount;
@@ -3169,7 +3203,8 @@ function ppMsg(text, kind) {
 
 function ppAmount(s) {
   if (s && typeof s.amount === 'number' && s.amount > 0) return s.amount;
-  return (s && s.hasPage2) ? 600 : 300;
+  var base = basePrice(s && s.doctype);
+  return (s && s.hasPage2) ? base * 2 : base;
 }
 
 // The worker returns an already-normalised status, so the portal just reads it.
