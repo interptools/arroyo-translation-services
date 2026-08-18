@@ -2270,7 +2270,9 @@ var DEFAULT_PRICE = 300;
 
 // Resolve what the document really is. Under "Others" the meaningful type
 // lives in the sub-dropdown, so pricing has to read that instead.
-function effectiveDoctype() {
+// NOTE: deliberately NOT named effectiveDoctype — three other functions use
+// that name as a local var, and the shadowing would make this unreachable.
+function resolvedDoctype() {
   var dt = (document.getElementById('f-doctype') || {}).value || '';
   if (dt === 'Others') {
     var sub = (document.getElementById('f-others-subtype') || {}).value || '';
@@ -2290,7 +2292,7 @@ function quoteAmount() {
   var doctype = (document.getElementById('f-doctype') || {}).value || '';
   var doc2File = document.getElementById('f-doc2');
   var hasPage2 = doctype === 'Birth Certificate' && doc2File && doc2File.files && doc2File.files.length > 0;
-  var base = basePrice(effectiveDoctype());
+  var base = basePrice(resolvedDoctype());
   return hasPage2 ? base * 2 : base;
 }
 
@@ -2299,7 +2301,7 @@ function updatePrice() {
   var doctype = (document.getElementById('f-doctype') || {}).value || '';
   var doc2File = document.getElementById('f-doc2');
   var hasPage2 = doctype === 'Birth Certificate' && doc2File && doc2File.files && doc2File.files.length > 0;
-  var base = basePrice(effectiveDoctype());
+  var base = basePrice(resolvedDoctype());
 
   var qAmt = document.getElementById('quote-amount');
   if (qAmt) qAmt.innerHTML = '<span>PHP</span> ' + amount;
