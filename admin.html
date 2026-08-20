@@ -751,6 +751,12 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
       </button>
 
       <div id="st-summary" style="display:none;margin-bottom:12px"></div>
+      <div id="st-fix-all" style="display:none;margin-bottom:12px">
+        <button onclick="stFixAll()"
+          style="width:100%;padding:10px;background:#fef9c3;color:#854d0e;border:1.5px solid #fde68a;border-radius:9px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">
+          🔧 Auto-fix issues &amp; re-run test
+        </button>
+      </div>
       <div id="st-results" style="font-size:12.5px"></div>
 
       <div style="margin-top:14px;padding-top:12px;border-top:1px solid #f0ede8;font-size:11px;color:#6b7280;line-height:1.7">
@@ -1944,10 +1950,30 @@ function parseTranslationLines(txt) {
   var map = {};
   String(txt || '').split('\n').forEach(function(line) {
     line = line.trim(); if (!line) return;
+    // Models sometimes decorate the line as a markdown bullet. Strip that
+    // first, otherwise the field id below fails the strict id test.
+    line = line.replace(/^[-*\u2022]\s+/, '');
     var pipe = line.indexOf('|');
     if (pipe <= 0) return;
-    var fid = line.slice(0, pipe).trim();
+
+    // Field id: tolerate **bold** or `code` decoration, but the id itself must
+    // still be a bare snake_case token — a translated or reworded key is a real
+    // failure and must NOT be silently accepted.
+    var fid = line.slice(0, pipe).trim()
+                  .replace(/^\*+|\*+$/g, '')
+                  .replace(/^`+|`+$/g, '')
+                  .trim();
+
+    // Value: models like to wrap the translation in a template placeholder or
+    // markdown. Left in place these characters get baked straight into the
+    // delivered PDF, so peel them off here.
     var val = line.slice(pipe + 1).trim();
+    val = val.replace(/^\*\*([\s\S]*)\*\*$/, '$1').trim();
+    val = val.replace(/^`([\s\S]*)`$/, '$1').trim();
+    val = val.replace(/^<([^<>]*)>$/, '$1').trim();
+    val = val.replace(/^"([\s\S]*)"$/, '$1').trim();
+    val = val.replace(/^'([\s\S]*)'$/, '$1').trim();
+
     if (fid && val && /^[a-z0-9_]+$/i.test(fid)) map[fid] = val;
   });
   return map;
@@ -2129,7 +2155,7 @@ async function doTranslate() {
     'coe_monthly_salary':'月額基本給','coe_salary_currency':'通貨','coe_allowances':'各種手当','coe_gross_monthly':'月額総支給額',
     'coe_issue_date':'証明書発行日','coe_purpose':'証明目的',
     // ITR / BIR 2316
-    'itr_emp_name':'氏名（納税者）','itr_emp_tin':'TIN番号','itr_emp_address':'住所','itr_rdo_code':'RDO番号（税務署コード）','itr_rdo_code':'RDO番号（税務署コード）',
+    'itr_emp_name':'氏名（納税者）','itr_emp_tin':'TIN番号','itr_emp_address':'住所','itr_rdo_code':'RDO番号（税務署コード）',
     'itr_period_from':'対象期間（開始）','itr_period_to':'対象期間（終了）','itr_status':'婚姻状況',
     'itr_employer_name':'雇用者名','itr_employer_tin':'雇用者TIN番号',
     'itr_employer_address':'雇用者住所','itr_employer_zip':'郵便番号',
@@ -3827,11 +3853,9 @@ function doDownloadPDF() {
     (gv('itr_deminimis') ? itrAmt('デミニミス給付','De Minimis Benefits','itr_deminimis',true) : '') +
 
     '<div class="sh">D.　源泉徴収税 / TAX WITHHELD (PART V)</div>' +
-    (gv('itr_rdo_code') ? '<div class="g1" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb"><div class="fb s"><div class="fl">RDO番号 / Revenue District Office Code</div><div class="fj">'+gv('itr_rdo_code')+'</div><div class="fe">'+gv('itr_rdo_code')+'</div></div></div>' : '') + +
     (gv('itr_rdo_code') ? '<div class="g1" style="border-left:0.5px solid #bbb;border-top:0.5px solid #bbb">' +
       '<div class="fb s"><div class="fl">RDO番号 / Revenue District Office (RDO) Code</div><div class="fj">'+gv('itr_rdo_code')+'</div><div class="fe">'+gv('itr_rdo_code')+'</div></div>' +
     '</div>' : '') +
-    '<div style="display:none">placeholder</div>' + +
     (gv('itr_tax_withheld_prev') ? itrAmt('前雇用者源泉徴収税','Tax Withheld by Previous Employer','itr_tax_withheld_prev',true) : '') +
     itrAmt('現雇用者源泉徴収税','Tax Withheld by Current Employer','itr_tax_withheld_curr',false) +
     '<div class="g2" style="border-top:2px solid #1a2744;background:#1a2744">' +
@@ -6680,6 +6704,15 @@ function stClose() {
   document.body.style.overflow = '';
 }
 
+// Detail text can contain raw model output (e.g. "<出生証明書>") or worker error
+// strings. Injected unescaped, anything tag-shaped silently disappears from the
+// panel — which is how a failure can look like it has no explanation at all.
+function stEsc(v) {
+  return String(v == null ? '' : v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 function stRender() {
   var pass = 0, fail = 0, warn = 0;
   stGroups.forEach(function (g) {
@@ -6693,7 +6726,7 @@ function stRender() {
   var bg = { pass: '#f0fdf4', fail: '#fef2f2', warn: '#fffbeb', run: '#f9fafb', skip: '#f9fafb' };
 
   var html = '';
-  stGroups.forEach(function (g) {
+  stGroups.forEach(function (g, gi) {
     var gf = g.rows.filter(function (r) { return r.s === 'fail'; }).length;
     var gw = g.rows.filter(function (r) { return r.s === 'warn'; }).length;
     var badge = gf ? '<span style="color:#b91c1c;font-weight:700">' + gf + ' failed</span>'
@@ -6703,12 +6736,29 @@ function stRender() {
       '<div style="background:#faf8f0;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#1a2744">' +
         '<span>' + g.name + '</span>' + badge +
       '</div>';
-    g.rows.forEach(function (r) {
+    g.rows.forEach(function (r, ri) {
+      // Every failing or warning row gets a button. Where a real in-app repair
+      // exists it says "Fix"; otherwise it says "How to fix" and opens the
+      // written steps. Previously only the 5 rows in stFixes got anything, so
+      // most failures looked like dead ends.
+      var bad = (r.s === 'fail' || r.s === 'warn');
+      var auto = typeof stFixes[r.n] === 'function';
+      var fixBtn = '';
+      if (bad) {
+        var tone = auto
+          ? 'background:#fef9c3;color:#854d0e;border:1px solid #fde68a'
+          : 'background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe';
+        fixBtn = '<button onclick="stRowAction(' + gi + ',' + ri + ')" ' +
+          'style="margin-left:7px;padding:2px 8px;' + tone + ';' +
+          'border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;' +
+          'white-space:nowrap;vertical-align:middle;line-height:1.4">' +
+          (auto ? '🔧 Fix' : '🛈 How to fix') + '</button>';
+      }
       html += '<div style="display:flex;gap:9px;padding:7px 12px;border-top:1px solid #f4f1e8;background:' + bg[r.s] + '">' +
         '<span style="flex-shrink:0;width:15px;text-align:center;font-weight:800;color:' + col[r.s] + '">' + icon[r.s] + '</span>' +
         '<div style="flex:1;min-width:0">' +
-          '<div style="color:#1f2937">' + r.n + '</div>' +
-          (r.d ? '<div style="font-size:11px;color:' + col[r.s] + ';margin-top:2px;word-break:break-word">' + r.d + '</div>' : '') +
+          '<div style="color:#1f2937">' + stEsc(r.n) + fixBtn + '</div>' +
+          (r.d ? '<div style="font-size:11px;color:' + col[r.s] + ';margin-top:2px;word-break:break-word">' + stEsc(r.d) + '</div>' : '') +
         '</div>' +
         (r.ms != null ? '<span style="flex-shrink:0;font-size:10px;color:#9ca3af">' + r.ms + 'ms</span>' : '') +
       '</div>';
@@ -6724,6 +6774,16 @@ function stRender() {
     (fail ? '✕ ' + fail + ' check(s) failed' : warn ? '! ' + warn + ' warning(s)' : '✓ Everything passed') +
     ' <span style="font-weight:500;opacity:.85">— ' + pass + ' passed' +
     (warn ? ', ' + warn + ' warning' : '') + (fail ? ', ' + fail + ' failed' : '') + '</span></div>';
+
+  // Show Fix All button only when there are fixable failures or warnings
+  var fixable = 0;
+  stGroups.forEach(function (g) {
+    g.rows.forEach(function (r) {
+      if ((r.s === 'fail' || r.s === 'warn') && typeof stFixes[r.n] === 'function') fixable++;
+    });
+  });
+  var fixAllEl = document.getElementById('st-fix-all');
+  if (fixAllEl) fixAllEl.style.display = fixable > 0 ? 'block' : 'none';
 }
 
 function stGroup(name) {
@@ -6748,6 +6808,246 @@ function stGroup(name) {
       return same;
     }
   };
+}
+
+// ── AUTO-FIX REGISTRY ────────────────────────────────────────────────
+// Maps a test row name → async fix function.
+// stRender() adds a 🔧 Fix button on any row whose name appears here and
+// whose status is 'fail' or 'warn'. stFixAll() runs all that apply.
+var stFixes = {
+
+  // Group 1 — Admin token missing: sign out so the user can re-authenticate.
+  'Admin token present in this session': function () {
+    stClose();
+    doLogout();
+    toast('Signed out — please sign back in with your admin token.', 'warn');
+  },
+
+  // Group 4 — Storage near/over limit: launch the purge wizard.
+  'Storage headroom': async function () {
+    await doPurge();
+  },
+
+  // Group 4 — Unpaid delivered jobs: jump to the Awaiting Payment filter.
+  'Unpaid-but-delivered jobs': function () {
+    stClose();
+    // Find the "Awaiting Payment" filter button and activate it safely.
+    var btn = null;
+    document.querySelectorAll('.fbtn').forEach(function (b) {
+      if ((b.getAttribute('onclick') || '').indexOf("'translated'") > -1) btn = b;
+    });
+    if (btn) {
+      setFilter('translated', btn);
+    } else {
+      curFilter = 'translated';
+      render();
+    }
+    toast('Showing jobs awaiting payment — use Actions → Request Payment.', 'ok');
+  },
+
+  // Group 4 — Classification error: reload data and re-test (may be transient).
+  'Every record classifies and prices cleanly': async function () {
+    await loadSubs();
+    toast('Data reloaded — re-running checks…', 'ok');
+  },
+
+  // Group 9 — Leftover test record: run the built-in cleanup tool.
+  'Test record deleted': async function () {
+    await stCleanupTestRecords();
+  },
+
+  // Group 4 / 9 — Stale local copy. Re-reading from the bin clears the failure
+  // whenever it was caused by a mid-test write landing after the last load.
+  'Records load': async function () {
+    await loadSubs();
+    toast('Reloaded from JSONBin — re-running checks…', 'ok');
+  },
+  'New request appears in the dashboard': async function () {
+    await loadSubs();
+    toast('Reloaded from JSONBin — re-running checks…', 'ok');
+  },
+  'Proof visible to admin': async function () {
+    await loadSubs();
+    toast('Reloaded from JSONBin — re-running checks…', 'ok');
+  },
+
+  // Group 9 — An aborted lifecycle run usually leaves a ZZ SELF-TEST record
+  // behind, which is what makes the next run fail too.
+  'Lifecycle test': async function () {
+    await stCleanupTestRecords();
+  }
+};
+
+// ── GUIDANCE REGISTRY ────────────────────────────────────────────────
+// Most failures cannot be repaired from inside this page — they need a redeploy,
+// an environment variable, or simply waiting out a quota. Those rows get a
+// "🛈 How to fix" button with the actual steps instead of a button that lies
+// about being able to repair them.
+var stHelp = {
+  'Health endpoint reachable':
+    'The data worker did not answer.\n\n' +
+    '1. Open your Cloudflare dashboard → Workers → the data worker.\n' +
+    '2. Confirm it is deployed and the route matches DATA_API in this file.\n' +
+    '3. Retry in a private window — an ad blocker or corporate proxy can swallow the request.',
+
+  'Archive bin configured':
+    'JSONBIN_ARCHIVE_BIN is not set on the worker.\n\n' +
+    'Until it is, saves will start FAILING once the main bin fills rather than rolling over.\n' +
+    'Add JSONBIN_ARCHIVE_BIN as a worker environment variable, pointing at a second empty bin, then redeploy.',
+
+  'AI worker responds':
+    'The Gemini proxy did not return a usable response.\n\n' +
+    '• HTTP 429 — quota exhausted. Nothing to fix; wait for the reset.\n' +
+    '• HTTP 401/403 — the Gemini API key is missing or revoked. Re-add it as a worker secret.\n' +
+    '• Network error — the worker is not deployed, or WORKER points at the wrong URL.',
+
+  'AI worker is separate from the data API':
+    'WORKER and DATA_API resolve to the same URL. One of the two constants at the top of this file is wrong — ' +
+    'the Gemini proxy and the data API are separate workers and must have separate routes.',
+
+  'Finished cleanly':
+    'Gemini stopped before finishing.\n\n' +
+    '• MAX_TOKENS — the reply was truncated. Raise maxOutputTokens, or translate in smaller batches.\n' +
+    '• SAFETY — a safety filter blocked it. Usually triggered by death-certificate wording; translate that record by hand.',
+
+  'Returned Japanese characters':
+    'The model replied in English. Re-run the test — if it persists, the model is ignoring the prompt and ' +
+    'translations should be spot-checked before delivery.',
+
+  'Output parses in FIELD|Japanese format':
+    'The reply did not come back as FIELD_ID|Japanese lines.\n\n' +
+    'This is a prompt-formatting problem, not a connectivity one. Re-run once; if it repeats, compare the ' +
+    'self-test prompt against the one built in doTranslate() — they are meant to use the same format rules.',
+
+  'Field ID survives untranslated':
+    'The model reworded the field key instead of copying it (e.g. "apo_underlying_doc" came back as ' +
+    '"apostille underlying doc").\n\n' +
+    'The parser rejects reworded keys on purpose — accepting them would silently drop fields from the PDF. ' +
+    'Re-run once; if it repeats, strengthen the "Do NOT translate field IDs" rule in the prompt.',
+
+  'Vision / OCR reads an image':
+    'The model could not read a clean rendered word, so customer document auto-fill is unreliable right now.\n\n' +
+    'Check the worker is forwarding inline_data unchanged, and that the configured model supports vision. ' +
+    'Customers can still type their details in by hand meanwhile.',
+
+  'Admin endpoint accepts your token':
+    'Your token does not match ADMIN_TOKEN on the worker.\n\n' +
+    'Either sign out and re-enter the correct token, or update the ADMIN_TOKEN secret in Cloudflare and redeploy. ' +
+    'Note they must match exactly — a trailing space counts.',
+
+  'Missing token is refused (401)':
+    'The admin endpoint served data without a token. This is a live security hole — anyone who knows the URL ' +
+    'can read every customer record.\n\nFix the auth check in the worker and redeploy before taking more requests.',
+
+  'Wrong token is refused (401)':
+    'The admin endpoint accepted an invalid token. This is a live security hole — fix the auth check in the ' +
+    'worker and redeploy before taking more requests.',
+
+  'No JSONBin key embedded in this page':
+    'A JSONBin master key is present in this HTML. Anyone who opens View Source can read and delete every record.\n\n' +
+    'Remove the key from this file, keep it only as a worker secret, then rotate it in JSONBin — the old one ' +
+    'must be assumed compromised.',
+
+  'Server sets the price, not the client':
+    'The worker accepted a price supplied by the browser. A customer could set their own amount to 1 peso.\n\n' +
+    'Make the worker derive the amount from the document type and ignore any client-sent value.',
+
+  'Forged paid status ignored':
+    'The worker accepted status/paymentStatus from the browser, so a customer could mark their own job paid ' +
+    'and released. Strip those fields server-side on create and always start new records at pending/unpaid.',
+
+  'No preview before translation':
+    'A preview was served for a job with no translation yet. Gate the preview on status === translated in the worker.',
+
+  'Payment blocked before translation':
+    'Proof upload was allowed before the translation existed. The worker should return 409 until the job is translated.',
+
+  'Preview withdrawn after payment':
+    'The full preview is still readable after payment. Once proof is uploaded the worker should stop serving ' +
+    'preview content, otherwise the document can be copied without the job ever being released.',
+
+  'Document fields never sent to the customer':
+    'The customer-facing response includes the raw fields object. That is the full document contents, ' +
+    'unredacted — strip it from the public endpoint in the worker.',
+
+  'Customer email is masked':
+    'The public endpoint returned an unmasked email address. Mask it in the worker before returning it.',
+
+  'EmailJS service configured':
+    'One of EMAILJS_SVC / EMAILJS_TPL / EMAILJS_KEY is empty, so payment-request and release emails will not send. ' +
+    'Fill all three at the top of this file. Everything else keeps working — you would just have to notify customers manually.'
+};
+
+// Fallback so no failing row is ever a dead end, even one added later.
+var stGroupHelp = {
+  '1':  'A configuration constant at the top of this file is missing or malformed. Check DATA_API, WORKER, PORTAL_URL and the EmailJS keys.',
+  '2':  'The data worker is unreachable or misbehaving. Check it is deployed in Cloudflare and that DATA_API matches its route.',
+  '2b': 'The Gemini proxy is unreachable or refusing requests. Check the worker deployment, the API key secret, and your remaining quota.',
+  '3':  'Authentication is not behaving as expected. Compare the token you signed in with against ADMIN_TOKEN in the worker.',
+  '4':  'Stored data did not load or did not validate. Reload the page; if it persists, inspect the bin contents directly in JSONBin.',
+  '5':  'A paywall rule is not being enforced. These are server-side guarantees — fix them in the worker, not here.',
+  '6':  'Status or pricing logic returned an unexpected value. Check PRICE_TIERS, amountFor() and normStatus() in this file.',
+  '7':  'A renderer produced unexpected output. Check the document builder for that document type in this file.',
+  '8':  'A required element or function is missing from the page, usually after an edit. Re-check the markup and function names.',
+  '9':  'The end-to-end run did not complete. This is most often JSONBin rate limiting — wait a minute and retry, then clean up any leftover ZZ SELF-TEST record.'
+};
+
+function stHelpFor(groupName, rowName) {
+  if (stHelp[rowName]) return stHelp[rowName];
+  var key = String(groupName || '').split('\u00b7')[0].trim();
+  return stGroupHelp[key] ||
+    'No written guidance for this check yet. The detail line under the row name is the raw result — ' +
+    'that is usually enough to point at the cause.';
+}
+
+// Row button dispatch. Indices are used rather than the row name so names
+// containing quotes (e.g. legacy "approved" counts as paid) cannot break the
+// generated onclick attribute.
+function stRowAction(gi, ri) {
+  var g = stGroups[gi];
+  var r = g && g.rows[ri];
+  if (!r) return;
+  if (typeof stFixes[r.n] === 'function') return stRunFix(r.n);
+  return uiAlert(stHelpFor(g.name, r.n) +
+      (r.d ? '\n\n──────────────\nReported: ' + r.d : ''),
+    { kind: r.s === 'warn' ? 'warn' : 'info', title: r.n });
+}
+
+// Run a single named fix, then re-run the quick test if the panel is still open.
+async function stRunFix(name) {
+  if (stBusy) { toast('A test is still running — please wait.', 'warn'); return; }
+  var fx = stFixes[name];
+  if (!fx) return;
+  try {
+    await fx();
+  } catch (e) {
+    toast('Fix failed: ' + (e.message || String(e)), 'warn');
+  }
+  // If the overlay is still visible, confirm the fix by re-running.
+  if (document.getElementById('st-overlay').style.display !== 'none') {
+    await runSelfTest(false);
+  }
+}
+
+// Run every available fix for the current set of failures, then re-run the test.
+async function stFixAll() {
+  if (stBusy) { toast('A test is still running — please wait.', 'warn'); return; }
+  var toFix = [];
+  stGroups.forEach(function (g) {
+    g.rows.forEach(function (r) {
+      if ((r.s === 'fail' || r.s === 'warn') && typeof stFixes[r.n] === 'function'
+          && toFix.indexOf(r.n) === -1) {
+        toFix.push(r.n);
+      }
+    });
+  });
+  if (!toFix.length) { toast('No auto-fixable issues found.', 'ok'); return; }
+  for (var i = 0; i < toFix.length; i++) {
+    try { await stFixes[toFix[i]](); } catch (e) { /* keep going */ }
+    // If a fix navigated away (logout, filter change), stop here.
+    if (document.getElementById('st-overlay').style.display === 'none') return;
+  }
+  await runSelfTest(false);
 }
 
 // The lifecycle test makes ~15 JSONBin round-trips. Without pacing, JSONBin
@@ -6841,10 +7141,24 @@ async function runSelfTest(deep) {
         return fetch(WORKER, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            // Mirrors the shape of the real doTranslate() prompt — a worked
+            // example plus the "do not translate field IDs" rule. Without
+            // those, the model rewrites the key ("birth_cert" -> "birth
+            // certificate") and wraps the value in <>, so the check failed
+            // even though production translation was working fine.
             contents: [{ parts: [{ text:
-              'Translate to Japanese. Reply with ONLY the translation, no explanation.\n' +
-              'Output exactly one line in the form: greeting|<Japanese>\n' +
-              'English: Certificate of Live Birth' }] }],
+              'You are a professional Japanese translator for Philippine government documents.\n\n' +
+              'OUTPUT FORMAT - use EXACTLY this pipe format for EVERY field:\n' +
+              'FIELD_ID|Japanese Translation\n\n' +
+              'Example:\n' +
+              'child_pob|カマリネス・スール州、バト\n\n' +
+              'DOCUMENT FIELDS TO TRANSLATE:\n' +
+              '  apo_underlying_doc (原文書の種類): Certificate of Live Birth\n\n' +
+              'STRICT RULES:\n' +
+              '- Output ONLY lines in FIELD_ID|Japanese format — no headers, no explanations, no extra text\n' +
+              '- Output 1 line exactly\n' +
+              '- Do NOT translate field IDs — keep them exactly as shown (e.g. apo_underlying_doc)\n' +
+              '- Do NOT wrap the value in <>, quotes, or markdown' }] }],
             generationConfig: { temperature: 0, topK: 1, topP: 1, candidateCount: 1, maxOutputTokens: 60 }
           })
         });
@@ -6882,6 +7196,11 @@ async function runSelfTest(deep) {
             var parsed = parseTranslationLines(txt || '');
             g.ok('Output parses in FIELD|Japanese format', Object.keys(parsed).length >= 1,
               'could not parse a pipe line from: "' + String(txt || '').slice(0, 80) + '"');
+            // Production keys every field by its exact ID, so a reworded key is
+            // as bad as no output at all — it silently drops the field.
+            g.ok('Field ID survives untranslated', !!parsed.apo_underlying_doc,
+              'expected key "apo_underlying_doc", got: ' +
+              (Object.keys(parsed).length ? '"' + Object.keys(parsed).join('", "') + '"' : 'nothing'));
             if (txt) g.add('Sample output', 'pass', String(txt).trim().slice(0, 90));
             aiOk = true;
           }
