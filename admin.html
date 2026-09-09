@@ -4058,7 +4058,14 @@ function doDownloadPDF() {
         '⚠ ' + untranslatedCount + ' field(s) NOT translated — find the red 【未翻訳】 marks and type the Japanese before printing' +
         '</span>'
       : '<span style="font-size:11px;color:rgba(255,255,255,0.55);">Click any Japanese field value to edit before printing</span>') +
-    '<span id="ovf-warn" style="display:none;font-size:12px;font-weight:700;color:#1a2744;background:#fbbf24;padding:5px 12px;border-radius:6px;"></span>' +
+    '<button id="fit-btn" onclick="cycleFit()" style="padding:6px 12px;background:rgba(255,255,255,0.14);' +
+      'color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:6px;font-size:11.5px;font-weight:700;' +
+      'cursor:pointer;font-family:Arial,sans-serif;white-space:nowrap;">Auto-fit: On</button>' +
+    '<button id="flow-btn" onclick="toggleFlow()" style="padding:6px 12px;background:rgba(255,255,255,0.14);' +
+      'color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:6px;font-size:11.5px;font-weight:700;' +
+      'cursor:pointer;font-family:Arial,sans-serif;white-space:nowrap;">Allow extra page</button>' +
+    '<span id="fit-pill" style="display:none;font-size:12px;font-weight:700;color:#1a2744;' +
+      'background:#a7f3d0;padding:5px 12px;border-radius:6px;"></span>' +
     '</div>' +
     '<div style="height:46px" class="no-print"></div>';
 
@@ -4068,7 +4075,76 @@ function doDownloadPDF() {
     '[contenteditable="true"]:focus{background:rgba(201,168,76,0.28)!important;box-shadow:0 0 0 1.5px #c9a84c;outline:none}',
     'span.fill[contenteditable],span.fill-lg[contenteditable]{display:inline-block;min-width:40px}',
     'span.dval[contenteditable]{display:inline-block;min-width:40px}',
+    // The zoomable layer the auto-fit engine drives. zoom (not transform) so it
+    // actually reduces layout height and Chrome carries it into the PDF.
+    '.pgfit{zoom:1}',
+    '@media print{.pgfit{-webkit-print-color-adjust:exact;print-color-adjust:exact}}',
     '@media print{.no-print{display:none!important}[contenteditable]{background:transparent!important;box-shadow:none!important;cursor:default}}'
+  ].join('');
+
+  // ── A4 AUTO-FIT ────────────────────────────────────────────────────────
+  // Runs inside the generated document. Each .page is a hard A4 box, so long
+  // documents used to lose their tail silently. This wraps the page content in
+  // a .pgfit layer and zooms that layer down until it fits, leaving the
+  // absolutely positioned overlays (UNPAID watermark, rotated margin note)
+  // untouched so they still cover the full sheet.
+  //   Auto-fit on  — shrink to fit, floor at MIN so it stays readable
+  //   Auto-fit off — original size, amber outline on anything clipped
+  //   Extra page   — release the A4 clamp and let it paginate naturally
+  var FIT_JS = [
+    '(function(){',
+    'var MIN=0.70;',
+    'var pages=[].slice.call(document.querySelectorAll(".page"));',
+    'var mode="fit";',
+    // Move page content into a zoomable wrapper, skipping overlay layers.
+    'pages.forEach(function(p){',
+      'if(p.getAttribute("data-fit")==="1")return;',
+      'p.setAttribute("data-fit","1");',
+      'var w=document.createElement("div");w.className="pgfit";',
+      '[].slice.call(p.childNodes).forEach(function(n){',
+        'if(n.nodeType===1&&(n.classList.contains("wmk")||n.classList.contains("rot-wrap")))return;',
+        'w.appendChild(n);});',
+      'p.insertBefore(w,p.firstChild);});',
+    'function room(p){var c=getComputedStyle(p);',
+      'return p.clientHeight-parseFloat(c.paddingTop)-parseFloat(c.paddingBottom);}',
+    'function over(p){return p.scrollHeight>p.clientHeight+2;}',
+    'function apply(){var clipped=0,pct=[];',
+      'pages.forEach(function(p){',
+        'var w=p.querySelector(".pgfit");if(!w)return;',
+        'p.style.outline="";w.style.zoom=1;',
+        'if(mode==="flow"){p.style.maxHeight="none";p.style.overflow="visible";return;}',
+        'p.style.maxHeight="";p.style.overflow="";',
+        'if(mode==="off"){if(over(p)){clipped++;p.style.outline="2px solid #f59e0b";}return;}',
+        // Measure at 1:1, take the first-pass ratio, then creep down to absorb
+        // rounding and any reflow the zoom itself causes.
+        'var need=w.scrollHeight,have=room(p);',
+        'if(need<=have+1)return;',
+        'var f=Math.max(MIN,have/need);w.style.zoom=f;',
+        'for(var i=0;i<14&&over(p)&&f>MIN;i++){f=Math.max(MIN,f-0.01);w.style.zoom=f;}',
+        'if(over(p)){clipped++;p.style.outline="2px solid #f59e0b";}',
+        'pct.push(Math.round(f*100));});',
+      'report(clipped,pct);}',
+    'function report(clipped,pct){var el=document.getElementById("fit-pill");if(!el)return;',
+      'var show=function(bg,txt){el.style.display="inline-block";el.style.background=bg;el.textContent=txt;};',
+      'if(mode==="flow"){show("#bfdbfe","Extra sheets allowed — nothing is cut off");return;}',
+      'if(clipped&&mode==="off"){show("#fbbf24","Content is cut off on "+clipped+" page(s) — turn Auto-fit on, or allow an extra page");return;}',
+      'if(clipped){show("#fbbf24","Too long for "+clipped+" page(s) even shrunk to "+Math.round(MIN*100)+"% — use \\u201CAllow extra page\\u201D");return;}',
+      'if(pct.length){show("#a7f3d0","Auto-fitted to A4 at "+Math.min.apply(null,pct)+"% — nothing is cut off");return;}',
+      'el.style.display="none";}',
+    'function labels(){',
+      'var b=document.getElementById("fit-btn"),g=document.getElementById("flow-btn");',
+      'if(b){b.textContent=mode==="off"?"Auto-fit: Off":"Auto-fit: On";b.style.opacity=mode==="flow"?"0.45":"1";}',
+      'if(g)g.textContent=mode==="flow"?"Keep to one page":"Allow extra page";}',
+    'window.setFit=function(m){mode=m;labels();apply();};',
+    'window.cycleFit=function(){if(mode==="flow")return;setFit(mode==="fit"?"off":"fit");};',
+    'window.toggleFlow=function(){setFit(mode==="flow"?"fit":"flow");};',
+    'labels();apply();',
+    // Re-fit as the document is edited, but never while a field has focus —
+    // resetting zoom mid-keystroke would jump the caret.
+    'setInterval(function(){var a=document.activeElement;',
+      'if(a&&a.getAttribute&&a.getAttribute("contenteditable")==="true")return;',
+      'apply();},1500);',
+    '})();'
   ].join('');
 
   var docHtml = '<!DOCTYPE html><html lang="ja"><head>'+
@@ -4097,14 +4173,12 @@ function doDownloadPDF() {
     'el.setAttribute(\'contenteditable\',\'true\');' +
     'el.setAttribute(\'spellcheck\',\'false\');' +
     'el.setAttribute(\'title\',\'Click to edit\');});});' +
-    // .page is max-height:297mm with overflow:hidden, so anything too long is
-    // silently cut off. Detect it and say so instead of printing a truncated doc.
-    'function ovf(){var n=0;document.querySelectorAll(\'.page\').forEach(function(p,i){' +
-    'if(p.scrollHeight>p.clientHeight+2){n++;p.style.outline=\'2px solid #f59e0b\';}});' +
-    'var w=document.getElementById(\'ovf-warn\');' +
-    'if(n&&w){w.style.display=\'inline-block\';' +
-    'w.textContent=\'⚠ Content overflows the A4 page on \'+n+\' page(s) — text is being cut off\';}}' +
-    'ovf();setInterval(ovf,1500);' +
+    // .page is max-height:297mm with overflow:hidden, so anything too long used
+    // to be silently cut off. Instead of only warning, shrink the content until
+    // it fits; if even the floor is not enough, offer to spill onto a 2nd sheet.
+    '});<\/script>' +
+    '<script>' + FIT_JS + '<\/script>' +
+    '<script>document.addEventListener(\'DOMContentLoaded\',function(){' +
     // Last line of defence before paper
     'window.addEventListener(\'beforeprint\',function(){' +
     'if(document.querySelectorAll(\'.untr\').length){' +
