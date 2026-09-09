@@ -7446,6 +7446,29 @@ async function runSelfTest(deep) {
       return isOverdue(old) && !isOverdue(recent) && !isOverdue(F.cleared);
     })(), 'overdue detection is wrong');
 
+    // The custom-translation workspace prints from a throwaway record rather
+    // than the real one, so the watermark decision has to be re-checked on
+    // that path — a hardcoded status there once stamped paid jobs UNPAID.
+    g.ok('custom workspace inherits payment state', (function () {
+      var built = function (real) {
+        return {
+          id: 'REQ-TEST', name: 'Custom Translation', doctype: 'Others', fields: {},
+          status:        real ? real.status        : 'released',
+          paymentStatus: real ? real.paymentStatus : undefined,
+          proofFile:     real ? real.proofFile     : undefined,
+          amount:        real ? real.amount        : undefined,
+          hasPage2:      real ? real.hasPage2      : undefined,
+          customTitleEn: 'T', customBody: 'a|あ', customCols: '2'
+        };
+      };
+      return isPaid(built(F.cleared))       // released  → clean copy
+          && isPaid(built(F.proof))         // paid      → clean copy
+          && isPaid(built(F.legacyDone))    // prepaid   → clean copy
+          && !isPaid(built(F.done))         // unpaid    → still stamped
+          && !isPaid(built(F.refused))      // rejected  → still stamped
+          && isPaid(built(null));           // standalone→ no payment record
+    })(), 'a paid job would print with the UNPAID watermark from the workspace');
+
     // ── 7. RENDERERS ──
     g = stGroup('7 · Renderers');
     try {
