@@ -2183,8 +2183,6 @@ async function onDoc2Upload(input) {
   if (!file) return;
 
   doc2FileData = await toBase64(file);
-  var scanImg2 = await prepImageForScan(file);
-  if (!scanImg2) { await uiAlert('Please try a JPG or PNG photo of the page.', {kind:'warn', title:'Could not read that file'}); input.value=''; return; }
   document.getElementById('doc2-ok').textContent = 'Selected: ' + file.name;
   document.getElementById('doc2-ok').style.display = 'block';
 
@@ -2192,65 +2190,109 @@ async function onDoc2Upload(input) {
   var p1badge = document.getElementById('page1-badge');
   if (p1badge) p1badge.textContent = 'PAGE 1 OF 2 · 第1ページ（全2ページ）';
 
-  // Update price immediately on file selection
   updatePrice();
-
-  // Show the page 2 details section
   document.getElementById('details-section2').style.display = 'block';
 
-  // Determine affidavit type
+  var status2 = document.getElementById('scan-status2');
+  status2.style.cssText = scanStatusStyle('busy');
+  status2.innerHTML = scanSpinner() + 'Preparing Page 2 for scanning...';
+
+  var passes2 = await prepScanPasses(file);
+  if (!passes2 || !passes2.length) {
+    status2.style.cssText = scanStatusStyle('warn');
+    status2.innerHTML = 'Could not read that file. Please try a JPG or PNG photo of the page, or fill in the affidavit fields below.';
+    return;
+  }
+
+  // Which affidavits are on this page
   var aType = document.getElementById('p2_affidavit_type').value || 'both';
 
-  var status2 = document.getElementById('scan-status2');
-  status2.style.cssText = 'display:flex;background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12px;align-items:center;gap:8px';
-  status2.innerHTML = '<span style="display:inline-block;width:13px;height:13px;border:2px solid #2563eb;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0"></span> Reading Page 2...';
+  var patIds = ['p2_pat_father','p2_pat_mother','p2_pat_child','p2_pat_child_dob',
+                'p2_pat_city','p2_pat_date_sworn','p2_pat_notary','p2_pat_ctc',
+                'p2_pat_ctc_place','p2_pat_ctc_date'];
+  var delIds = ['p2_del_affiant','p2_del_civil','p2_del_affiant_addr','p2_del_child',
+                'p2_del_child_dob','p2_del_child_pob','p2_del_attendant','p2_del_attendant_addr',
+                'p2_del_citizen','p2_del_father','p2_del_mother','p2_del_married',
+                'p2_del_marriage_date','p2_del_marriage_place','p2_del_reason',
+                'p2_del_exec_city','p2_del_exec_date','p2_del_notary','p2_del_date_sworn',
+                'p2_del_remarks'];
+
+  var promptPat = 'Affidavit of Acknowledgment / Admission of Paternity: the father acknowledges the ' +
+    'child. Read the father name, mother name, child name and child date of birth from the body text, ' +
+    'then the notarial block at the bottom — city where sworn, date sworn, Notary Public name, and the ' +
+    "father's CTC or valid ID number with where and when it was issued. ";
+  var promptDel = 'Affidavit for Delayed Registration of Birth: read the affiant (the person who signed) ' +
+    'with civil status and address, the child name, date and place of birth, the attendant at birth and ' +
+    'their address, citizenship, father and mother names, whether the parents are married and the ' +
+    'marriage date and place if they are, the stated reason for the delay, then the city and date the ' +
+    'affidavit was executed, the Notary Public name, the date sworn and any additional remarks or stamps. ';
+
+  var affDesc, ids2;
+  if (aType === 'paternity') {
+    affDesc = 'It contains ONE affidavit. ' + promptPat;
+    ids2 = patIds;
+  } else if (aType === 'delayed') {
+    affDesc = 'It contains ONE affidavit. ' + promptDel;
+    ids2 = delIds;
+  } else {
+    affDesc = 'It contains TWO affidavits, one above the other. (1) ' + promptPat + '(2) ' + promptDel;
+    ids2 = patIds.concat(delIds);
+  }
+
+  clearUserEditFlags(ids2);
+  var spec2 = fieldSpecFromDom(ids2);
+  if (!spec2.lines.length) {
+    status2.style.cssText = scanStatusStyle('warn');
+    status2.innerHTML = 'Page 2 uploaded. Please fill in the affidavit fields below.';
+    return;
+  }
+
+  var tip2 = affDesc +
+    'These affidavits are usually typed onto a printed form but signed, dated, corrected and ' +
+    'annotated by hand, and the notarial details at the foot of the page are often the hardest ' +
+    'part to read. Take the doc. no. / page no. / book no. / series line into remarks if present.';
+
+  var buildPrompt2 = function(p) {
+    return buildScanPrompt('Page 2 of a PSA Birth Certificate (affidavits)', spec2.lines, tip2, p);
+  };
+
+  var zoom2 = passes2.length - 1;
+  status2.innerHTML = scanSpinner() + 'Reading Page 2...' +
+    (zoom2 > 0 ? ' (then ' + zoom2 + ' close-up passes)' : '');
 
   try {
-    // Build prompt based on affidavit type
-    var patFields = 'p2_pat_father, p2_pat_mother, p2_pat_child, p2_pat_child_dob, p2_pat_city, p2_pat_date_sworn, p2_pat_notary, p2_pat_ctc, p2_pat_ctc_place, p2_pat_ctc_date';
-    var delFields = 'p2_del_affiant, p2_del_civil, p2_del_affiant_addr, p2_del_child, p2_del_child_dob, p2_del_child_pob, p2_del_attendant, p2_del_attendant_addr, p2_del_citizen, p2_del_father, p2_del_mother, p2_del_married, p2_del_marriage_date, p2_del_marriage_place, p2_del_reason, p2_del_exec_city, p2_del_exec_date, p2_del_notary, p2_del_date_sworn, p2_del_remarks';
-
-    var promptPat = 'Affidavit of Acknowledgment/Admission of Paternity — read: father name, mother name, child name, child date of birth, city where sworn, date sworn, notary public name, CTC/Valid ID number of father, CTC issued at (city), CTC issued on (date). ';
-    var promptDel = 'Affidavit for Delayed Registration of Birth — read: affiant name (the person who signed), affiant civil status (single/married/widowed/divorced), affiant address, child name, child date of birth, child place of birth, attendant at birth name, attendant address, citizenship, father name, mother name, whether parents are married (yes/no), marriage date if applicable, marriage place if applicable, reason for delayed registration, city where affidavit executed, date executed, notary public name, date sworn, any additional remarks or stamps. ';
-
-    var affDesc = '', fieldIds = '';
-    if (aType === 'both') {
-      affDesc = 'It contains TWO affidavits: (1) ' + promptPat + '(2) ' + promptDel;
-      fieldIds = patFields + ', ' + delFields;
-    } else if (aType === 'paternity') {
-      affDesc = 'It contains ONE affidavit: Affidavit of Acknowledgment/Admission of Paternity. ' + promptPat;
-      fieldIds = patFields;
-    } else {
-      affDesc = 'It contains ONE affidavit: Affidavit for Delayed Registration of Birth. ' + promptDel;
-      fieldIds = delFields;
-    }
-
-    var prompt2 = 'You are an expert at reading Philippine PSA civil registry documents. ' +
-      'This is Page 2 of a PSA Birth Certificate. ' + affDesc +
-      HANDWRITING_RULES +
-      'Affidavits on this page are usually typed onto a form but signed, dated and annotated by hand. ' +
-      'Extract ONLY these exact field IDs: ' + fieldIds + '. ' +
-      'IMPORTANT: Return ONLY a raw JSON object. No markdown. No backticks. No explanation. ' +
-      'Full names as First Middle Last. Dates as YYYY-MM-DD. Use empty string if field not present or unreadable.';
-
-    var ex2 = await callScanAI(prompt2, scanImg2.data, scanImg2.mime);
-    var filled2 = 0;
-    Object.keys(ex2).forEach(function(id) {
-      var el = document.getElementById(id);
-      if (el && ex2[id]) { el.value = ex2[id]; filled2++; }
+    var results2 = await runScanPasses(passes2, buildPrompt2, function(done, total, sofar) {
+      applyMerged(mergeExtractions(sofar, spec2.meta));
+      if (done < total) {
+        status2.style.cssText = scanStatusStyle('busy');
+        status2.innerHTML = scanSpinner() + 'Zooming in on the ' + passes2[done].label +
+          ' of Page 2... (' + done + ' of ' + total + ' passes done)';
+      }
     });
 
-    status2.style.cssText = 'display:flex;background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12px;align-items:center;gap:8px';
-    status2.innerHTML = filled2 > 0
-      ? 'AI filled ' + filled2 + ' fields from Page 2. Please review and correct if needed.'
-      : 'Page 2 uploaded. Please fill in the affidavit fields below.';
+    var ok2 = results2.filter(function(r) { return !r.error; }).length;
+    if (!ok2) throw new Error(results2.length ? results2[0].error : 'scan failed');
+
+    var report2 = applyMerged(mergeExtractions(results2, spec2.meta));
+
+    if (report2.filled > 0) {
+      status2.style.cssText = scanStatusStyle('ok');
+      status2.innerHTML = '✓ Read ' + report2.filled + ' fields from Page 2' +
+        (ok2 > 1 ? ' across ' + ok2 + ' passes' : '') +
+        (report2.verify > 0 ? '. ' + report2.verify + ' need a quick check' : '') +
+        '. Please review the affidavit details below.';
+    } else {
+      status2.style.cssText = scanStatusStyle('warn');
+      status2.innerHTML = 'Page 2 uploaded, but nothing could be read automatically. Please fill in the affidavit fields below.';
+    }
 
     updatePrice();
 
-  } catch(e2) {
-    console.error('Page 2 scan error:', e2.message);
-    status2.style.cssText = 'display:flex;background:#fffbeb;border:1px solid #fde68a;color:#92400e;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12px;align-items:center;gap:8px';
-    status2.innerHTML = 'Could not auto-read Page 2 (' + (e2.message || 'error') + '). Please fill in the fields manually.';
+  } catch (e2) {
+    console.error('Page 2 scan error:', e2 && e2.message);
+    status2.style.cssText = scanStatusStyle('warn');
+    status2.innerHTML = 'Could not auto-read Page 2 (' + ((e2 && e2.message) || 'error') +
+      '). Please fill in the affidavit fields below.';
   }
 }
 
@@ -2346,89 +2388,298 @@ function buildInput(f) {
 }
 
 // ══ SCAN SUPPORT ═══════════════════════════════════════════════════
-// Prepare an image for OCR. Modern phone cameras produce 4–12MB files;
-// base64 inflates them by ~33%, which is slow on mobile data and can be
-// rejected outright. Downscaling the long edge to 2200px still gives about
-// 185 DPI on an A4 sheet — well above what handwriting needs — and cuts the
-// payload dramatically. HEIC/HEIF from iPhones cannot always be decoded by
-// canvas, so on any failure we fall back to sending the original bytes.
-var SCAN_MAX_EDGE = 2200;
+// The scanner makes several passes over the same photo and merges them:
+//
+//   pass 1   the whole page — layout, long text blocks, overall context
+//   pass 2+  overlapping close-up crops ("zoom") at full sensor resolution,
+//            which is what actually makes small print, rubber stamps,
+//            registry numbers and handwriting legible
+//
+// A value that two or more passes agree on is treated as reliable. A value
+// only one pass saw is still filled in but flagged for the customer to check.
+//
+// Everything is written through setFieldValue(), which converts what the
+// model returned into something the real input will accept: dropdowns are
+// matched against their actual <option> list and dates are normalised to
+// YYYY-MM-DD. Previously a reply of "MALE" or "July 9, 2026" was assigned
+// straight to the element, the browser rejected it silently, and the select
+// or date picker was left blank while the counter still claimed it was
+// filled. Every assignment is now verified after the fact.
 
-function prepImageForScan(file) {
+var SCAN_CONFIG = {
+  fullMaxEdge:     2200,   // whole-page pass
+  tileMaxEdge:     2400,   // each zoom crop — kept near native resolution
+  tileOverlap:     0.14,   // so a value sitting on a seam is whole in one crop
+  jpegQuality:     0.95,   // faint pen strokes survive this; 0.7 smears them
+  enableZoom:      true,
+  minEdgeForZoom:  1400,   // below this there is no extra detail to find
+  concurrency:     2,      // parallel zoom passes
+  maxOutputTokens: 8192    // large field sets were being truncated at 4096
+};
+
+// Rules that materially improve handwritten Philippine civil-registry reads.
+var HANDWRITING_RULES =
+  'HANDWRITING: much of this document is filled in by hand — block capitals, ' +
+  'cursive, or a mix — and it may be faint, smudged, slanted, written over printed ' +
+  'guide lines, or crossing into the next box. Read handwritten entries as carefully ' +
+  'as printed ones, letter by letter. ' +
+  'Watch these confusions: 0/O, 1/I/l/7, 2/Z, 4/9, 5/S, 6/G, 8/B, rn/m, U/V, cl/d, ' +
+  'and a/o/u in cursive. Compare a doubtful character with the same character ' +
+  'elsewhere in the same handwriting before deciding. ' +
+  'Filipino names often contain Ñ, hyphens (DELA CRUZ-SANTOS) and multi-word ' +
+  'surnames (DELA CRUZ, DE LEON, DELOS SANTOS, SAN JOSE, DE LA PEÑA) — keep those ' +
+  'together as one surname, never split them across name fields. ' +
+  'Transcribe names exactly as written: do not correct spelling, do not translate, ' +
+  'do not expand initials. ' +
+  'Tick boxes, X marks and shaded circles: report the option that is actually marked, ' +
+  'not the printed label nearest an empty box. If two boxes look marked, leave it empty. ' +
+  'ACCURACY OVER COMPLETENESS: if a value is genuinely unclear, return an empty string ' +
+  'for that field rather than guessing. Never invent or approximate a name, date, ' +
+  'registry number or amount — a blank field gets corrected by the customer, a ' +
+  'plausible-looking wrong one does not. ';
+
+var GENERIC_TIP =
+  'Read the letterhead and title first, then the body, then the signature block. ' +
+  'Capture every personal name, date, reference or serial number, amount and official ' +
+  'designation. Rubber stamps and dry seals usually carry the issuing office, a date ' +
+  'and a control number — read those too, including anything handwritten beside them.';
+
+// ── IMAGE PREPARATION ──────────────────────────────────────────────
+function loadScanImage(file) {
   return new Promise(function(resolve) {
-    var fallback = function() {
-      toBase64(file).then(function(b64) {
-        resolve({ data: b64, mime: file.type || 'image/jpeg', resized: false });
-      }, function() { resolve(null); });
-    };
-    if (!file.type || file.type.indexOf('image/') !== 0) { fallback(); return; }
-
     var reader = new FileReader();
-    reader.onerror = fallback;
+    reader.onerror = function() { resolve(null); };
     reader.onload = function(e) {
       var img = new Image();
-      img.onerror = fallback;
-      img.onload = function() {
-        try {
-          var longEdge = Math.max(img.width, img.height);
-          if (longEdge <= SCAN_MAX_EDGE && file.size < 1500000) { fallback(); return; }
-          var ratio  = SCAN_MAX_EDGE / longEdge;
-          var canvas = document.createElement('canvas');
-          canvas.width  = Math.round(img.width * ratio);
-          canvas.height = Math.round(img.height * ratio);
-          var ctx = canvas.getContext('2d');
-          ctx.imageSmoothingQuality = 'high';
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          // 0.92 keeps faint pen strokes legible; 0.3 would smear them
-          var out = canvas.toDataURL('image/jpeg', 0.92).split(',')[1];
-          if (!out || out.length < 1000) { fallback(); return; }
-          resolve({ data: out, mime: 'image/jpeg', resized: true });
-        } catch (err) { fallback(); }
-      };
+      img.onerror = function() { resolve(null); };
+      img.onload  = function() { resolve(img); };
       img.src = e.target.result;
     };
     reader.readAsDataURL(file);
   });
 }
 
-// Rules that materially improve handwritten Philippine civil-registry reads.
-var HANDWRITING_RULES =
-  'HANDWRITING: Much of this document is filled in by hand, often in block capitals, ' +
-  'sometimes in cursive, and it may be faint, smudged, slanted or written over printed guide lines. ' +
-  'Read handwritten entries as carefully as printed ones. ' +
-  'Take care with these common confusions: 0/O, 1/I/l, 2/Z, 5/S, 6/G, 8/B, rn/m, U/V, and a/o in cursive. ' +
-  'Filipino names often contain Ñ, hyphens (e.g. DELA CRUZ-SANTOS), and multi-word surnames ' +
-  '(DELA CRUZ, DE LEON, DELOS SANTOS, SAN JOSE) — keep those as one surname, do not split them. ' +
-  'Transcribe names exactly as written; do not correct spelling and do not translate them. ' +
-  'Tick boxes and X marks: report the option that is marked, not the printed label next to an empty box. ' +
-  'ACCURACY OVER COMPLETENESS: if a value is genuinely unclear, return an empty string for that field ' +
-  'rather than guessing. Never invent or approximate dates, registry numbers or amounts — ' +
-  'a blank field is corrected by the customer, a wrong one is not noticed. ';
+// Draw one region of the source image to a JPEG. Never upscales: a crop is
+// capped at its own native pixel size, so "zoom" means real extra detail
+// rather than interpolated mush.
+function renderRegion(img, sx, sy, sw, sh, maxEdge, quality) {
+  try {
+    var longEdge = Math.max(sw, sh);
+    var ratio    = longEdge > maxEdge ? maxEdge / longEdge : 1;
+    var canvas   = document.createElement('canvas');
+    canvas.width  = Math.max(1, Math.round(sw * ratio));
+    canvas.height = Math.max(1, Math.round(sh * ratio));
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+    var out = canvas.toDataURL('image/jpeg', quality).split(',')[1];
+    return (out && out.length > 1000) ? out : null;
+  } catch (err) {
+    return null;
+  }
+}
 
-// Single place for the vision call: greedy decoding, one retry on a transient
-// failure, and an explicit truncation check so a cut-off reply is not reported
-// to the customer as an unreadable document.
-async function callScanAI(prompt, imgData, imgMime) {
-  var body = JSON.stringify({
-    contents: [{ parts: [
-      { text: prompt },
-      { inline_data: { mime_type: imgMime || 'image/jpeg', data: imgData } }
-    ]}],
-    generationConfig: { temperature: 0, topK: 1, topP: 1, maxOutputTokens: 4096 }
+// Build the pass list: the full page, then overlapping crops. Wide-ish pages
+// get a 2x2 grid; tall narrow ones (payslips, receipts, statements) get
+// horizontal bands, which keeps each line of text intact.
+function prepScanPasses(file) {
+  return new Promise(function(resolve) {
+    var rawFallback = function() {
+      toBase64(file).then(function(b64) {
+        resolve(b64 ? [{ kind:'full', label:'the whole page', data:b64,
+                         mime:file.type || 'image/jpeg' }] : null);
+      }, function() { resolve(null); });
+    };
+
+    if (!file.type || file.type.indexOf('image/') !== 0) { rawFallback(); return; }
+
+    loadScanImage(file).then(function(img) {
+      // HEIC/HEIF from iPhones cannot always be decoded by canvas — send the
+      // original bytes and let the model deal with it.
+      if (!img || !img.width || !img.height) { rawFallback(); return; }
+
+      var W = img.width, H = img.height;
+      var passes = [];
+
+      var full = renderRegion(img, 0, 0, W, H,
+                              SCAN_CONFIG.fullMaxEdge, SCAN_CONFIG.jpegQuality);
+      if (!full) { rawFallback(); return; }
+      passes.push({ kind:'full', label:'the whole page', data:full, mime:'image/jpeg' });
+
+      var longEdge = Math.max(W, H);
+      if (SCAN_CONFIG.enableZoom && longEdge >= SCAN_CONFIG.minEdgeForZoom) {
+        var ov  = SCAN_CONFIG.tileOverlap;
+        var box = [];
+        if (H / W >= 1.75) {
+          // tall document: three full-width bands
+          box = [
+            { x:0, y:0,          w:1, h:(1/3)+ov, label:'top third' },
+            { x:0, y:(1/3)-ov/2, w:1, h:(1/3)+ov, label:'middle third' },
+            { x:0, y:(2/3)-ov,   w:1, h:(1/3)+ov, label:'bottom third' }
+          ];
+        } else if (W / H >= 1.75) {
+          // landscape: three full-height columns
+          box = [
+            { x:0,          y:0, w:(1/3)+ov, h:1, label:'left third' },
+            { x:(1/3)-ov/2, y:0, w:(1/3)+ov, h:1, label:'middle third' },
+            { x:(2/3)-ov,   y:0, w:(1/3)+ov, h:1, label:'right third' }
+          ];
+        } else {
+          // normal page: 2x2 quadrants with overlap
+          box = [
+            { x:0,        y:0,        w:0.5+ov, h:0.5+ov, label:'top-left quarter' },
+            { x:0.5-ov,   y:0,        w:0.5+ov, h:0.5+ov, label:'top-right quarter' },
+            { x:0,        y:0.5-ov,   w:0.5+ov, h:0.5+ov, label:'bottom-left quarter' },
+            { x:0.5-ov,   y:0.5-ov,   w:0.5+ov, h:0.5+ov, label:'bottom-right quarter' }
+          ];
+        }
+
+        box.forEach(function(b) {
+          var sx = Math.max(0, Math.round(b.x * W));
+          var sy = Math.max(0, Math.round(b.y * H));
+          var sw = Math.min(W - sx, Math.round(b.w * W));
+          var sh = Math.min(H - sy, Math.round(b.h * H));
+          if (sw < 200 || sh < 200) return;
+          var data = renderRegion(img, sx, sy, sw, sh,
+                                  SCAN_CONFIG.tileMaxEdge, SCAN_CONFIG.jpegQuality);
+          if (data) passes.push({ kind:'zoom', label:b.label, data:data, mime:'image/jpeg' });
+        });
+      }
+
+      resolve(passes);
+    });
   });
+}
 
+// Kept for callers that still expect the old single-image helper.
+function prepImageForScan(file) {
+  return prepScanPasses(file).then(function(passes) {
+    if (!passes || !passes.length) return null;
+    return { data: passes[0].data, mime: passes[0].mime, resized: true };
+  });
+}
+
+// ── FIELD SPEC (read from the live DOM) ────────────────────────────
+// Telling the model the human label, the input type and — crucially — the
+// exact dropdown options is the single biggest accuracy win available here.
+// It used to receive nothing but a list of ids like "bank_stmt_from".
+function domLabel(el) {
+  var wrap = el && el.closest ? el.closest('.field') : null;
+  var lab  = wrap ? wrap.querySelector('label') : null;
+  if (!lab) return '';
+  return lab.textContent.replace(/\*/g, '').replace(/\s+/g, ' ').trim();
+}
+
+function fieldSpecFromDom(ids, labelOverrides) {
+  var lines = [], meta = {};
+  ids.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var label = (labelOverrides && labelOverrides[id]) || domLabel(el) || id;
+    var kind = 'TEXT', extra = '';
+
+    if (el.tagName === 'SELECT') {
+      var opts = [];
+      for (var i = 0; i < el.options.length; i++) {
+        var o = el.options[i];
+        var t = (o.text || '').trim();
+        if (!t || o.disabled || t.toLowerCase() === 'select') continue;
+        opts.push(t);
+      }
+      kind = 'CHOICE';
+      extra = ' -> reply with exactly one of: ' + opts.join(' | ');
+      meta[id] = { kind:'select', opts:opts, label:label };
+    } else if (el.type === 'date') {
+      kind = 'DATE';
+      extra = ' -> strictly YYYY-MM-DD';
+      meta[id] = { kind:'date', label:label };
+    } else if (el.type === 'number') {
+      kind = 'NUMBER';
+      extra = ' -> digits only';
+      meta[id] = { kind:'number', label:label };
+    } else {
+      meta[id] = { kind:'text', label:label };
+      var ph = (el.getAttribute('placeholder') || '').trim();
+      if (ph && ph.length < 60) extra = ' (e.g. ' + ph.replace(/^e\.g\.\s*/i, '') + ')';
+    }
+    lines.push('- ' + id + ' = ' + label + ' [' + kind + ']' + extra);
+  });
+  return { lines: lines, meta: meta };
+}
+
+function buildScanPrompt(doctypeLabel, specLines, tip, pass) {
+  var scope = pass.kind === 'full'
+    ? 'This image is the COMPLETE page. Use it for layout, section numbers and long text blocks.'
+    : 'This image is a ZOOMED-IN CROP of the ' + pass.label + ' of that same page, at higher ' +
+      'magnification than the full-page view. Read the small print, stamps, seals and handwriting ' +
+      'in it with maximum care. Report ONLY fields you can actually see inside this crop and return ' +
+      'an empty string for every other field — do not carry values over from memory of other areas, ' +
+      'and do not guess at text that is cut off at the edge of the crop.';
+
+  return 'You are a meticulous OCR and data-entry specialist for Philippine and Japanese official documents. ' +
+    'The document is a ' + doctypeLabel + '. ' + scope + ' ' +
+    'Read every layer of text: printed form labels, typed entries, rubber stamps, dry seals, ' +
+    'marginal annotations, corrections and handwriting. ' +
+    HANDWRITING_RULES +
+    'Reading notes for this document type: ' + tip + '\n' +
+    'Return a JSON object whose keys are exactly these field ids and whose values are strings:\n' +
+    specLines.join('\n') + '\n' +
+    'RULES:\n' +
+    '- Person names: "First Middle Last" exactly as spelled on the document. No titles, no honorifics.\n' +
+    '- [DATE] fields: always YYYY-MM-DD. "JULY 9, 2026" becomes 2026-07-09; "09 JUL 26" becomes 2026-07-09.\n' +
+    '- [CHOICE] fields: copy one of the listed options character for character.\n' +
+    '- Money and [NUMBER] fields: digits and a decimal point only — no commas, no currency symbol.\n' +
+    '- Anything missing from this image, or that you are not confident about: use "" (empty string).\n' +
+    'Output raw JSON only. No markdown, no backticks, no commentary.';
+}
+
+// ── VISION CALL ────────────────────────────────────────────────────
+// Greedy decoding, one retry on transient failure, explicit truncation
+// check so a cut-off reply is not reported as an unreadable document.
+var SCAN_JSON_MIME = true;   // flipped off if the endpoint rejects the field
+
+async function callScanAI(prompt, imgData, imgMime) {
   var lastErr = null;
+
   for (var attempt = 0; attempt < 2; attempt++) {
     if (attempt) await new Promise(function(r) { setTimeout(r, 1200); });
+
+    var gen = {
+      temperature: 0, topK: 1, topP: 1,
+      maxOutputTokens: SCAN_CONFIG.maxOutputTokens
+    };
+    if (SCAN_JSON_MIME) gen.responseMimeType = 'application/json';
+
+    var body = JSON.stringify({
+      contents: [{ parts: [
+        { text: prompt },
+        { inline_data: { mime_type: imgMime || 'image/jpeg', data: imgData } }
+      ]}],
+      generationConfig: gen
+    });
+
     try {
       var res = await fetch('https://gemini-proxy.areymar36.workers.dev', {
         method: 'POST', headers: {'Content-Type': 'application/json'}, body: body
       });
       if (!res.ok) {
+        // Asking for JSON output removes almost all parse failures, but an
+        // older endpoint may reject the field outright. Any 400 on the first
+        // try is treated as that case: drop the field and retry without it,
+        // rather than failing a scan over an optional optimisation.
+        if (res.status === 400 && SCAN_JSON_MIME) {
+          SCAN_JSON_MIME = false;
+          attempt--;
+          continue;
+        }
         lastErr = new Error('Server returned ' + res.status);
         if (res.status === 429 || res.status >= 500) continue;   // worth retrying
         throw lastErr;
       }
+
       var data = await res.json();
       if (data.error) throw new Error(data.error.message);
 
@@ -2454,6 +2705,511 @@ async function callScanAI(prompt, imgData, imgMime) {
   throw lastErr || new Error('Scan failed');
 }
 
+// ── VALUE NORMALISATION ────────────────────────────────────────────
+function normKey(s) {
+  return String(s == null ? '' : s).toUpperCase()
+    .replace(/[^A-Z0-9ÑÁÉÍÓÚ]+/g, ' ').trim();
+}
+
+// Model chatter that must never land in a field.
+var NON_ANSWERS = ['NULL','UNDEFINED','NONE','NOT VISIBLE','NOT STATED','NOT SHOWN',
+  'NOT PRESENT','NOT LEGIBLE','ILLEGIBLE','UNREADABLE','UNCLEAR','NOT FOUND',
+  'NOT APPLICABLE','BLANK','EMPTY','N A','NA','-','--','---'];
+
+function isNonAnswer(v) {
+  return NON_ANSWERS.indexOf(normKey(v)) !== -1;
+}
+
+var MONTH_WORDS = {
+  jan:1, january:1, ene:1, enero:1,
+  feb:2, february:2, febrero:2, peb:2, pebrero:2,
+  mar:3, march:3, marso:3, marzo:3,
+  apr:4, april:4, abr:4, abril:4,
+  may:5, mayo:5,
+  jun:6, june:6, junio:6, hun:6, hunyo:6,
+  jul:7, july:7, julio:7, hul:7, hulyo:7,
+  aug:8, august:8, ago:8, agosto:8, agst:8,
+  sep:9, sept:9, september:9, set:9, setyembre:9, septiembre:9,
+  oct:10, october:10, okt:10, oktubre:10, octubre:10,
+  nov:11, november:11, nob:11, nobyembre:11, noviembre:11,
+  dec:12, december:12, dis:12, disyembre:12, diciembre:12
+};
+
+function isoIfValid(y, m, d) {
+  y = Number(y); m = Number(m); d = Number(d);
+  if (!y || !m || !d) return null;
+  if (m < 1 || m > 12 || d < 1 || d > 31) return null;
+  var nowY = new Date().getFullYear();
+  if (y < 1890 || y > nowY + 6) return null;
+  var probe = new Date(Date.UTC(y, m - 1, d));
+  if (probe.getUTCFullYear() !== y || probe.getUTCMonth() !== m - 1 ||
+      probe.getUTCDate() !== d) return null;   // catches 31 February
+  var pad = function(n) { return (n < 10 ? '0' : '') + n; };
+  return y + '-' + pad(m) + '-' + pad(d);
+}
+
+function expandYear(y) {
+  y = String(y);
+  if (y.length === 4) return Number(y);
+  if (y.length !== 2) return null;
+  var n = Number(y);
+  var cut = (new Date().getFullYear() % 100) + 1;
+  return n <= cut ? 2000 + n : 1900 + n;
+}
+
+// Find a d/m/y style group without letting the match start or end in the
+// middle of a longer number. Without this guard "2026-02-31" (an invalid date)
+// gets re-read as "26-02-31" and silently becomes 1931-02-26.
+function findNumericTriple(s) {
+  var re = /(\d{1,4})\s*[-\/.]\s*(\d{1,2})\s*[-\/.]\s*(\d{1,4})/g, m;
+  while ((m = re.exec(s)) !== null) {
+    var before = m.index === 0 ? '' : s.charAt(m.index - 1);
+    var afterI = m.index + m[0].length;
+    var after  = afterI >= s.length ? '' : s.charAt(afterI);
+    if (/\d/.test(before) || /\d/.test(after)) continue;
+    return m;
+  }
+  return null;
+}
+
+// PSA and DFA forms write dates as boxes, printed text, stamps and cursive,
+// in English, Filipino, Spanish and — on Japanese payslips — with era years.
+// A date picker only accepts YYYY-MM-DD, so anything else has to be converted
+// here or the field stays visibly empty.
+//
+// Once a date-shaped pattern is recognised the result is final: if it does not
+// describe a real calendar day the field is left empty and the review screen
+// reports what was read, rather than reshuffling the digits into something
+// that merely looks plausible.
+function parseFlexibleDate(raw) {
+  var s = String(raw == null ? '' : raw).trim();
+  if (!s || isNonAnswer(s)) return null;
+
+  var iso, m;
+
+  // Japanese: 2026年7月9日, and 令和 / 平成 / 昭和 era years
+  m = s.match(/(令和|平成|昭和)?\s*(元|\d{1,4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日?/);
+  if (m) {
+    var yr = m[2] === '元' ? 1 : Number(m[2]);
+    if (m[1] === '令和')      yr += 2018;
+    else if (m[1] === '平成') yr += 1988;
+    else if (m[1] === '昭和') yr += 1925;
+    iso = isoIfValid(yr, m[3], m[4]);
+    return iso ? { iso: iso, ambiguous: false } : null;
+  }
+
+  // "9 JULY 2026" / "9th day of July, 2026" — day first, so it is tried first:
+  // a month-first pattern would otherwise chew the year into day + year.
+  m = s.match(/(\d{1,2})(?!\d)(?:st|nd|rd|th)?\s+(?:day\s+of\s+|of\s+)?([A-Za-zÑñ]{3,12})\.?\s*,?\s*['’]?(\d{2,4})(?!\d)/);
+  if (m && MONTH_WORDS[m[2].toLowerCase()]) {
+    iso = isoIfValid(expandYear(m[3]), MONTH_WORDS[m[2].toLowerCase()], m[1]);
+    return iso ? { iso: iso, ambiguous: false } : null;
+  }
+
+  // "JULY 9, 2026" / "Jul 09 2026" / "Jul 9 '26"
+  m = s.match(/([A-Za-zÑñ]{3,12})\.?\s+(\d{1,2})(?!\d)(?:st|nd|rd|th)?\s*,?\s*['’]?(\d{2,4})(?!\d)/);
+  if (m && MONTH_WORDS[m[1].toLowerCase()]) {
+    iso = isoIfValid(expandYear(m[3]), MONTH_WORDS[m[1].toLowerCase()], m[2]);
+    return iso ? { iso: iso, ambiguous: false } : null;
+  }
+
+  // Numeric: 2026-07-09, 09/07/2026, 9-7-26
+  m = findNumericTriple(s);
+  if (m) {
+    var g1 = m[1], g2 = m[2], g3 = m[3];
+    if (g1.length === 4) {                          // year first
+      iso = isoIfValid(g1, g2, g3);
+      return iso ? { iso: iso, ambiguous: false } : null;
+    }
+    var a = Number(g1), b = Number(g2), y = expandYear(g3);
+    if (!y) return null;
+    if (a > 12 && b <= 12) {                        // must be day first
+      iso = isoIfValid(y, b, a);
+      return iso ? { iso: iso, ambiguous: false } : null;
+    }
+    if (b > 12 && a <= 12) {                        // must be month first
+      iso = isoIfValid(y, a, b);
+      return iso ? { iso: iso, ambiguous: false } : null;
+    }
+    // Genuinely undecidable (03/04/2026). Fill it so the picker is not left
+    // blank, but flag it so the review screen asks the customer to confirm.
+    iso = isoIfValid(y, a, b) || isoIfValid(y, b, a);
+    return iso ? { iso: iso, ambiguous: true } : null;
+  }
+
+  // YYYYMMDD as the entire value
+  m = s.match(/^(\d{8})$/);
+  if (m) {
+    iso = isoIfValid(m[1].slice(0, 4), m[1].slice(4, 6), m[1].slice(6, 8));
+    return iso ? { iso: iso, ambiguous: false } : null;
+  }
+
+  // Last resort: a month word plus a day and a year loose in the string
+  var word = s.toLowerCase().match(/[a-zñ]{3,12}/g) || [];
+  var mon = null;
+  for (var i = 0; i < word.length && !mon; i++) {
+    if (MONTH_WORDS[word[i]]) mon = MONTH_WORDS[word[i]];
+  }
+  if (mon) {
+    var nums = (s.match(/\d{1,4}/g) || []).map(Number);
+    var dayC = null, yrC = null;
+    nums.forEach(function(n) {
+      if (n > 31 && yrC === null) yrC = n;
+      else if (n >= 1 && n <= 31 && dayC === null) dayC = n;
+    });
+    if (dayC && yrC) {
+      iso = isoIfValid(expandYear(yrC), mon, dayC);
+      if (iso) return { iso: iso, ambiguous: false };
+    }
+  }
+
+  return null;
+}
+
+// Same canonical value may be written many ways. Each entry maps a reading to
+// one or more possible option labels; whichever exists on the actual select wins.
+var OPTION_SYNONYMS = [
+  { from:['M','MALE','BOY','LALAKI','MASCULINO','MASCULINE','H'], to:['Male'] },
+  { from:['F','FEMALE','GIRL','BABAE','FEMENINO','FEMININE','W'], to:['Female'] },
+
+  { from:['SINGLE','SOLTERO','SOLTERA','NEVER MARRIED','UNMARRIED','BINATA','DALAGA',
+          'SINGLETON','ONE','1','LIVE BIRTH SINGLE'], to:['Single'] },
+  { from:['MARRIED','KASAL','MAY ASAWA','CASADO','CASADA','LEGALLY MARRIED','YES MARRIED'],
+    to:['Married'] },
+  { from:['WIDOW','WIDOWER','WIDOWED','BIYUDO','BIYUDA','VIUDO','VIUDA'], to:['Widowed'] },
+  { from:['SEPARATED','LEGALLY SEPARATED','HIWALAY','SEPARATED IN FACT'],
+    to:['Separated','Divorced'] },
+  { from:['DIVORCED','DIVORCE','DIVORCEE'], to:['Divorced','Separated'] },
+  { from:['ANNULLED','ANNULMENT','MARRIAGE ANNULLED','VOID'],
+    to:['Annulled','Separated','Divorced'] },
+
+  { from:['TWIN','TWINS','2','TWO'], to:['Twin'] },
+  { from:['TRIPLET','TRIPLETS','3','THREE'], to:['Triplet'] },
+  { from:['MULTIPLE','QUADRUPLET','OTHER','OTHERS'], to:['Other','Others'] },
+
+  { from:['PHYSICIAN','DOCTOR','DR','MD','M D','OB','OB GYN','OBGYN','OBSTETRICIAN'],
+    to:['Physician'] },
+  { from:['NURSE','RN','R N','STAFF NURSE'], to:['Nurse'] },
+  { from:['MIDWIFE','MW','M W','MIDWIVES','REGISTERED MIDWIFE'], to:['Midwife'] },
+  { from:['HILOT','TRADITIONAL BIRTH ATTENDANT','TBA','COMADRONA','MANANABANG'],
+    to:['Hilot'] },
+
+  { from:['LEGITIMATE','LEHITIMO','LEGITIMATED','LEGIT'], to:['Legitimate'] },
+  { from:['ILLEGITIMATE','NOT LEGITIMATE','NON LEGITIMATE','ILEHITIMO'],
+    to:['Illegitimate'] },
+
+  { from:['Y','YES','OO','OPO','TRUE','AFFIRMATIVE','1'], to:['Yes'] },
+  { from:['N','NO','HINDI','FALSE','NEGATIVE','0'], to:['No'] },
+
+  { from:['NATURAL','NATURAL CAUSES','ILLNESS','DISEASE'], to:['Natural'] },
+  { from:['ACCIDENT','ACCIDENTAL','VEHICULAR ACCIDENT','MISHAP'], to:['Accident'] },
+  { from:['SUICIDE','SELF INFLICTED'], to:['Suicide'] },
+  { from:['HOMICIDE','MURDER','ASSAULT','FOUL PLAY'], to:['Homicide'] },
+  { from:['UNKNOWN','UNDETERMINED','COULD NOT BE DETERMINED','CANNOT BE DETERMINED'],
+    to:['Unknown'] },
+
+  { from:['NATIONWIDE','NATIONAL','WHOLE PHILIPPINES','ENTIRE PHILIPPINES'],
+    to:['Nationwide'] },
+  { from:['LOCAL','LOCAL CIVIL REGISTRY','LCR','CITY'], to:['Local'] }
+];
+
+// Resolve a model reply to a real <option>. Returns the option text, or null.
+function matchOption(el, raw) {
+  var val = String(raw == null ? '' : raw).trim();
+  if (!val || isNonAnswer(val)) return null;
+
+  var opts = [];
+  for (var i = 0; i < el.options.length; i++) {
+    var o = el.options[i];
+    var t = (o.text || '').trim();
+    if (!t || o.disabled || t.toLowerCase() === 'select') continue;
+    opts.push(t);
+  }
+  if (!opts.length) return null;
+
+  var key = normKey(val), j;
+
+  for (j = 0; j < opts.length; j++) if (opts[j] === val) return opts[j];
+  for (j = 0; j < opts.length; j++) if (normKey(opts[j]) === key) return opts[j];
+
+  for (j = 0; j < OPTION_SYNONYMS.length; j++) {
+    if (OPTION_SYNONYMS[j].from.indexOf(key) === -1) continue;
+    var wants = OPTION_SYNONYMS[j].to;
+    for (var w = 0; w < wants.length; w++) {
+      for (var k = 0; k < opts.length; k++) {
+        if (normKey(opts[k]) === normKey(wants[w])) return opts[k];
+      }
+    }
+  }
+
+  // "MARRIED (LEGITIMATE)" -> Married ; "Phys." -> Physician
+  for (j = 0; j < opts.length; j++) {
+    var ok = normKey(opts[j]);
+    if (key.indexOf(ok) === 0 || ok.indexOf(key) === 0) return opts[j];
+  }
+  for (j = 0; j < opts.length; j++) {
+    if ((' ' + key + ' ').indexOf(' ' + normKey(opts[j]) + ' ') !== -1) return opts[j];
+  }
+  if (key.length === 1) {
+    for (j = 0; j < opts.length; j++) {
+      if (normKey(opts[j]).charAt(0) === key) return opts[j];
+    }
+  }
+  // Only fall back to a catch-all option when the list actually has one.
+  for (j = 0; j < opts.length; j++) {
+    if (normKey(opts[j]) === 'OTHERS' || normKey(opts[j]) === 'OTHER') return opts[j];
+  }
+  return null;
+}
+
+function cleanText(raw) {
+  var v = String(raw == null ? '' : raw).replace(/\s+/g, ' ').trim();
+  v = v.replace(/^["'“”‘’]+|["'“”‘’]+$/g, '').trim();
+  if (!v || isNonAnswer(v)) return '';
+  return v;
+}
+
+function cleanNumber(raw) {
+  var v = String(raw == null ? '' : raw).replace(/[^\d.\-]/g, '');
+  var parts = v.split('.');
+  if (parts.length > 2) v = parts.shift() + '.' + parts.join('');
+  return v;
+}
+
+// Turn a model reply into a value the input will actually accept.
+// Returns { value, ok, note } — note explains any conversion for the review screen.
+function canonicalValue(id, raw) {
+  var el = document.getElementById(id);
+  var text = cleanText(raw);
+  if (!el) return { value:'', ok:false, note:'' };
+  if (!text) return { value:'', ok:false, note:'' };
+
+  if (el.tagName === 'SELECT') {
+    var opt = matchOption(el, text);
+    if (!opt) return { value:'', ok:false, note:'"' + text + '" is not one of the choices' };
+    var conv = normKey(opt) !== normKey(text);
+    return { value:opt, ok:true, note: conv ? 'read as "' + text + '"' : '' };
+  }
+  if (el.type === 'date') {
+    var d = parseFlexibleDate(text);
+    if (!d) return { value:'', ok:false, note:'could not read "' + text + '" as a date' };
+    return { value:d.iso, ok:true,
+             note: d.ambiguous ? 'day/month order unclear on the document' : '' };
+  }
+  if (el.type === 'number') {
+    var n = cleanNumber(text);
+    return n ? { value:n, ok:true, note:'' } : { value:'', ok:false, note:'' };
+  }
+  return { value:text, ok:true, note:'' };
+}
+
+// ── MERGING PASSES ─────────────────────────────────────────────────
+// Canonicalise first, then vote. Doing it in that order means "JULY 9, 2026"
+// from the full page and "2026-07-09" from a zoom crop count as agreement.
+function mergeExtractions(results, meta) {
+  var bucket = {};
+
+  results.forEach(function(r) {
+    if (!r || !r.data || typeof r.data !== 'object') return;
+    Object.keys(r.data).forEach(function(rawId) {
+      var id = String(rawId).trim();
+      if (!meta[id]) return;
+      var v = r.data[id];
+      if (v && typeof v === 'object') v = Array.isArray(v) ? v.join(' ') : '';
+      var c = canonicalValue(id, v);
+      if (!bucket[id]) bucket[id] = [];
+      bucket[id].push({ pass:r.pass, canon:c, raw:cleanText(v) });
+    });
+  });
+
+  var out = {};
+  Object.keys(bucket).forEach(function(id) {
+    var cands = bucket[id];
+    var votes = {}, best = null;
+
+    cands.forEach(function(c) {
+      if (!c.canon.ok || !c.canon.value) return;
+      var k = c.canon.value;
+      if (!votes[k]) votes[k] = { value:k, n:0, zoom:0, note:c.canon.note, raw:c.raw };
+      votes[k].n++;
+      if (c.pass.kind === 'zoom') votes[k].zoom++;
+      if (!votes[k].note && c.canon.note) votes[k].note = c.canon.note;
+    });
+
+    Object.keys(votes).forEach(function(k) {
+      var v = votes[k];
+      if (!best) { best = v; return; }
+      // most agreement wins; then whichever a zoom crop saw; then the longer read
+      if (v.n !== best.n) { if (v.n > best.n) best = v; return; }
+      if (v.zoom !== best.zoom) { if (v.zoom > best.zoom) best = v; return; }
+      if (String(v.value).length > String(best.value).length) best = v;
+    });
+
+    var distinct = Object.keys(votes).length;
+
+    if (!best) {
+      // Every pass that saw something failed to convert it — keep the raw
+      // reading so the review screen can show what the AI thought it saw.
+      var shown = null;
+      cands.forEach(function(c) { if (!shown && c.canon.note) shown = c; });
+      if (shown) {
+        out[id] = { value:'', confidence:'none', note:shown.canon.note,
+                    raw:shown.raw, sources:0 };
+      }
+      return;
+    }
+
+    var conf = best.n >= 2 ? 'high' : (distinct > 1 ? 'low' : 'medium');
+    if (/unclear/.test(best.note || '')) conf = 'low';
+
+    out[id] = { value:best.value, confidence:conf, note:best.note || '',
+                raw:best.raw, sources:best.n, conflict:distinct > 1 };
+  });
+
+  return out;
+}
+
+// ── WRITING TO THE FORM ────────────────────────────────────────────
+// Anything the customer has typed themselves is never overwritten by a later
+// zoom pass. isTrusted separates a real keystroke from our own dispatch.
+(function watchUserEdits() {
+  if (window.__scanEditWatch) return;
+  window.__scanEditWatch = true;
+  ['input', 'change'].forEach(function(evt) {
+    document.addEventListener(evt, function(e) {
+      if (e.isTrusted && e.target && e.target.id) e.target.dataset.userEdited = '1';
+    }, true);
+  });
+})();
+
+function clearUserEditFlags(ids) {
+  ids.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el && el.dataset) delete el.dataset.userEdited;
+  });
+}
+
+// Assign and then confirm it stuck. A select given an unlisted value or a date
+// input given a non-ISO string both fail silently, which is exactly how the
+// old counter came to report fields as filled while they sat empty.
+function setFieldValue(id, value) {
+  var el = document.getElementById(id);
+  if (!el || value === '' || value == null) return false;
+  if (el.dataset && el.dataset.userEdited === '1') return false;
+  try {
+    el.value = value;
+    if (el.tagName === 'SELECT' && el.selectedIndex < 0) return false;
+    if (String(el.value) !== String(value)) return false;
+    el.dispatchEvent(new Event('input',  { bubbles:true }));
+    el.dispatchEvent(new Event('change', { bubbles:true }));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+// Push the merged reading into the form. Returns a report the review screen
+// uses to mark each row as confirmed / worth checking / not filled.
+function applyMerged(merged) {
+  var report = { filled:0, verify:0, unresolved:0, fields:{} };
+  Object.keys(merged).forEach(function(id) {
+    var m = merged[id];
+    var wrote = m.value ? setFieldValue(id, m.value) : false;
+    if (wrote) {
+      report.filled++;
+      if (m.confidence === 'high' && !m.note) {
+        report.fields[id] = { state:'ok', value:m.value };
+      } else {
+        report.verify++;
+        report.fields[id] = { state:'check', value:m.value, note:m.note,
+                              raw:m.raw, confidence:m.confidence };
+      }
+    } else if (m.value) {
+      // Held back because the customer already typed there.
+      report.fields[id] = { state:'kept', value:m.value };
+    } else {
+      report.unresolved++;
+      report.fields[id] = { state:'failed', note:m.note, raw:m.raw };
+    }
+  });
+  return report;
+}
+
+// ── PASS RUNNER ────────────────────────────────────────────────────
+// The full page goes first so the form fills quickly, then the zoom crops run
+// two at a time. A crop that fails is skipped rather than failing the scan.
+async function runScanPasses(passes, buildPrompt, onProgress) {
+  var results = [], done = 0;
+
+  async function runOne(p) {
+    try {
+      var out = await callScanAI(buildPrompt(p), p.data, p.mime);
+      results.push({ pass:p, data:out });
+    } catch (e) {
+      results.push({ pass:p, error:(e && e.message) || 'failed' });
+    }
+    done++;
+    if (onProgress) { try { onProgress(done, passes.length, results); } catch (ignore) {} }
+  }
+
+  await runOne(passes[0]);
+
+  var rest = passes.slice(1), next = 0;
+  async function worker() {
+    while (next < rest.length) { await runOne(rest[next++]); }
+  }
+  var pool = [];
+  for (var w = 0; w < Math.min(SCAN_CONFIG.concurrency, rest.length); w++) pool.push(worker());
+  if (pool.length) await Promise.all(pool);
+
+  return results;
+}
+
+function scanStatusStyle(kind) {
+  var map = {
+    busy: 'background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af',
+    ok:   'background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d',
+    warn: 'background:#fffbeb;border:1px solid #fde68a;color:#92400e'
+  };
+  return 'display:flex;' + map[kind] + ';margin-top:10px;padding:10px 12px;' +
+         'border-radius:8px;font-size:12px;align-items:center;gap:8px;line-height:1.5';
+}
+
+function scanSpinner() {
+  return '<span style="display:inline-block;width:13px;height:13px;border:2px solid #2563eb;' +
+         'border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;' +
+         'flex-shrink:0"></span> ';
+}
+
+// Reading notes per document type. Hoisted out of onDocUpload so both the
+// page 1 and page 2 scanners can use them.
+var DOC_TIPS = {
+  'Birth Certificate': 'Child name section 1 (First Middle Last columns). Sex: X mark next to Male or Female. Date of birth split into Day Month Year boxes - combine them. Place of birth: hospital or street, city, province. Birth order: 1st 2nd etc. Type of birth: Single Twin Triplet. Attendant at birth: Physician Nurse Midwife Hilot Others. Birth weight in grams if shown. Legitimacy: check if Legitimate or Illegitimate box is marked. Mother maiden name section 6 (First Middle Last). Mother citizenship, religion, occupation, age, residence. Father name section 9 (First Middle Last). Father citizenship, religion, occupation, age, residence. Informant section near bottom: name, relationship to child, address. Affidavit of acknowledgment section: father name if present. Remarks or annotations box: copy any handwritten or stamped text exactly. Registry number top right. Registration date near bottom.',
+  'Marriage Certificate': 'Husband full name section 1. Husband date of birth, place of birth, citizenship, religion, civil status. Husband father name and mother maiden name. Wife maiden name. Wife date of birth, place of birth, citizenship, religion, civil status. Wife father name and mother maiden name. Date of marriage, place of marriage. Solemnizing officer name and position/designation. Registry number top right.',
+  'Death Certificate': 'Deceased full name section 1. Sex, date of birth, place of birth, civil status, citizenship, religion, occupation, usual residence. Father name and mother maiden name. Date of death, place of death. Immediate cause, antecedent cause, underlying cause of death. Attending physician. Registry number top right.',
+  'CENOMAR': 'Applicant full name at top. Date of birth, place of birth, sex, citizenship. Father name and mother maiden name. Period covered (e.g. 1945–2024) from the certification text. Reference number and date of issuance at bottom.',
+  'Advisory on Marriages': 'Subject full name. Date of birth, place of birth, sex. Number of marriages found. Name of bride/groom spouse. Date of marriage, place of marriage. Remarks or annotation (e.g. With Foreign Divorce Decree). Period covered from certification text. Date of issuance.',
+  'Certificate of No Birth Record': 'Subject full name. Date of birth, place of birth. Father name and mother maiden name. Date of issuance.',
+  'Apostille': 'This is a DFA Apostille certificate from the Philippines. Read: Serial Number (S.N.) at top left. Item 1 Country. Item 2 signed by (full name). Item 3 capacity/title. Item 4 seal/stamp of (institution name). Item 5 place certified (city). Item 6 date (day month year — convert to YYYY-MM-DD). Item 7 certified by (full name in uppercase). Item 8 apostille number. Underlying document type and reference number at bottom right. KEYCODE value at bottom left.',
+  'Certificate of Employment': 'This is a Philippine Certificate of Employment (COE). Read the company letterhead for: company name, full address, telephone number, TIN if visible. Read the body for: employee full name (First Middle Last), position/designation, department if stated, employment status (Regular/Probationary/Contractual/Project-based), employment start date (YYYY-MM-DD), end date or "Present". Read compensation section for: monthly basic salary with currency (PHP), allowances if stated, gross monthly compensation. Read signature block for: authorized signatory name and position/title. Read date of issuance (YYYY-MM-DD). Note the purpose stated in the document.',
+  'ITR / BIR Form 2316': 'This is a Philippine BIR Form 2316 (Certificate of Compensation Payment/Tax Withheld). Part I — Employee: full name (Last, First Middle), TIN (format: XXX-XXX-XXX-XXX), address, period covered from and to dates (YYYY-MM-DD), civil status. Part II — Employer: employer name, TIN, address, ZIP code. Part IV — Compensation income: gross compensation, non-taxable compensation, taxable compensation, basic salary, 13th month pay & other benefits, other benefits, de minimis. Part V — Tax withheld: tax withheld by previous employer (if any), tax withheld by current employer, total tax withheld, tax due. Note the period covered carefully.',
+  'Bank Certificate': 'This is a Philippine Bank Certificate (Certificate of Deposit/Balance). Read bank letterhead for: bank name, branch name, full address, telephone number. Read body for: account holder full name (First Middle Last), account number (may be partially masked — read as shown), account type (Savings/Checking/Time Deposit), currency (PHP/USD), account opening date (YYYY-MM-DD). Read balance section for: current balance amount with currency, balance as of date (YYYY-MM-DD), average daily balance (ADB) if stated with period covered. Read certification block for: bank officer name, position/title, date of issuance (YYYY-MM-DD). Note stated purpose.',
+  'Bank Statement': 'This is a Philippine Bank Statement. Read bank header for: bank name, branch, address, account holder name, account number, account type, currency. Read statement period: from date (YYYY-MM-DD) to date (YYYY-MM-DD). Read balance summary: opening balance, closing balance, average daily balance (ADB) with period, total credits/deposits, total debits/withdrawals. Read any remarks or account status notes. Read bank officer name, position, and issuance date (YYYY-MM-DD) if present. Note stated purpose.',
+  'Philippine Payslip': 'This is a Philippine company payslip. Read company header: company name, address, telephone, TIN if visible, HR/payroll officer name. Read employee info: name, ID, department, position, pay period. Read earnings section: basic pay, all allowances (COLA, rice, transport, clothing, overtime, holiday, other) with PHP amounts. Read deductions: SSS, PhilHealth, Pag-IBIG, withholding tax, loans, other deductions. Read totals: gross pay, total deductions, net pay (take home). All amounts in PHP.',
+  'Japanese Payslip': 'This is a Japanese payslip (給与明細書). Read company info: 会社名 (company name), 所在地 (address), 電話番号 (phone), 法人番号 if visible, 担当者 (HR officer). Read employee info: 氏名 (name), 社員番号 (ID), 部署 (dept), 役職 (position), 支給月 (pay period). Read 支給 (earnings): 基本給, all 手当 allowances with yen amounts. Read 控除 (deductions): 健康保険, 厚生年金, 雇用保険, 所得税, 住民税, others. Read totals: 支給合計 (gross), 控除合計 (total deductions), 差引支給額 (net pay).',
+  'Barangay Clearance': 'This is a Philippine Barangay Clearance. Read the letterhead for barangay name, city/municipality and province. Then the resident full name, date of birth, age, sex, citizenship, civil status, address, length of residency, purpose. At the bottom: date issued, Barangay Captain name and signature, CTC number and OR number. Much of the middle section is handwritten on printed lines.',
+  'NBI Clearance': 'This is a Philippine NBI Clearance. Read full name, date of birth, place of birth, age, sex, civil status, nationality, height, weight, address. Read the REMARKS box exactly (usually NO CRIMINAL RECORD ON FILE). Read NBI ID No., reference/barcode number, date issued and valid until.',
+  'Police Clearance': 'This is a Philippine PNP Police Clearance. Read full name, date of birth, place of birth, age, sex, civil status, citizenship, occupation, address. Read the findings/result line, clearance number, issuing police station, date issued, valid until and the Chief of Police name.',
+  'Certificate of Residency': 'This is a Philippine Certificate of Residency from a barangay. Read barangay, city/municipality, province from the letterhead. Then full name, date of birth, age, sex, civil status, citizenship, present address, residing since date, purpose, date issued, and the name and position of the certifying official.',
+  'Medical Certificate': 'This is a medical certificate. Read the clinic or hospital name, address and contact number from the letterhead. Then patient name, date of birth, age, sex, address. Then date of examination, height, weight, blood pressure, vision, chest X-ray result, laboratory results, diagnosis and findings. At the bottom read the physician name, PRC license number and specialization. Physician handwriting is often difficult — leave unclear values empty.',
+  'Transcript of Records': 'This is a school Transcript of Records. Read school name and address, student full name, date of birth, place of birth, student number, course/major, period of attendance, total units earned, general average, date of graduation, degree conferred, registrar name and date issued. Do NOT try to read the individual subject rows.',
+  'Diploma': 'This is a school diploma or certificate of graduation. Read school name and address, graduate full name, date of birth if shown, the degree or title conferred, major, date of graduation, place conferred, and the signatory names (President, Dean, Registrar). Diploma text is often in ornate or script type.',
+  'Business Permit': "This is a Philippine Mayor's Permit / Business Permit. Read business name, trade name, owner name, type of organization, business address, line of business. Then permit number, permit year, date issued, valid until, capitalization, gross sales, business tax paid, OR number and the Mayor name.",
+  'Affidavit of Support': 'This is an Affidavit of Support and Guarantee. Read the affiant (guarantor) full name, date of birth, citizenship, address, passport number, occupation, employer and annual income. Then the beneficiary full name, relationship, date of birth and passport number. Then purpose of travel, duration of stay and address in Japan if stated. From the notarial block read date sworn, place, Notary Public name, CTC No., Doc. No., Page No., Book No. and Series of year.',
+  "Driver's License": "This is a Philippine LTO driver's license card. Read full name, date of birth, sex, nationality, address, height, weight, blood type, eyes colour. Then license number, license type, DL codes, conditions, restrictions, date issued, expiration date and agency code. Text on the card is small — read carefully.",
+  'Land Title': 'This is a Philippine land title (TCT or OCT) from the Registry of Deeds. Read the Registry of Deeds location, title number and previous title number. Then registered owner name, civil status, name of spouse, citizenship and address. Then lot number, block number, survey plan number (Psd/Pcs/Ccs), location, area and classification. Then entry number, date registered, Register of Deeds name and any encumbrances or annotations. Do NOT attempt the technical description bearings.'
+};
+
 function toBase64(file) {
   return new Promise(function(resolve, reject) {
     var reader = new FileReader();
@@ -2466,6 +3222,8 @@ function toBase64(file) {
 function genId() {
   return 'REQ-' + String(Date.now()).slice(-6);
 }
+
+var lastScanReport = null;   // consumed by showScanReview()
 
 async function onDocUpload(input) {
   var file = input.files[0];
@@ -2499,93 +3257,85 @@ async function onDocUpload(input) {
   revealReviewTrigger();
   updatePrice();
 
-  // Downscaled copy for OCR only — the original is what gets stored/sent on.
-  var scanImg = await prepImageForScan(file);
-  if (!scanImg) {
-    document.getElementById('scan-status').style.cssText = 'display:flex;background:#fffbeb;border:1px solid #fde68a;color:#92400e;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12px;gap:8px';
-    document.getElementById('scan-status').innerHTML = 'Could not read that file. Please try a JPG or PNG photo, or fill in the fields below.';
-    document.getElementById('details-section').style.display = 'block';
-    document.getElementById('details-fields').innerHTML = buildFields(effectiveDoctype);
-    setStep(3);
-    return;
-  }
-
   var detailsSection = document.getElementById('details-section');
-  var detailsFields = document.getElementById('details-fields');
+  var detailsFields  = document.getElementById('details-fields');
   detailsSection.style.display = 'block';
   detailsFields.innerHTML = buildFields(effectiveDoctype);
 
   var status = document.getElementById('scan-status');
-  status.style.cssText = 'display:flex;background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12px;align-items:center;gap:8px';
-  status.innerHTML = '<span style="display:inline-block;width:13px;height:13px;border:2px solid #2563eb;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0"></span> Reading your document...';
+  status.style.cssText = scanStatusStyle('busy');
+  status.innerHTML = scanSpinner() + 'Preparing your document for scanning...';
+
+  // Full page plus overlapping close-ups. The original file is what gets
+  // stored and sent on; these copies exist only for reading.
+  var passes = await prepScanPasses(file);
+  if (!passes || !passes.length) {
+    status.style.cssText = scanStatusStyle('warn');
+    status.innerHTML = 'Could not read that file. Please try a JPG or PNG photo of the page, or fill in the fields below.';
+    setStep(3);
+    return;
+  }
+
+  var fields = DOC_FIELDS[effectiveDoctype] || [];
+  var ids = fields.map(function(f) { return f.id; });
+  clearUserEditFlags(ids);
+
+  var spec = fieldSpecFromDom(ids);
+  if (!spec.lines.length) { setStep(3); return; }
+
+  var tip = DOC_TIPS[effectiveDoctype] || GENERIC_TIP;
+  var buildPrompt = function(p) {
+    return buildScanPrompt(effectiveDoctype, spec.lines, tip, p);
+  };
+
+  var zoomCount = passes.length - 1;
+  status.innerHTML = scanSpinner() + 'Reading the whole page...' +
+    (zoomCount > 0 ? ' (then ' + zoomCount + ' close-up passes)' : '');
 
   try {
-    var fields = DOC_FIELDS[effectiveDoctype] || [];
-    var fieldIds = fields.map(function(f){ return f.id; }).join(', ');
+    var report = null;
 
-    var tips = {
-      'Birth Certificate': 'Child name section 1 (First Middle Last columns). Sex: X mark next to Male or Female. Date of birth split into Day Month Year boxes - combine them. Place of birth: hospital or street, city, province. Birth order: 1st 2nd etc. Type of birth: Single Twin Triplet. Attendant at birth: Physician Nurse Midwife Hilot Others. Birth weight in grams if shown. Legitimacy: check if Legitimate or Illegitimate box is marked. Mother maiden name section 6 (First Middle Last). Mother citizenship, religion, occupation, age, residence. Father name section 9 (First Middle Last). Father citizenship, religion, occupation, age, residence. Informant section near bottom: name, relationship to child, address. Affidavit of acknowledgment section: father name if present. Remarks or annotations box: copy any handwritten or stamped text exactly. Registry number top right. Registration date near bottom.',
-      'Marriage Certificate': 'Husband full name section 1. Husband date of birth, place of birth, citizenship, religion, civil status. Husband father name and mother maiden name. Wife maiden name. Wife date of birth, place of birth, citizenship, religion, civil status. Wife father name and mother maiden name. Date of marriage, place of marriage. Solemnizing officer name and position/designation. Registry number top right.',
-      'Death Certificate': 'Deceased full name section 1. Sex, date of birth, place of birth, civil status, citizenship, religion, occupation, usual residence. Father name and mother maiden name. Date of death, place of death. Immediate cause, antecedent cause, underlying cause of death. Attending physician. Registry number top right.',
-      'CENOMAR': 'Applicant full name at top. Date of birth, place of birth, sex, citizenship. Father name and mother maiden name. Period covered (e.g. 1945–2024) from the certification text. Reference number and date of issuance at bottom.',
-      'Advisory on Marriages': 'Subject full name. Date of birth, place of birth, sex. Number of marriages found. Name of bride/groom spouse. Date of marriage, place of marriage. Remarks or annotation (e.g. With Foreign Divorce Decree). Period covered from certification text. Date of issuance.',
-      'Certificate of No Birth Record': 'Subject full name. Date of birth, place of birth. Father name and mother maiden name. Date of issuance.',
-      'Apostille': 'This is a DFA Apostille certificate from the Philippines. Read: Serial Number (S.N.) at top left. Item 1 Country. Item 2 signed by (full name). Item 3 capacity/title. Item 4 seal/stamp of (institution name). Item 5 place certified (city). Item 6 date (day month year — convert to YYYY-MM-DD). Item 7 certified by (full name in uppercase). Item 8 apostille number. Underlying document type and reference number at bottom right. KEYCODE value at bottom left.',
-      'Certificate of Employment': 'This is a Philippine Certificate of Employment (COE). Read the company letterhead for: company name, full address, telephone number, TIN if visible. Read the body for: employee full name (First Middle Last), position/designation, department if stated, employment status (Regular/Probationary/Contractual/Project-based), employment start date (YYYY-MM-DD), end date or "Present". Read compensation section for: monthly basic salary with currency (PHP), allowances if stated, gross monthly compensation. Read signature block for: authorized signatory name and position/title. Read date of issuance (YYYY-MM-DD). Note the purpose stated in the document.',
-      'ITR / BIR Form 2316': 'This is a Philippine BIR Form 2316 (Certificate of Compensation Payment/Tax Withheld). Part I — Employee: full name (Last, First Middle), TIN (format: XXX-XXX-XXX-XXX), address, period covered from and to dates (YYYY-MM-DD), civil status. Part II — Employer: employer name, TIN, address, ZIP code. Part IV — Compensation income: gross compensation, non-taxable compensation, taxable compensation, basic salary, 13th month pay & other benefits, other benefits, de minimis. Part V — Tax withheld: tax withheld by previous employer (if any), tax withheld by current employer, total tax withheld, tax due. Note the period covered carefully.',
-      'Bank Certificate': 'This is a Philippine Bank Certificate (Certificate of Deposit/Balance). Read bank letterhead for: bank name, branch name, full address, telephone number. Read body for: account holder full name (First Middle Last), account number (may be partially masked — read as shown), account type (Savings/Checking/Time Deposit), currency (PHP/USD), account opening date (YYYY-MM-DD). Read balance section for: current balance amount with currency, balance as of date (YYYY-MM-DD), average daily balance (ADB) if stated with period covered. Read certification block for: bank officer name, position/title, date of issuance (YYYY-MM-DD). Note stated purpose.',
-      'Bank Statement': 'This is a Philippine Bank Statement. Read bank header for: bank name, branch, address, account holder name, account number, account type, currency. Read statement period: from date (YYYY-MM-DD) to date (YYYY-MM-DD). Read balance summary: opening balance, closing balance, average daily balance (ADB) with period, total credits/deposits, total debits/withdrawals. Read any remarks or account status notes. Read bank officer name, position, and issuance date (YYYY-MM-DD) if present. Note stated purpose.',
-      'Philippine Payslip': 'This is a Philippine company payslip. Read company header: company name, address, telephone, TIN if visible, HR/payroll officer name. Read employee info: name, ID, department, position, pay period. Read earnings section: basic pay, all allowances (COLA, rice, transport, clothing, overtime, holiday, other) with PHP amounts. Read deductions: SSS, PhilHealth, Pag-IBIG, withholding tax, loans, other deductions. Read totals: gross pay, total deductions, net pay (take home). All amounts in PHP.',
-      'Japanese Payslip': 'This is a Japanese payslip (給与明細書). Read company info: 会社名 (company name), 所在地 (address), 電話番号 (phone), 法人番号 if visible, 担当者 (HR officer). Read employee info: 氏名 (name), 社員番号 (ID), 部署 (dept), 役職 (position), 支給月 (pay period). Read 支給 (earnings): 基本給, all 手当 allowances with yen amounts. Read 控除 (deductions): 健康保険, 厚生年金, 雇用保険, 所得税, 住民税, others. Read totals: 支給合計 (gross), 控除合計 (total deductions), 差引支給額 (net pay).',
-      'Barangay Clearance': 'This is a Philippine Barangay Clearance. Read the letterhead for barangay name, city/municipality and province. Then the resident full name, date of birth, age, sex, citizenship, civil status, address, length of residency, purpose. At the bottom: date issued, Barangay Captain name and signature, CTC number and OR number. Much of the middle section is handwritten on printed lines.',
-      'NBI Clearance': 'This is a Philippine NBI Clearance. Read full name, date of birth, place of birth, age, sex, civil status, nationality, height, weight, address. Read the REMARKS box exactly (usually NO CRIMINAL RECORD ON FILE). Read NBI ID No., reference/barcode number, date issued and valid until.',
-      'Police Clearance': 'This is a Philippine PNP Police Clearance. Read full name, date of birth, place of birth, age, sex, civil status, citizenship, occupation, address. Read the findings/result line, clearance number, issuing police station, date issued, valid until and the Chief of Police name.',
-      'Certificate of Residency': 'This is a Philippine Certificate of Residency from a barangay. Read barangay, city/municipality, province from the letterhead. Then full name, date of birth, age, sex, civil status, citizenship, present address, residing since date, purpose, date issued, and the name and position of the certifying official.',
-      'Medical Certificate': 'This is a medical certificate. Read the clinic or hospital name, address and contact number from the letterhead. Then patient name, date of birth, age, sex, address. Then date of examination, height, weight, blood pressure, vision, chest X-ray result, laboratory results, diagnosis and findings. At the bottom read the physician name, PRC license number and specialization. Physician handwriting is often difficult — leave unclear values empty.',
-      'Transcript of Records': 'This is a school Transcript of Records. Read school name and address, student full name, date of birth, place of birth, student number, course/major, period of attendance, total units earned, general average, date of graduation, degree conferred, registrar name and date issued. Do NOT try to read the individual subject rows.',
-      'Diploma': 'This is a school diploma or certificate of graduation. Read school name and address, graduate full name, date of birth if shown, the degree or title conferred, major, date of graduation, place conferred, and the signatory names (President, Dean, Registrar). Diploma text is often in ornate or script type.',
-      'Business Permit': "This is a Philippine Mayor's Permit / Business Permit. Read business name, trade name, owner name, type of organization, business address, line of business. Then permit number, permit year, date issued, valid until, capitalization, gross sales, business tax paid, OR number and the Mayor name.",
-      'Affidavit of Support': 'This is an Affidavit of Support and Guarantee. Read the affiant (guarantor) full name, date of birth, citizenship, address, passport number, occupation, employer and annual income. Then the beneficiary full name, relationship, date of birth and passport number. Then purpose of travel, duration of stay and address in Japan if stated. From the notarial block read date sworn, place, Notary Public name, CTC No., Doc. No., Page No., Book No. and Series of year.',
-      "Driver's License": "This is a Philippine LTO driver's license card. Read full name, date of birth, sex, nationality, address, height, weight, blood type, eyes colour. Then license number, license type, DL codes, conditions, restrictions, date issued, expiration date and agency code. Text on the card is small — read carefully.",
-      'Land Title': 'This is a Philippine land title (TCT or OCT) from the Registry of Deeds. Read the Registry of Deeds location, title number and previous title number. Then registered owner name, civil status, name of spouse, citizenship and address. Then lot number, block number, survey plan number (Psd/Pcs/Ccs), location, area and classification. Then entry number, date registered, Register of Deeds name and any encumbrances or annotations. Do NOT attempt the technical description bearings.'
-    };
-
-    var prompt = 'You are an expert at reading Philippine government documents. ' +
-      'This image is a ' + effectiveDoctype + '. Read ALL text very carefully including printed, stamped, and handwritten text. ' +
-      HANDWRITING_RULES +
-      'Document reading tips: ' + (tips[effectiveDoctype] || 'Read all visible fields carefully.') + ' ' +
-      'Extract ONLY these exact field IDs and their values: ' + fieldIds + '. ' +
-      'IMPORTANT: Return ONLY a raw JSON object. No markdown. No backticks. No explanation. No extra text. ' +
-      'Example format: {"apo_sn":"26e-0063046","apo_country":"Philippines","apo_date":"2026-07-09"} ' +
-      'Rules: Full names as First Middle Last. Dates as YYYY-MM-DD. Use empty string if unreadable.';
-
-    var extracted = await callScanAI(prompt, scanImg.data, scanImg.mime);
-
-    var filled = 0;
-    Object.keys(extracted).forEach(function(id) {
-      var el = document.getElementById(id);
-      if (el && extracted[id]) { el.value = extracted[id]; filled++; }
+    var results = await runScanPasses(passes, buildPrompt, function(done, total, sofar) {
+      // Fill the form after every pass so it is already populated behind the
+      // review screen, and refine as the zoom passes come in.
+      report = applyMerged(mergeExtractions(sofar, spec.meta));
+      if (done < total) {
+        var next = passes[done];
+        status.style.cssText = scanStatusStyle('busy');
+        status.innerHTML = scanSpinner() + 'Zooming in on the ' + next.label +
+          ' to check small print and handwriting... (' + done + ' of ' + total + ' passes done, ' +
+          report.filled + ' fields so far)';
+      }
     });
 
-    status.style.cssText = 'display:flex;background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12px;align-items:center;gap:8px';
-    if (filled > 0) {
-      status.innerHTML = '✓ AI filled ' + filled + ' fields from your document. Please review and correct if needed.';
-    } else {
-      status.style.cssText = 'display:flex;background:#fffbeb;border:1px solid #fde068;color:#92400e;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12px;gap:8px';
-      status.innerHTML = '⚠ We could not read this document automatically. ' +
-        'A clearer, well-lit photo of the whole page often works — or just fill in the fields below yourself.';
-      console.log('Extracted:', extracted, 'expected IDs:', fieldIds);
+    var okPasses = results.filter(function(r) { return !r.error; }).length;
+    if (!okPasses) {
+      var firstErr = results.length ? results[0].error : 'scan failed';
+      throw new Error(firstErr);
     }
 
-    if (filled > 0) {
-      showScanReview(filled, effectiveDoctype);
+    var merged = mergeExtractions(results, spec.meta);
+    report = applyMerged(merged);
+    lastScanReport = report;
+
+    if (report.filled > 0) {
+      status.style.cssText = scanStatusStyle('ok');
+      var bits = '✓ Read ' + report.filled + ' fields from your document';
+      if (okPasses > 1) bits += ' across ' + okPasses + ' passes (full page + zoom)';
+      if (report.verify > 0) bits += '. ' + report.verify + ' need a quick check';
+      status.innerHTML = bits + '. Please review before submitting.';
+      showScanReview(report.filled, effectiveDoctype);
     } else {
+      status.style.cssText = scanStatusStyle('warn');
+      status.innerHTML = '⚠ We could not read this document automatically. ' +
+        'A clearer, well-lit photo of the whole page — flat, in focus, no glare and no shadow across ' +
+        'the text — usually works. Otherwise just fill in the fields below yourself.';
       setStep(3);
     }
 
-  } catch(e) {
-    console.error('Scan error:', e.message);
-    var em = e.message || '';
+  } catch (e) {
+    console.error('Scan error:', e && e.message);
+    var em = (e && e.message) || '';
     var hint;
     if (/Failed to fetch|NetworkError|network/i.test(em)) {
       hint = 'We could not reach the scanning service — check your internet connection and re-select the file, or fill in the fields below.';
@@ -2598,7 +3348,7 @@ async function onDocUpload(input) {
     } else {
       hint = 'Could not auto-read the document. A clearer, well-lit photo of the full page usually helps — or fill in the fields below.';
     }
-    status.style.cssText = 'display:flex;background:#fffbeb;border:1px solid #fde68a;color:#92400e;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12px;align-items:center;gap:8px';
+    status.style.cssText = scanStatusStyle('warn');
     status.innerHTML = hint;
     setStep(3);
   }
@@ -2608,23 +3358,9 @@ async function onDocUpload(input) {
 // ── SCAN REVIEW FUNCTIONS ──────────────────────────────────────────
 function showScanReview(filledCount, doctype) {
   var fields = DOC_FIELDS[doctype] || [];
+  var report = (lastScanReport && lastScanReport.fields) || {};
   var html = '';
-  var sectionMap = {};
 
-  // Group fields by section header from docSections
-  // For display: just show all filled fields in clean cards
-  var sections = {};
-  var sectionOrder = [];
-
-  fields.forEach(function(f) {
-    var el = document.getElementById(f.id);
-    var val = el ? el.value.trim() : '';
-    var section = f.section || 'Document Details';
-    if (!sections[section]) { sections[section] = []; sectionOrder.push(section); }
-    sections[section].push({ label: f.label, value: val, req: f.req !== false, id: f.id });
-  });
-
-  // Also include personal info
   html += scanReviewCard('👤 Personal Information', [
     { label: 'Full Name',          value: document.getElementById('f-name').value.trim() },
     { label: 'Email',              value: document.getElementById('f-email').value.trim() },
@@ -2635,10 +3371,11 @@ function showScanReview(filledCount, doctype) {
   // Document fields
   var docRows = [];
   fields.forEach(function(f) {
-    var el = document.getElementById(f.id);
-    var val = el ? el.value.trim() : '';
+    var el  = document.getElementById(f.id);
+    var val = el ? String(el.value).trim() : '';
     if (val || f.req !== false) {
-      docRows.push({ label: f.label, value: val, req: f.req !== false, id: f.id });
+      docRows.push({ label:f.label, value:val, req:f.req !== false,
+                     id:f.id, scan:report[f.id] });
     }
   });
   if (docRows.length > 0) {
@@ -2661,8 +3398,8 @@ function showScanReview(filledCount, doctype) {
     };
     p2ids.forEach(function(pid) {
       var el = document.getElementById(pid);
-      var val = el ? el.value.trim() : '';
-      if (val) p2rows.push({ label: p2labels[pid], value: val, id: pid });
+      var val = el ? String(el.value).trim() : '';
+      if (val) p2rows.push({ label:p2labels[pid], value:val, id:pid });
     });
     if (p2rows.length > 0) html += scanReviewCard('📄 Page 2 — Affidavit Details', p2rows);
   }
@@ -2671,14 +3408,23 @@ function showScanReview(filledCount, doctype) {
   html += '<div style="background:#fefce8;border:1px solid #fde047;border-radius:10px;padding:12px 16px;font-size:12px;color:#854d0e;margin-bottom:8px">' +
     '<strong>📌 How to proceed:</strong><ul style="margin:6px 0 0 16px;padding:0;line-height:2">' +
     '<li>Check every value against your document — <strong>handwritten entries are the most likely to be misread</strong></li>' +
+    '<li><span style="color:#b45309;font-weight:700">Please check</span> means only one pass of the scan saw that value, so confirm it carefully</li>' +
     '<li>Anything shown as <em>⚠ Not filled</em> means the AI was not confident — please type it in yourself</li>' +
     '<li>Pay extra attention to names, dates and registry numbers</li>' +
     '<li>If everything looks correct → tap <strong>✓ Looks Correct</strong></li>' +
     '<li>If any detail is wrong → tap <strong>✏ Edit Details</strong> to fix it</li>' +
     '</ul></div>';
 
-  // Update badge
-  document.getElementById('scan-review-badge').textContent = filledCount + ' fields filled';
+  var badge = document.getElementById('scan-review-badge');
+  if (badge) {
+    badge.textContent = filledCount + ' fields filled';
+    if (lastScanReport && lastScanReport.verify > 0) {
+      badge.textContent += ' · ' + lastScanReport.verify + ' to check';
+      badge.style.background = '#d97706';
+    } else {
+      badge.style.background = '#16a34a';
+    }
+  }
 
   document.getElementById('scan-review-body').innerHTML = html;
   document.getElementById('scan-review-overlay').style.display = 'block';
@@ -2690,18 +3436,42 @@ function scanReviewCard(title, rows) {
   html += '<div style="background:#f5f3ef;padding:10px 16px;font-size:11px;font-weight:700;color:#1a2744;text-transform:uppercase;letter-spacing:0.8px;border-bottom:1px solid #e5e0d8">' + title + '</div>';
   rows.forEach(function(r) {
     var isMissing = r.req && !r.value;
-    var bg = isMissing ? 'background:#fff7f7' : '';
+    var scan = r.scan || null;
+    var needsCheck = !isMissing && r.value && scan && scan.state === 'check';
+
+    var bg = isMissing ? 'background:#fff7f7' : (needsCheck ? 'background:#fffdf5' : '');
     html += '<div style="display:flex;padding:9px 16px;border-bottom:0.5px solid #f5f3ef;align-items:flex-start;' + bg + '">';
     html += '<div style="font-size:11px;color:#999;min-width:160px;flex-shrink:0;padding-top:1px;line-height:1.4">' + r.label + '</div>';
+
     if (isMissing) {
-      html += '<div style="font-size:11px;color:#dc2626;font-style:italic">⚠ Not filled — please edit</div>';
+      html += '<div style="font-size:11px;color:#dc2626;font-style:italic">⚠ Not filled — please edit';
+      // Show what the AI thought it saw, so a near-miss is quick to correct.
+      if (scan && scan.raw) {
+        html += '<div style="color:#92400e;font-style:normal;margin-top:3px">' +
+                'AI read: “' + escapeHtml(scan.raw) + '” — ' + escapeHtml(scan.note || 'could not be used') +
+                '</div>';
+      }
+      html += '</div>';
     } else {
-      html += '<div style="font-size:12px;color:#1a2744;font-weight:600;word-break:break-word;line-height:1.4">' + (r.value || '—') + '</div>';
+      html += '<div style="flex:1;min-width:0">';
+      html += '<div style="font-size:12px;color:#1a2744;font-weight:600;word-break:break-word;line-height:1.4">' +
+              escapeHtml(r.value || '—') + '</div>';
+      if (needsCheck) {
+        html += '<div style="font-size:10.5px;color:#b45309;margin-top:3px;line-height:1.4">⚠ Please check' +
+                (scan.note ? ' — ' + escapeHtml(scan.note) : '') + '</div>';
+      }
+      html += '</div>';
     }
     html += '</div>';
   });
   html += '</div>';
   return html;
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 function scanReviewEdit() {
