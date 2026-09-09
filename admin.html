@@ -6522,19 +6522,29 @@ function customGenerate(asFile) {
 
   var linkId = document.getElementById('cus-link').value;
   var prevSubs = subs, prevActive = activeId;
+  var real = linkId ? subs.find(function(x) { return x.id === linkId; }) : null;
+  // The throwaway record is what doDownloadPDF() reads to decide whether to
+  // stamp UNPAID. It must therefore inherit the REAL payment state — status,
+  // paymentStatus, proofFile — otherwise an already-paid job is stamped UNPAID
+  // because a bare record looks unpaid to isPaid().
+  // Standalone (no submission attached) has no portal payment record at all,
+  // so it is treated as released: the admin is generating it by hand and there
+  // is no way to ever clear a watermark on it.
   var temp = {
     id: linkId || ('CUSTOM-' + String(Date.now()).slice(-6)),
     name: w.name || 'Custom Translation',
-    doctype: 'Others', status: 'translated', fields: {},
+    doctype: 'Others', fields: {},
+    status:        real ? real.status        : 'released',
+    paymentStatus: real ? real.paymentStatus : undefined,
+    proofFile:     real ? real.proofFile     : undefined,
+    amount:        real ? real.amount        : undefined,
+    hasPage2:      real ? real.hasPage2      : undefined,
     customTitleEn: w.titleEn, customTitleJp: w.titleJp,
     customIssuerEn: w.issuerEn, customIssuerJp: w.issuerJp,
     customDocNo: w.docNo, customCountry: w.country,
     customPurpose: w.purpose, customCols: w.cols, customBody: w.body
   };
-  if (linkId) {
-    var real = subs.find(function(x) { return x.id === linkId; });
-    if (real) { temp.correctionEn = real.correctionEn; temp.correctionJp = real.correctionJp; }
-  }
+  if (real) { temp.correctionEn = real.correctionEn; temp.correctionJp = real.correctionJp; }
   subs = [temp]; activeId = temp.id;
   try {
     if (asFile) forceDownloadFile = true;
