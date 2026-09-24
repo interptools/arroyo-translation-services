@@ -134,6 +134,17 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
 #cus-preview .fl{font-size:8px;color:#777;line-height:1.2}
 #cus-preview .fj{font-size:11px;font-weight:bold;color:#1a2744;line-height:1.3}
 #cus-preview .fe{font-size:8.5px;color:#aaa;font-style:italic;line-height:1.2}
+#cus-preview .mg{display:grid;border-left:1px solid #555;border-top:1px solid #555}
+#cus-preview .mc{border-right:1px solid #555;border-bottom:1px solid #555;padding:2px 5px;background:#fff;min-height:24px;overflow:hidden}
+#cus-preview .mc.h{background:#ece7d8}
+#cus-preview .mc.ctr{text-align:center}
+#cus-preview .ml{font-size:8px;color:#777;line-height:1.2}
+#cus-preview .mj{font-size:11px;font-weight:bold;color:#1a2744;line-height:1.3}
+#cus-preview .me{font-size:8.5px;color:#aaa;font-style:italic;line-height:1.2}
+#cus-preview .msub{border-top:1px dotted #c4c0b4;margin-top:2px;padding-top:2px}
+#cus-preview .mc > .msub:first-child{border-top:none;margin-top:0;padding-top:0}
+#cus-preview .mc.fillcell{background:#fbfaf6}
+#cus-preview .mnote{font-size:8.5px;color:#8a8578;font-style:italic;padding:4px 7px;border:1px solid #bbb;border-top:none;background:#f7f4ea}
 #cus-preview .cp-empty{color:#dc2626;font-weight:bold}
 #cus-preview .prose{border:1px solid #bbb;border-top:none;background:#faf8f0;padding:6px 9px 7px}
 #cus-preview .prose.s{background:#f0ece0}
@@ -477,6 +488,18 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
           <div style="font-size:9px;color:#7c6f5a;margin-top:3px">Pick <b>filed with</b> for a 控用 retained copy — the office received it, it did not issue it.</div>
         </div>
 
+        <div style="margin-bottom:8px">
+          <label style="font-size:10px;font-weight:600;color:#5b21b6;display:block;margin-bottom:3px">What the client wants to see — body language</label>
+          <select id="cus-view" onchange="cusRenderPreview()"
+            style="width:100%;padding:7px 9px;border:1px solid #c4b5fd;border-radius:6px;font-size:11px;font-family:'Noto Sans JP',sans-serif">
+            <option value="bi-src">Bilingual — original above, translation below</option>
+            <option value="bi-tgt">Bilingual — translation above, original below</option>
+            <option value="tgt">Translation only</option>
+            <option value="src">Original only — transcription, no translation</option>
+          </select>
+          <div style="font-size:9px;color:#7c6f5a;margin-top:3px">Which language is &ldquo;original&rdquo; follows the direction setting above. Header and certification stay bilingual in every mode — a certified translation has to name the source document in its own language.</div>
+        </div>
+
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
           <div>
             <label style="font-size:10px;font-weight:600;color:#5b21b6;display:block;margin-bottom:3px">Top header line (change for non-PH documents)</label>
@@ -513,6 +536,9 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
             <button class="cus-tool" onclick="cusInsert('&gt;&gt; ')" title="Indented numbered clause — for affidavit points 1., 2., 3.">＋ Clause</button>
             <button class="cus-tool" onclick="cusInsert('&gt;c ')" title="Centred line — for signature and date blocks">＋ Centred</button>
             <button class="cus-tool" onclick="cusInsert(' |  | ')" title="Insert the field separators">＋ Field</button>
+            <button class="cus-tool" onclick="cusInsertMirror()" title="Mirror grid — reproduce the cell structure of the original form">▦ Mirror grid</button>
+            <button class="cus-tool" onclick="cusInsert('c6 ')" title="Grid cell spanning 6 of 12 tracks. Use c3, c4, c12… to change the width.">＋ Cell</button>
+            <button class="cus-tool" onclick="cusInsert('+ ')" title="Sub-row inside the cell above — for a tall cell holding several entries">＋ Sub-row</button>
             <button class="cus-tool" onclick="cusInsertSeal()" title="Note that the original bears a seal, signature or photo">＋ Seal note</button>
             <button class="cus-tool" onclick="cusAutoFormat()" title="Turn pasted 'Label: value' or tab-separated text into field lines">🔤 Format pasted text</button>
           </div>
@@ -525,7 +551,22 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
           <code>&gt;&gt; 1.　…</code> indented clause &nbsp;·&nbsp;
           <code>&gt;c …</code> centred line<br>
           <span style="color:#7c3aed">Consecutive paragraph lines flow together as one passage — use these for affidavits, jurats and certifications rather than field rows.<br>A line with no <code>|</code> is treated as a paragraph automatically, so notes and sentences never print a stray “—”.</span>
+          <div style="margin-top:6px;padding-top:6px;border-top:1px dashed #d8b4fe">
+            <strong style="display:block;margin-bottom:3px;font-size:9.5px;letter-spacing:.4px;text-transform:uppercase">Mirror grid — reproduce the original&#39;s cell structure</strong>
+            <code>::: 12</code> open a grid, 12 tracks wide &nbsp;·&nbsp;
+            <code>:::</code> close<br>
+            <code>c6 Label | 日本語 | English</code> cell 6 tracks wide &nbsp;·&nbsp;
+            <code>c4r3</code> also spans 3 rows &nbsp;·&nbsp;
+            <code>c3h</code> shaded label cell &nbsp;·&nbsp;
+            <code>c6x</code> centred<br>
+            <code>+ Label | 日本語 | English</code> sub-row inside the cell above — use for a tall cell holding several entries (例：納税地 → 〒 / 住所 / TEL)<br>
+            <span style="color:#7c3aed">Leftover slots are filled automatically, so the block always prints as a clean rectangle. A grid closes at the next <code>##</code> section bar if you forget <code>:::</code>.</span>
+          </div>
         </div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:#5b21b6;margin-bottom:5px;cursor:pointer">
+          <input type="checkbox" id="cus-mirror-note" checked onchange="cusRenderPreview()" style="margin:0">
+          <span>Add the layout-disclosure note when a mirror grid is used — <span style="color:#7c6f5a">〔本翻訳は原本の書式に準じて配置した翻訳文であり、原本そのものではない。〕 &nbsp;Keep this on unless the receiving office has asked otherwise.</span></span>
+        </label>
         <textarea id="cus-body" rows="12" spellcheck="false" oninput="cusRenderPreview()"
           placeholder="## 申請者情報 / APPLICANT INFORMATION&#10;氏名 / Full Name | ヒラハラ・マリア・サントス | HIRAHARA, MARIA SANTOS&#10;生年月日 / Date of Birth | 1990年5月14日 | May 14, 1990&#10;住所 / Address | セブ州ラプラプ市パハク | Pajac, Lapu-Lapu City, Cebu&#10;&#10;## 証明事項 / CERTIFICATION DETAILS&#10;&gt; 上記の者は2015年1月より現在まで当バランガイに居住していることを証明する。&#10;発行日 / Date Issued | 2026年8月10日 | August 10, 2026"
           style="width:100%;padding:10px;border:1px solid #c4b5fd;border-radius:8px;font-size:11px;font-family:'Noto Sans JP',monospace;color:#1a2744;background:#fff;resize:vertical;line-height:1.7"></textarea>
@@ -2804,6 +2845,21 @@ function doDownloadPDF() {
     '.g3{display:grid;grid-template-columns:1fr 1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb}',
     '.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb}',
     '.gcl{border-right:2px solid #888}',
+    // ── MIRROR GRID ── reproduces the cell structure of the source form.
+    // Heavier rules than .g2 because a form's ruling is part of what is being
+    // mirrored; .mc.h is the shaded label column most JP official forms use.
+    '.mg{display:grid;border-left:0.6px solid #555;border-top:0.6px solid #555;margin-top:1px}',
+    '.mc{border-right:0.6px solid #555;border-bottom:0.6px solid #555;padding:1px 4px 1.5px;background:#fff;min-height:14px;overflow:hidden}',
+    '.mc.h{background:#ece7d8}',
+    '.mc.ctr{text-align:center}',
+    '.mc.mid{display:flex;flex-direction:column;justify-content:center}',
+    '.ml{font-size:5.5px;color:#777;line-height:1.1;margin-bottom:0.5px}',
+    '.mj{font-size:8px;font-weight:bold;color:#1a2744;line-height:1.2}',
+    '.me{font-size:6.5px;color:#aaa;font-style:italic;line-height:1.1}',
+    '.msub{border-top:0.5px dotted #c4c0b4;margin-top:1.5px;padding-top:1.5px}',
+    '.mc > .msub:first-child{border-top:none;margin-top:0;padding-top:0}',
+    '.mc.fillcell{background:#fbfaf6}',
+    '.mnote{font-size:6px;color:#8a8578;font-style:italic;line-height:1.3;padding:2px 6px;border:0.5px solid #bbb;border-top:none;background:#f7f4ea}',
     // Field box — ultra compact
     '.fb{border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:1px 5px 1.5px;min-height:15px;background:#faf8f0}',
     '.fb.s{background:#f0ece0}',
@@ -3055,6 +3111,9 @@ function doDownloadPDF() {
   function customRows(text, cols) {
     var wrap = (cols === 1) ? 'g1' : 'g2';
     var out = '', buf = [], shade = true, proseBuf = [], proseShade = false;
+    var allLines = String(text || '').split('\n');
+    var skipUntil = -1;
+    var V = atsViewOf(s.customDir || 'en2jp', s.customView || 'bi-src');
 
     function flushProse() {
       if (!proseBuf.length) return;
@@ -3071,13 +3130,21 @@ function doDownloadPDF() {
       buf = [];
     }
 
-    String(text || '').split('\n').forEach(function(raw) {
+    allLines.forEach(function(raw, idx) {
+      if (idx < skipUntil) return;
       var line = raw.trim();
       if (!line) return;
 
+      // ── MIRROR GRID ──
+      if (MIRROR_OPEN.test(line)) {
+        var mg = mgBuild(allLines, idx, esc, '', V);
+        if (mg) { flush(); out += mg.html; skipUntil = idx + mg.consumed; }
+        return;
+      }
+
       if (line.slice(0, 2) === '##') {
         flush(); shade = true;
-        out += '<div class="sh">' + esc(line.slice(2).trim()) + '</div>';
+        out += '<div class="sh">' + esc(atsLabel(line.slice(2).trim(), V.label)) + '</div>';
         return;
       }
       // A field row always carries at least one '|'. A line without one is a
@@ -3111,8 +3178,10 @@ function doDownloadPDF() {
         var pjp = (pp[0] || '').trim();
         var pen = (pp[1] || '').trim();
 
-        proseBuf.push('<p class="' + cls + '">' + esc(pjp) + '</p>' +
-                      (pen ? '<p class="para-en">' + esc(pen) + '</p>' : ''));
+        var pv = atsVals(V, pjp, pen);
+        if (!pv.main && !pv.sub) return;
+        proseBuf.push((pv.main ? '<p class="' + cls + '">' + esc(pv.main) + '</p>' : '') +
+                      (pv.sub ? '<p class="para-en">' + esc(pv.sub) + '</p>' : ''));
         return;
       }
 
@@ -3121,16 +3190,27 @@ function doDownloadPDF() {
       var jp    = (p[1] || '').trim();
       var en    = (p[2] || '').trim();
 
+      var fv = atsVals(V, jp, en);
+      var fl = atsLabel(label, V.label);
       buf.push('<div class="fb' + (shade ? ' s' : '') + '">' +
-        (label ? '<div class="fl">' + esc(label) + '</div>' : '') +
-        '<div class="fj">' + (jp ? esc(jp) : '—') + '</div>' +
-        (en ? '<div class="fe">' + esc(en) + '</div>' : '') +
+        (fl ? '<div class="fl">' + esc(fl) + '</div>' : '') +
+        '<div class="fj">' + (fv.main ? esc(fv.main) : '—') + '</div>' +
+        (fv.sub ? '<div class="fe">' + esc(fv.sub) + '</div>' : '') +
       '</div>');
       shade = !shade;
     });
 
     flush();
     return out;
+  }
+
+  // A layout-faithful translation can be mistaken for the original, so a
+  // document using the mirror grid carries a standing disclosure unless the
+  // operator has deliberately switched it off.
+  function mirrorNote(bodyText, enabled) {
+    if (enabled === false) return '';
+    if (!/^:::/m.test(String(bodyText || ''))) return '';
+    return '<div class="mnote">' + esc(MIRROR_NOTE_JP) + '<br>' + esc(MIRROR_NOTE_EN) + '</div>';
   }
 
   function customFooter(titEn, titJp, issEn, issJp) {
@@ -3162,6 +3242,7 @@ function doDownloadPDF() {
           '</b> · <b contenteditable="true" spellcheck="false" title="Click to edit">' + todayJP + '</b></span>' +
       '</div>' +
       customRows(s.customBody, parseInt(s.customCols || '2', 10)) +
+      mirrorNote(s.customBody, s.customMirrorNote) +
       customFooter(cTitEn, cTitJp, s.customIssuerEn, s.customIssuerJp);
 
   // ════ BIRTH CERTIFICATE ════
@@ -5327,6 +5408,190 @@ async function saveEdit() {
 // ══ CUSTOM TRANSLATION — PRESET SKELETONS ══════════════════════════
 // Each preset pre-fills the titles, issuer and a labelled skeleton so
 // only the Japanese values are left to type.
+// ════ MIRROR GRID ════
+// One parser, shared by the print renderer and the live preview, so what is
+// on screen is what comes out of the printer.
+//
+//   ::: N     open a grid with N column tracks (default 12)
+//   :::       close
+//   cN[rM][h][x] Label | JP | EN     a cell
+//   + Label | JP | EN                a sub-row inside the previous cell
+//
+// Flags:  h = shaded label cell     x = centred
+// ════ LANGUAGE DISPLAY MODE ════
+// Resolves the abstract choice ("show the translation only") into the concrete
+// slots the body syntax uses (jp / en), using the translation direction.
+//   dir  'jp2en' | 'jp2en_filed'  → source is Japanese, target is English
+//        'en2jp'                  → source is English,  target is Japanese
+function atsViewOf(dir, mode) {
+  var srcSide = (dir === 'jp2en' || dir === 'jp2en_filed') ? 'jp' : 'en';
+  var tgtSide = (srcSide === 'jp') ? 'en' : 'jp';
+  switch (mode) {
+    case 'bi-tgt': return { primary: tgtSide, secondary: srcSide, label: 'both' };
+    case 'tgt':    return { primary: tgtSide, secondary: null,    label: tgtSide };
+    case 'src':    return { primary: srcSide, secondary: null,    label: srcSide };
+    default:       return { primary: srcSide, secondary: tgtSide, label: 'both' };
+  }
+}
+
+// Labels are written "日本語 / English". In a single-language mode only the
+// matching half is kept. Splits on the FIRST " / " only, so a label such as
+// "役職 / Position / Title" keeps "Position / Title" intact on the English side.
+function atsLabel(label, side) {
+  if (side === 'both') return label;
+  var t = String(label == null ? '' : label);
+  var i = t.indexOf(' / ');
+  if (i === -1) return t;
+  return (side === 'jp') ? t.slice(0, i).trim() : t.slice(i + 3).trim();
+}
+
+// Picks the values for a row. Returns {main, sub} already ordered for output.
+function atsVals(V, jp, en) {
+  var pick = function(side) { return side === 'jp' ? jp : en; };
+  return { main: pick(V.primary), sub: V.secondary ? pick(V.secondary) : '' };
+}
+
+var MIRROR_OPEN = /^:::\s*(\d+)?\s*$/;
+var MIRROR_CELL = /^c(\d+)(?:r(\d+))?([hx]*)\s*(.*)$/;
+
+// Split "Label | JP | EN" without losing empty trailing segments.
+function mgParts(t) {
+  var p = String(t == null ? '' : t).split('|');
+  return {
+    label: (p[0] || '').trim(),
+    jp:    (p[1] || '').trim(),
+    en:    (p[2] || '').trim()
+  };
+}
+
+function mgCellInner(t, escFn, emptyHtml, V) {
+  V = V || { primary: 'jp', secondary: 'en', label: 'both' };
+  var q  = mgParts(t);
+  var vv = atsVals(V, q.jp, q.en);
+  var lb = atsLabel(q.label, V.label);
+  return (lb ? '<div class="ml">' + escFn(lb) + '</div>' : '') +
+         (vv.main ? '<div class="mj">' + escFn(vv.main) + '</div>'
+                  : (lb && !vv.sub ? '' : '<div class="mj">' + (emptyHtml || '') + '</div>')) +
+         (vv.sub ? '<div class="me">' + escFn(vv.sub) + '</div>' : '');
+}
+
+// Returns {html, cells, rows} or null when the block never opened.
+// `lines` is the slice of body lines starting at the ::: opener.
+// `consumed` on the result tells the caller how many lines to skip.
+function mgBuild(lines, start, escFn, emptyHtml, V) {
+  var m = MIRROR_OPEN.exec(lines[start]);
+  if (!m) return null;
+  var tracks = Math.max(1, Math.min(24, parseInt(m[1] || '12', 10) || 12));
+  var cells = [], i = start + 1, maxRowSpan = 1, cellCount = 0, unitsUsed = 0;
+
+  while (i < lines.length) {
+    var line = String(lines[i]).trim();
+    if (line === '') { i++; continue; }
+    if (MIRROR_OPEN.test(line)) { i++; break; }              // closing :::
+    if (line.slice(0, 2) === '##') break;                    // section bar closes it
+
+    if (line.charAt(0) === '+' && cells.length) {
+      cells[cells.length - 1].sub.push(line.slice(1).trim());
+      i++; continue;
+    }
+
+    var cm = MIRROR_CELL.exec(line);
+    if (!cm) {                                               // stray line: full-width cell
+      cells.push({ cols: tracks, rows: 1, flags: '', text: line, sub: [] });
+      i++; continue;
+    }
+    var cols = Math.max(1, Math.min(tracks, parseInt(cm[1], 10) || 1));
+    var rows = Math.max(1, Math.min(12, parseInt(cm[2] || '1', 10) || 1));
+    cells.push({ cols: cols, rows: rows, flags: cm[3] || '', text: cm[4] || '', sub: [] });
+    if (rows > maxRowSpan) maxRowSpan = rows;
+    unitsUsed += cols;
+    i++;
+  }
+
+  // \u2500\u2500 Deterministic placement \u2500\u2500
+  // Browser auto-placement leaves holes around a row-spanning cell, which on a
+  // mirrored form reads as a missing box. Occupancy is simulated here so every
+  // cell gets an explicit position and every leftover slot gets a filler.
+  var occ = [];                                   // occ[row][col] = true when taken
+  function rowAt(r) {
+    while (occ.length <= r) occ.push(new Array(tracks).fill(false));
+    return occ[r];
+  }
+  function fits(r, c, w, h) {
+    if (c + w > tracks) return false;
+    for (var y = r; y < r + h; y++) {
+      var row = rowAt(y);
+      for (var x = c; x < c + w; x++) if (row[x]) return false;
+    }
+    return true;
+  }
+  function take(r, c, w, h) {
+    for (var y = r; y < r + h; y++) {
+      var row = rowAt(y);
+      for (var x = c; x < c + w; x++) row[x] = true;
+    }
+  }
+
+  var placed = [], cur = 0;
+  cells.forEach(function(c) {
+    var r = cur, col = -1;
+    for (;;) {
+      rowAt(r);
+      for (var x = 0; x < tracks; x++) { if (fits(r, x, c.cols, c.rows)) { col = x; break; } }
+      if (col !== -1) break;
+      r++;
+      if (r > cur + 400) { col = 0; rowAt(r); break; }        // safety stop
+    }
+    take(r, col, c.cols, c.rows);
+    placed.push({ cell: c, r: r, c: col });
+    cur = r;                                                   // keep scanning forward
+  });
+
+  var html = '<div class="mg" style="grid-template-columns:repeat(' + tracks + ',1fr)">';
+  placed.forEach(function(p) {
+    var c   = p.cell;
+    var cls = 'mc';
+    if (c.flags.indexOf('h') !== -1) cls += ' h';
+    if (c.flags.indexOf('x') !== -1) cls += ' ctr';
+    if (c.rows > 1) cls += ' mid';
+    var st = 'grid-column:' + (p.c + 1) + '/span ' + c.cols +
+             ';grid-row:'   + (p.r + 1) + '/span ' + c.rows;
+    var inner = c.sub.length
+      ? [c.text].concat(c.sub).filter(function(t) { return String(t).trim() !== ''; })
+          .map(function(t) { return '<div class="msub">' + mgCellInner(t, escFn, emptyHtml, V) + '</div>'; })
+          .join('')
+      : mgCellInner(c.text, escFn, emptyHtml, V);
+    html += '<div class="' + cls + '" style="' + st + '">' + inner + '</div>';
+  });
+
+  // Fill leftover slots so the block always prints as a clean rectangle.
+  // Horizontally adjacent gaps merge into one filler.
+  occ.forEach(function(row, r) {
+    var x = 0;
+    while (x < tracks) {
+      if (row[x]) { x++; continue; }
+      var w = 0;
+      while (x + w < tracks && !row[x + w]) w++;
+      html += '<div class="mc fillcell" style="grid-column:' + (x + 1) + '/span ' + w +
+              ';grid-row:' + (r + 1) + '/span 1"></div>';
+      x += w;
+    }
+  });
+  html += '</div>';
+
+  cellCount = cells.length;
+  return {
+    html: html,
+    consumed: i - start,
+    cells: cellCount,
+    rowsPx: occ.length * 16 +
+            cells.reduce(function(a, c) { return a + c.sub.length * 11; }, 0)
+  };
+}
+
+var MIRROR_NOTE_JP = '\u3014\u672c\u7ffb\u8a33\u306f\u539f\u672c\u306e\u66f8\u5f0f\u306b\u6e96\u3058\u3066\u914d\u7f6e\u3057\u305f\u7ffb\u8a33\u6587\u3067\u3042\u308a\u3001\u539f\u672c\u305d\u306e\u3082\u306e\u3067\u306f\u306a\u3044\u3002\u3015';
+var MIRROR_NOTE_EN = '[This translation reproduces the layout of the original for reference. It is a translation, not the original document.]';
+
 var CUSTOM_PRESETS = {
   'barangay': {
     group: 'Other Certificates & Documents', label: 'Barangay Clearance / Certificate',
@@ -6276,6 +6541,22 @@ function cusInsert(txt) {
   cusRenderPreview();
 }
 
+// Drops a ready-to-edit grid skeleton at the cursor.
+function cusInsertMirror() {
+  cusInsert([
+    '::: 12',
+    'c4h ラベル / Label cell',
+    'c8 項目 / Field | 日本語 | English',
+    'c4r2h 背の高い欄 / Tall cell',
+    '+ 小項目 1 / Sub-row 1 | 日本語 | English',
+    '+ 小項目 2 / Sub-row 2 | 日本語 | English',
+    'c8 項目 / Field | 日本語 | English',
+    'c12 全幅の欄 / Full-width field | 日本語 | English',
+    ':::',
+    ''
+  ].join('\n'));
+}
+
 function cusInsertSeal() {
   cusInsert('> 〔原本には発行機関の公印および発行責任者の署名が付されている。〕');
 }
@@ -6350,15 +6631,33 @@ function cusRenderPreview() {
     buf = [];
   }
 
-  String(text || '').split('\n').forEach(function(raw) {
+  var allLines = String(text || '').split('\n');
+  var skipUntil = -1;
+  var dirEl  = document.getElementById('cus-dir');
+  var viewEl = document.getElementById('cus-view');
+  var V = atsViewOf(dirEl ? dirEl.value : 'en2jp', viewEl ? viewEl.value : 'bi-src');
+  var PRIMARY_NAME = (V.primary === 'jp') ? 'Japanese' : 'English';
+  allLines.forEach(function(raw, idx) {
+    if (idx < skipUntil) return;
     var line = raw.trim();
     if (!line) return;
+    if (MIRROR_OPEN.test(line)) {
+      var mg = mgBuild(allLines, idx, cusEsc, '<span class="cp-empty">\u3010\u672a\u5165\u529b\u3011</span>', V);
+      if (mg) {
+        flush();
+        html += mg.html;
+        nFields += mg.cells;
+        paraPx += mg.rowsPx;
+        skipUntil = idx + mg.consumed;
+      }
+      return;
+    }
     if (line.charAt(0) !== '>' && line.indexOf('|') === -1 && line.slice(0, 2) !== '##') {
       line = '> ' + line;
     }
     if (line.slice(0, 2) === '##') {
       flush(); shade = true; nSections++;
-      html += '<div class="sh">' + cusEsc(line.slice(2).trim()) + '</div>';
+      html += '<div class="sh">' + cusEsc(atsLabel(line.slice(2).trim(), V.label)) + '</div>';
       return;
     }
     if (line.charAt(0) === '>') {
@@ -6380,25 +6679,34 @@ function cusRenderPreview() {
       var jpLines = Math.max(1, Math.ceil(pjp.length / 88));
       paraPx += jpLines * 8.5 * 1.85 + 4;
       if (pen) paraPx += Math.max(1, Math.ceil(pen.length / 150)) * 6.8 * 1.6 + 1;
-      proseBuf.push('<p class="' + cls + '">' + cusEsc(pjp) + '</p>' +
-                    (pen ? '<p class="para-en">' + cusEsc(pen) + '</p>' : ''));
+      var pv = atsVals(V, pjp, pen);
+      if (!pv.main && !pv.sub) return;
+      proseBuf.push((pv.main ? '<p class="' + cls + '">' + cusEsc(pv.main) + '</p>' : '') +
+                    (pv.sub ? '<p class="para-en">' + cusEsc(pv.sub) + '</p>' : ''));
       return;
     }
     var p = line.split('|');
     var label = (p[0] || '').trim(), jp = (p[1] || '').trim(), en = (p[2] || '').trim();
+    var fv = atsVals(V, jp, en);
+    var fl = atsLabel(label, V.label);
     nFields++;
-    if (!jp) nMissingJp++;
+    if (!fv.main) nMissingJp++;
     // Height this row will occupy once printed. English is counted even when
     // still blank, so the gauge does not turn red only after you fill it in.
-    fieldPx.push(PX_PAD + (label ? PX_LABEL : 0) + PX_JP + PX_EN);
+    fieldPx.push(PX_PAD + (label ? PX_LABEL : 0) + PX_JP + (V.secondary ? PX_EN : 0));
     buf.push('<div class="fb' + (shade ? ' s' : '') + '">' +
-      (label ? '<div class="fl">' + cusEsc(label) + '</div>' : '') +
-      '<div class="fj' + (jp ? '' : ' cp-empty') + '">' + (jp ? cusEsc(jp) : '【未入力】') + '</div>' +
-      (en ? '<div class="fe">' + cusEsc(en) + '</div>' : '') +
+      (fl ? '<div class="fl">' + cusEsc(fl) + '</div>' : '') +
+      '<div class="fj' + (fv.main ? '' : ' cp-empty') + '">' + (fv.main ? cusEsc(fv.main) : '【未入力】') + '</div>' +
+      (fv.sub ? '<div class="fe">' + cusEsc(fv.sub) + '</div>' : '') +
     '</div>');
     shade = !shade;
   });
   flush();
+
+  var noteEl = document.getElementById('cus-mirror-note');
+  if ((!noteEl || noteEl.checked) && /^:::/m.test(String(text || ''))) {
+    html += '<div class="mnote">' + cusEsc(MIRROR_NOTE_JP) + '<br>' + cusEsc(MIRROR_NOTE_EN) + '</div>';
+  }
 
   var ctry = document.getElementById('cus-country').value.trim() || 'Republic of the Philippines · フィリピン共和国';
   var purp = document.getElementById('cus-purpose').value.trim();
@@ -6415,7 +6723,8 @@ function cusRenderPreview() {
   var st = document.getElementById('cus-stats');
   if (st) {
     st.textContent = nFields + ' field(s) · ' + nSections + ' section(s) · ' + nParas + ' paragraph(s)' +
-                     (nMissingJp ? ' · ⚠ ' + nMissingJp + ' missing Japanese' : ' · ✓ all have Japanese');
+                     (nMissingJp ? ' · ⚠ ' + nMissingJp + ' missing ' + PRIMARY_NAME
+                                 : ' · ✓ all have ' + PRIMARY_NAME);
     st.style.color = nMissingJp ? '#dc2626' : '#16a34a';
   }
 
@@ -6507,6 +6816,8 @@ async function saveCustomTemplate() {
     issuerJp: document.getElementById('cus-issuer-jp').value.trim(),
     cols:     document.getElementById('cus-cols').value,
     dir:      document.getElementById('cus-dir').value,
+    view:     document.getElementById('cus-view').value,
+    mirrorNote: document.getElementById('cus-mirror-note').checked,
     country:  document.getElementById('cus-country').value.trim(),
     purpose:  document.getElementById('cus-purpose').value.trim(),
     body:     body
@@ -6538,6 +6849,8 @@ async function loadCustomTemplate() {
   document.getElementById('cus-issuer-jp').value = t.issuerJp || '';
   document.getElementById('cus-cols').value      = t.cols     || '2';
   document.getElementById('cus-dir').value       = t.dir      || 'en2jp';
+  document.getElementById('cus-view').value      = t.view     || 'bi-src';
+  document.getElementById('cus-mirror-note').checked = t.mirrorNote !== false;
   document.getElementById('cus-country').value   = t.country  || '';
   document.getElementById('cus-purpose').value   = t.purpose  || '';
   document.getElementById('cus-body').value      = t.body     || '';
@@ -6631,6 +6944,8 @@ function loadCustomFromSubmission(s) {
   document.getElementById('cus-purpose').value   = s.customPurpose  || s.purpose || '';
   document.getElementById('cus-cols').value      = s.customCols     || '2';
   document.getElementById('cus-dir').value       = s.customDir      || 'en2jp';
+  document.getElementById('cus-view').value      = s.customView     || 'bi-src';
+  document.getElementById('cus-mirror-note').checked = s.customMirrorNote !== false;
   document.getElementById('cus-body').value      = s.customBody     || '';
   var st = document.getElementById('cus-status');
   st.textContent = s.customBody
@@ -6663,6 +6978,8 @@ function readCustomWorkspace() {
     purpose:  document.getElementById('cus-purpose').value.trim(),
     cols:     document.getElementById('cus-cols').value,
     dir:      document.getElementById('cus-dir').value,
+    view:     document.getElementById('cus-view').value,
+    mirrorNote: document.getElementById('cus-mirror-note').checked,
     body:     document.getElementById('cus-body').value.trim()
   };
 }
@@ -6696,7 +7013,7 @@ function customGenerate(asFile) {
     customIssuerEn: w.issuerEn, customIssuerJp: w.issuerJp,
     customDocNo: w.docNo, customCountry: w.country,
     customPurpose: w.purpose, customCols: w.cols, customBody: w.body,
-    customDir: w.dir
+    customDir: w.dir, customView: w.view, customMirrorNote: w.mirrorNote
   };
   if (real) { temp.correctionEn = real.correctionEn; temp.correctionJp = real.correctionJp; }
   subs = [temp]; activeId = temp.id;
@@ -6727,6 +7044,8 @@ async function saveCustomToSubmission() {
   s.customDocNo    = w.docNo;    s.customCountry  = w.country;
   s.customPurpose  = w.purpose;  s.customCols     = w.cols;
   s.customDir      = w.dir;
+  s.customView     = w.view;
+  s.customMirrorNote = w.mirrorNote;
   s.customBody     = w.body;
   if (s.status !== 'translated') s.status = 'translated';
 
@@ -6764,6 +7083,7 @@ async function clearCustomTranslation() {
   delete s.customIssuerEn; delete s.customIssuerJp;
   delete s.customDocNo; delete s.customCols; delete s.customBody;
   delete s.customCountry; delete s.customPurpose; delete s.customDir;
+  delete s.customMirrorNote; delete s.customView;
 
   await saveSubs();
   document.getElementById('cus-status').textContent = 'Removed — ' + s.name + ' uses its template again';
