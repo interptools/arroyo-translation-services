@@ -545,9 +545,9 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
             <button class="cus-tool" onclick="cusInsert('&gt;c ')" title="Centred line — for signature and date blocks">＋ Centred</button>
             <button class="cus-tool" onclick="cusInsert('&gt;t ')" title="Display title — centred and letter-spaced, for a document heading">＋ Title</button>
             <button class="cus-tool" onclick="cusInsert('&gt;r ')" title="Right-aligned line — for 以上, dates and issuer blocks">＋ Right</button>
-            <button class="cus-tool" onclick="cusInsertLetter()" title="Formal letter skeleton — title, statement, 記…以上 list, right-aligned issuer block">✉ Letter</button>
+            <button class="cus-tool" onclick="cusInsertLetter()" aria-label="Insert formal letter skeleton" title="Formal letter skeleton — title, statement, 記…以上 list, right-aligned issuer block">✉ Letter</button>
             <button class="cus-tool" onclick="cusInsert(' |  | ')" title="Insert the field separators">＋ Field</button>
-            <button class="cus-tool" onclick="cusInsertMirror()" title="Mirror grid — reproduce the cell structure of the original form">▦ Mirror grid</button>
+            <button class="cus-tool" onclick="cusInsertMirror()" aria-label="Insert mirror grid skeleton" title="Mirror grid — reproduce the cell structure of the original form">▦ Mirror grid</button>
             <button class="cus-tool" onclick="cusInsert('c6 ')" title="Grid cell spanning 6 of 12 tracks. Use c3, c4, c12… to change the width.">＋ Cell</button>
             <button class="cus-tool" onclick="cusInsert('+ ')" title="Sub-row inside the cell above — for a tall cell holding several entries">＋ Sub-row</button>
             <button class="cus-tool" onclick="cusInsertSeal()" title="Note that the original bears a seal, signature or photo">＋ Seal note</button>
@@ -586,6 +586,7 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
           <input type="checkbox" id="cus-mirror-note" checked onchange="cusRenderPreview()" style="margin:0">
           <span>Add the layout-disclosure note when a mirror grid is used — <span style="color:#7c6f5a">〔本翻訳は原本の書式に準じて配置した翻訳文であり、原本そのものではない。〕 &nbsp;Keep this on unless the receiving office has asked otherwise.</span></span>
         </label>
+        <div id="cus-draft-state" style="font-size:9.5px;color:#7c6f5a;margin-bottom:4px;min-height:12px"></div>
         <textarea id="cus-body" rows="12" spellcheck="false" oninput="cusRenderPreview()"
           placeholder="## 申請者情報 / APPLICANT INFORMATION&#10;氏名 / Full Name | ヒラハラ・マリア・サントス | HIRAHARA, MARIA SANTOS&#10;生年月日 / Date of Birth | 1990年5月14日 | May 14, 1990&#10;住所 / Address | セブ州ラプラプ市パハク | Pajac, Lapu-Lapu City, Cebu&#10;&#10;## 証明事項 / CERTIFICATION DETAILS&#10;&gt; 上記の者は2015年1月より現在まで当バランガイに居住していることを証明する。&#10;発行日 / Date Issued | 2026年8月10日 | August 10, 2026"
           style="width:100%;padding:10px;border:1px solid #c4b5fd;border-radius:8px;font-size:11px;font-family:'Noto Sans JP',monospace;color:#1a2744;background:#fff;resize:vertical;line-height:1.7"></textarea>
@@ -641,7 +642,7 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
   <div class="modal">
     <div class="modal-head">
       <h3 id="m-title">Submission</h3>
-      <button class="mclose" id="mclose-btn">×</button>
+      <button class="mclose" id="mclose-btn" aria-label="Close this request">×</button>
     </div>
     <div class="modal-body">
       <div class="modal-grid">
@@ -727,7 +728,7 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
             <button onclick="closeTranslationEditor()" style="padding:6px 14px;background:#f0ede8;color:#6b7280;border:none;border-radius:6px;font-size:11px;cursor:pointer;font-family:Inter,sans-serif">Cancel</button>
           </div>
         </div>
-        <textarea id="translation-textarea" style="width:100%;height:220px;padding:10px;border:1px solid #e5e0d8;border-radius:8px;font-size:11px;font-family:Noto Sans JP,sans-serif;color:#1a2744;background:#faf8f4;resize:vertical;line-height:1.6"></textarea>
+        <textarea id="translation-textarea" aria-label="Japanese translation, one FIELD_ID|Japanese pair per line" style="width:100%;height:220px;padding:10px;border:1px solid #e5e0d8;border-radius:8px;font-size:11px;font-family:Noto Sans JP,sans-serif;color:#1a2744;background:#faf8f4;resize:vertical;line-height:1.6"></textarea>
         <div style="font-size:10px;color:#6b7280;margin-top:4px">Edit the Japanese translation directly. Each line: Japanese label: English value / Japanese value</div>
       </div>
 
@@ -747,7 +748,7 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
             <div style="font-size:11px;font-weight:700;color:#065f46;text-transform:uppercase;letter-spacing:1px">↩ Correction Annotation (Rotated 90°)</div>
             <div style="font-size:10px;color:#6b7280;margin-top:2px">Only fills if original document has a rotated correction text on the right margin.</div>
           </div>
-          <button onclick="toggleCorrectionPanel()" style="background:none;border:none;font-size:16px;cursor:pointer;color:#6b7280">×</button>
+          <button onclick="toggleCorrectionPanel()" aria-label="Close the correction panel" style="background:none;border:none;font-size:16px;cursor:pointer;color:#6b7280">×</button>
         </div>
 
         <div style="margin-bottom:8px">
@@ -1109,6 +1110,88 @@ const PASS   = 'Trainer2026';
   };
 })();
 
+// ════ ACCESSIBILITY ════
+// Wires semantics that already exist in the markup rather than inventing any.
+// Runs at boot and again whenever panels are re-rendered, so controls added
+// later are covered without anyone remembering to label them.
+function atsA11y() {
+  var made = 0, unnamed = [];
+
+  // <label> sits immediately before its control throughout this file, but
+  // without for= the association is visual only.
+  [].slice.call(document.querySelectorAll('label:not([for])')).forEach(function (lab) {
+    if (lab.querySelector('input,select,textarea')) return;      // wrapping label: already fine
+    var ctl = lab.nextElementSibling;
+    var hops = 0;
+    while (ctl && hops < 3 && !/^(INPUT|SELECT|TEXTAREA)$/.test(ctl.tagName)) {
+      ctl = ctl.querySelector ? ctl.querySelector('input,select,textarea') || ctl.nextElementSibling : null;
+      hops++;
+    }
+    if (!ctl || !/^(INPUT|SELECT|TEXTAREA)$/.test(ctl.tagName)) return;
+    if (!ctl.id) ctl.id = 'ats-ctl-' + (++made);
+    lab.setAttribute('for', ctl.id);
+  });
+
+  // A control with no label at all still needs a name.
+  [].slice.call(document.querySelectorAll('input,select,textarea')).forEach(function (ctl) {
+    if (ctl.type === 'hidden') return;
+    if (ctl.getAttribute('aria-label') || ctl.labels && ctl.labels.length) return;
+    var ph = ctl.getAttribute('placeholder') || ctl.getAttribute('title');
+    if (ph) ctl.setAttribute('aria-label', ph);
+  });
+
+  // Buttons: promote an existing title to the accessible name. Where the label
+  // is a bare glyph and there is no title, say so instead of guessing.
+  [].slice.call(document.querySelectorAll('button')).forEach(function (b) {
+    if (b.getAttribute('aria-label')) return;
+    var txt = (b.textContent || '').replace(/[\s\u00a0]/g, '');
+    var hasWords = /[A-Za-z0-9\u3040-\u30ff\u4e00-\u9faf]/.test(txt);
+    var title = b.getAttribute('title');
+    if (title) { b.setAttribute('aria-label', title); return; }
+    if (!hasWords && txt) unnamed.push(txt.slice(0, 12));
+  });
+
+  // Live regions and dialog semantics.
+  var t = document.getElementById('toast');
+  if (t && !t.getAttribute('aria-live')) {
+    t.setAttribute('role', 'status');
+    t.setAttribute('aria-live', 'polite');
+    t.setAttribute('aria-atomic', 'true');
+  }
+  [].slice.call(document.querySelectorAll('.ui-modal,.modal,#ats-gate')).forEach(function (m) {
+    if (!m.getAttribute('role')) m.setAttribute('role', 'dialog');
+    m.setAttribute('aria-modal', 'true');
+  });
+
+  if (unnamed.length) {
+    console.warn('A11y: ' + unnamed.length + ' icon-only button(s) have no title to name them:', unnamed);
+  }
+  return { labelled: made, unnamed: unnamed.length };
+}
+
+(function () {
+  function go() { try { atsA11y(); } catch (e) {} }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go);
+  else go();
+  // Panels are rebuilt on navigation; re-run rather than rely on one pass.
+  var mo = new MutationObserver(function () {
+    clearTimeout(window.__a11yT);
+    window.__a11yT = setTimeout(go, 400);
+  });
+  if (document.body) mo.observe(document.body, { childList: true, subtree: true });
+  else document.addEventListener('DOMContentLoaded', function () {
+    mo.observe(document.body, { childList: true, subtree: true });
+  });
+})();
+
+// Global markup escaper. esc() lives inside the PDF builder's scope; this is
+// the same guarantee for the admin UI and the e-mail/affidavit builders.
+function escAttr(v) {
+  return String(v == null ? '' : v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 const DATA_API = 'https://ats-data.areymar36.workers.dev';
 var ADMIN_TOKEN = '';
 const WORKER = 'https://gemini-proxy.areymar36.workers.dev';
@@ -1213,6 +1296,19 @@ async function loadSubs() {
     document.getElementById('main-wrap').style.display = 'none';
     return;
   }
+  function useMirror(why) {
+    var raw = null;
+    try { raw = localStorage.getItem('ats_subs_mirror'); } catch (e) {}
+    if (!raw) return false;
+    var m; try { m = JSON.parse(raw); } catch (e) { return false; }
+    if (!m || !Array.isArray(m.subs)) return false;
+    subs = m.subs;
+    READ_ONLY_MIRROR = true;
+    toast(why + ' — showing the local copy from ' +
+          new Date(m.at).toLocaleString() + '. Do not release from this; reconnect first.', 'err');
+    return true;
+  }
+
   try {
     var r = await fetch(DATA_API + '/api/admin/requests', { headers: apiHeaders(false) });
     if (r.status === 401) {
@@ -1300,6 +1396,11 @@ async function saveSubs() {
 
     if (r.ok && d && d.ok) {
       binBytes = d.bytes || 0;
+      // Local read-only mirror, so an API outage does not leave the operator
+      // with nothing. Never authoritative — only a fallback for display.
+      try {
+        localStorage.setItem('ats_subs_mirror', JSON.stringify({ at: Date.now(), subs: subs }));
+      } catch (e) {}
       if (d.archived) toast('Saved. ' + d.archived + ' settled record(s) moved to the archive.');
       renderBinMeter();
       return d;
@@ -1443,7 +1544,7 @@ function render() {
     }
     tr.innerHTML =
       '<td data-l="Request ID"><span class="td-id" title="Click to copy" onclick="copyReqId(event,\'' + String(s.id || '').replace(/'/g, "\\'") + '\')">' + (s.id || '—') + '</span></td>' +
-      '<td data-l="Customer"><div class="td-name">' + s.name + '</div><div class="td-sub">' + s.email + '</div></td>' +
+      '<td data-l="Customer"><div class="td-name">' + escAttr(s.name) + '</div><div class="td-sub">' + escAttr(s.email) + '</div></td>' +
       '<td data-l="Document">' + s.doctype + '</td>' +
       '<td data-l="Purpose" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#6b7280">' + (s.purpose || '') + '</td>' +
       '<td data-l="Date" style="white-space:nowrap;color:#6b7280;font-size:11px">' + s.date + '</td>' +
@@ -1829,7 +1930,7 @@ async function doRequestPayment() {
       '</div>' +
       '<div style="background:#f7f8fc;padding:24px 28px;border-left:1px solid #e5e7eb;border-right:1px solid #e5e7eb">' +
 
-        '<p style="font-size:15px;margin:0 0 8px">Dear <strong>' + s.name + '</strong>,</p>' +
+        '<p style="font-size:15px;margin:0 0 8px">Dear <strong>' + escAttr(s.name) + '</strong>,</p>' +
         '<p style="font-size:13px;line-height:1.8;color:#374151;margin:0 0 20px">' +
           'Good news — your <strong>' + s.doctype + '</strong> translation is finished. ' +
           'As agreed, <strong>payment is only due now that the work is done</strong>.' +
@@ -2572,17 +2673,107 @@ function clearCorrection() {
   if (s) { delete s.correctionEn; delete s.correctionJp; saveSubs(); }
 }
 
+// ════ PRE-RELEASE GATE ════
+var atsGateOverride = false;
+var pendingGate = null;
+
+function showReleaseGate(warns) {
+  var old = document.getElementById('ats-gate');
+  if (old) old.remove();
+  var wrap = document.createElement('div');
+  wrap.id = 'ats-gate';
+  wrap.setAttribute('role', 'dialog');
+  wrap.setAttribute('aria-modal', 'true');
+  wrap.setAttribute('aria-label', 'Pre-release check');
+  wrap.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(16,22,34,.55);' +
+    'display:flex;align-items:center;justify-content:center;padding:20px;font-family:Inter,system-ui,sans-serif';
+  wrap.innerHTML =
+    '<div style="background:#fff;border-radius:12px;max-width:560px;width:100%;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.35)">' +
+      '<div style="background:#7f1d1d;color:#fff;padding:12px 18px;font-size:13.5px;font-weight:600">' +
+        '\u26a0 ' + warns.length + ' issue(s) found before release</div>' +
+      '<div style="padding:16px 18px">' +
+        '<ul style="margin:0 0 14px 18px;padding:0;font-size:12.5px;color:#1a2744;line-height:1.75">' +
+          warns.map(function (w) { return '<li>' + escAttr(w) + '</li>'; }).join('') +
+        '</ul>' +
+        '<div style="font-size:11.5px;color:#6b7280;line-height:1.6;margin-bottom:14px">' +
+          'Fix these first where you can. If you release anyway, the override is written to this ' +
+          'submission\u2019s release log.</div>' +
+        '<div style="display:flex;gap:8px;justify-content:flex-end">' +
+          '<button id="ats-gate-cancel" style="padding:8px 16px;border:1px solid #d1d5db;background:#fff;' +
+            'border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">Go back and fix</button>' +
+          '<button id="ats-gate-go" style="padding:8px 16px;border:none;background:#7f1d1d;color:#fff;' +
+            'border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">Release anyway</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(wrap);
+  document.getElementById('ats-gate-cancel').onclick = function () {
+    wrap.remove(); pendingGate = null;
+  };
+  document.getElementById('ats-gate-go').onclick = function () {
+    wrap.remove();
+    var g = pendingGate; pendingGate = null;
+    atsGateOverride = true;
+    atsGateOverrideNote = (g && g.warns) || [];
+    if (g && g.saveAsFile) forceDownloadFile = true;
+    doDownloadPDF();
+  };
+  document.getElementById('ats-gate-cancel').focus();
+}
+var atsGateOverrideNote = [];
+
 function doDownloadPDF() {
   var s = subs.find(function(x) { return x.id === activeId; });
   if (!s) return;
   var saveAsFile = forceDownloadFile;   // set by "⬇ Save as file"
   forceDownloadFile = false;
 
+  // ── PRE-RELEASE GATE ──
+  // Four failure modes that have actually shipped, checked before the
+  // deliverable is built rather than after it reaches a client.
+  window.atsReleaseWarnings = function (sub) {
+    var w = [];
+    var custom = !!(sub.customBody && sub.customBody.trim());
+    var jpSource = /^jp2en/.test(String(sub.customDir || ''));
+
+    if (/\u3010\u672a\u7ffb\u8a33\u3011|\u3010\u672a\u5165\u529b\u3011/.test(String(sub.translation || '') + String(sub.customBody || ''))) {
+      w.push('Untranslated markers are still in the content.');
+    }
+    if (jpSource && /PSA|DFA|Philippine/i.test(String(sub.customIssuerEn || '') + String(sub.customIssuerJp || ''))) {
+      w.push('Direction is Japanese \u2192 English but the issuing authority still names PSA/DFA.');
+    }
+    if (custom && !jpSource && /\u7a0e\u52d9\u7f72|\u5e02\u5f79\u6240|\u56fd\u7a0e\u5e81|\u6cd5\u52d9\u5c40/.test(String(sub.customTitleJp || '') + String(sub.customIssuerJp || ''))) {
+      w.push('The document names a Japanese authority but the direction is not set to Japanese \u2192 English.');
+    }
+    if (custom && !String(sub.customIssuerEn || sub.customIssuerJp || '').trim()) {
+      w.push('No issuing authority set \u2014 the certification block will name a generic body.');
+    }
+    if (typeof atsCrossCheck === 'function') {
+      atsCrossCheck(sub).forEach(function (c) {
+        w.push('This customer\u2019s documents disagree on ' + c.label + ': ' +
+          c.values.map(function (v) { return v.id + ' = \u201c' + v.value + '\u201d'; }).join(' vs '));
+      });
+    }
+    return w;
+  };
+
   var hasCustom = !!(s.customBody && s.customBody.trim());
   if (!s.translation && !hasCustom) {
     uiAlert('Run the AI translation first, or use "Custom Translation" to type it in yourself.', {kind:'warn', title:'Nothing to put in the PDF'});
     return;
   }
+
+  // A warning nobody has to answer is not a gate. Outstanding issues stop the
+  // release until the operator overrides deliberately, and the override is
+  // recorded so a later question about this copy has an answer.
+  var relWarn = window.atsReleaseWarnings(s);
+  if (relWarn.length && !atsGateOverride) {
+    pendingGate = { warns: relWarn, saveAsFile: saveAsFile };
+    showReleaseGate(relWarn);
+    return;
+  }
+  var gateOverridden = relWarn.length && atsGateOverride;
+  atsGateOverride = false;
 
   // Payment is collected after translation, so a PDF generated before the money
   // lands gets stamped UNPAID on every page. Verify the payment to get a clean one.
@@ -2743,7 +2934,12 @@ function doDownloadPDF() {
     'National Statistics Office':'国家統計局',
   };
 
-  function gv(id) { return f[id] || ''; }
+  // Raw value — for logic only (pattern matching, comparisons, filenames).
+  // Never interpolate this into markup.
+  function gvRaw(id) { return f[id] || ''; }
+  // Markup-safe value. Client intake data is untrusted: it arrives from the
+  // public form, and the generated document runs on the admin origin.
+  function gv(id) { return esc(gvRaw(id)); }
   // Japanese name kanji map — surname romaji → kanji
   var JP_SURNAME = {
     'hirahara':'平原','yamamoto':'山本','tanaka':'田中','suzuki':'鈴木','sato':'佐藤',
@@ -2777,9 +2973,10 @@ function doDownloadPDF() {
     return null;
   }
 
-  function gj(id) {
+  function gj(id) { return esc(gjRaw(id)); }
+  function gjRaw(id) {
     if (jpMap[id]) return jpMap[id];
-    var en = gv(id); if (!en) return '';
+    var en = gvRaw(id); if (!en) return '';
     if (en.match(/^\d{4}-\d{2}-\d{2}$/)) { var p=en.split('-'); return p[0]+'年'+parseInt(p[1])+'月'+parseInt(p[2])+'日'; }
     // Japanese name fields — use kanji if father OR mother is Japanese
     var isJpFather = (gv('father_citizen')||'').toLowerCase().indexOf('japanese') >= 0 ||
@@ -2849,15 +3046,15 @@ function doDownloadPDF() {
     '.page{position:relative;width:210mm;min-height:297mm;max-height:297mm;background:#faf8f0;padding:4mm 8mm 4mm 4mm;margin:0 auto;overflow:hidden}',
     // PSA header — ultra compact
     '.psa-hdr{text-align:center;padding:1px 6px 1px;border-bottom:1.5px solid #999;background:#faf8f0;margin-bottom:0}',
-    '.psa-rep{font-size:6.5px;color:#555;letter-spacing:0.2px}',
-    '.psa-off{font-size:8px;font-weight:bold;color:#111;margin:1px 0}',
-    '.psa-civ{font-size:6.5px;color:#555;margin:0}',
-    '.psa-doctit{font-size:10px;font-weight:bold;color:#111;margin:1px 0 0px;letter-spacing:0.3px}',
-    '.psa-jptit{font-size:8.5px;font-weight:bold;color:#1a2744;margin:0}',
+    '.psa-rep{font-size:calc(6.5px * var(--ts, 1));color:#555;letter-spacing:0.2px}',
+    '.psa-off{font-size:calc(8px * var(--ts, 1));font-weight:bold;color:#111;margin:1px 0}',
+    '.psa-civ{font-size:calc(6.5px * var(--ts, 1));color:#555;margin:0}',
+    '.psa-doctit{font-size:calc(10px * var(--ts, 1));font-weight:bold;color:#111;margin:1px 0 0px;letter-spacing:0.3px}',
+    '.psa-jptit{font-size:calc(8.5px * var(--ts, 1));font-weight:bold;color:#1a2744;margin:0}',
     // Meta row
-    '.meta{display:flex;justify-content:space-between;padding:1px 6px;border-bottom:1px solid #aaa;font-size:6.5px;color:#444;background:#f0ece0}',
+    '.meta{display:flex;justify-content:space-between;padding:1px 6px;border-bottom:1px solid #aaa;font-size:calc(6.5px * var(--ts, 1));color:#444;background:#f0ece0}',
     // Section header
-    '.sh{background:#1a2744;color:#e8c97a;font-size:6.5px;font-weight:bold;padding:1px 6px;letter-spacing:0.3px;margin-top:1px}',
+    '.sh{background:#1a2744;color:#e8c97a;font-size:calc(6.5px * var(--ts, 1));font-weight:bold;padding:1px 6px;letter-spacing:0.3px;margin-top:1px}',
     // Grid wrappers
     '.g1{display:grid;grid-template-columns:1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb}',
     '.g2{display:grid;grid-template-columns:1fr 1fr;border-left:0.5px solid #bbb;border-top:0.5px solid #bbb}',
@@ -2872,30 +3069,30 @@ function doDownloadPDF() {
     '.mc.h{background:#ece7d8}',
     '.mc.ctr{text-align:center}',
     '.mc.mid{display:flex;flex-direction:column;justify-content:center}',
-    '.ml{font-size:5.5px;color:#777;line-height:1.1;margin-bottom:0.5px}',
-    '.mj{font-size:8px;font-weight:bold;color:#1a2744;line-height:1.2}',
-    '.me{font-size:6.5px;color:#aaa;font-style:italic;line-height:1.1}',
+    '.ml{font-size:calc(5.5px * var(--ts, 1));color:#777;line-height:1.1;margin-bottom:0.5px}',
+    '.mj{font-size:calc(8px * var(--ts, 1));font-weight:bold;color:#1a2744;line-height:1.2}',
+    '.me{font-size:calc(6.5px * var(--ts, 1));color:#aaa;font-style:italic;line-height:1.1}',
     '.msub{border-top:0.5px dotted #c4c0b4;margin-top:1.5px;padding-top:1.5px}',
     '.mc > .msub:first-child{border-top:none;margin-top:0;padding-top:0}',
     '.mc.fillcell{background:#fbfaf6}',
-    '.mnote{font-size:6px;color:#8a8578;font-style:italic;line-height:1.3;padding:2px 6px;border:0.5px solid #bbb;border-top:none;background:#f7f4ea}',
+    '.mnote{font-size:calc(6px * var(--ts, 1));color:#8a8578;font-style:italic;line-height:1.3;padding:2px 6px;border:0.5px solid #bbb;border-top:none;background:#f7f4ea}',
     // Field box — ultra compact
     '.fb{border-right:0.5px solid #bbb;border-bottom:0.5px solid #bbb;padding:1px 5px 1.5px;min-height:15px;background:#faf8f0}',
     '.fb.s{background:#f0ece0}',
-    '.fn{font-size:5.5px;color:#aaa;line-height:1.1}',
-    '.fl{font-size:5.5px;color:#777;line-height:1.1;margin-bottom:1px}',
-    '.fj{font-size:8px;font-weight:bold;color:#1a2744;line-height:1.2}',
+    '.fn{font-size:calc(5.5px * var(--ts, 1));color:#aaa;line-height:1.1}',
+    '.fl{font-size:calc(5.5px * var(--ts, 1));color:#777;line-height:1.1;margin-bottom:1px}',
+    '.fj{font-size:calc(8px * var(--ts, 1));font-weight:bold;color:#1a2744;line-height:1.2}',
     // Untranslated marker — must stay obvious on screen AND on paper
-    '.untr{display:inline-block;background:#dc2626;color:#fff;font-size:7px;font-weight:bold;padding:0 3px;border-radius:2px;letter-spacing:0.3px;-webkit-print-color-adjust:exact;print-color-adjust:exact}',
-    '.untr-en{display:inline-block;color:#dc2626;font-size:7px;font-weight:normal;font-style:italic;margin-left:3px;text-decoration:underline wavy #dc2626}',
-    '.fe{font-size:6.5px;color:#aaa;font-style:italic;line-height:1.1;margin-top:0}',
+    '.untr{display:inline-block;background:#dc2626;color:#fff;font-size:calc(7px * var(--ts, 1));font-weight:bold;padding:0 3px;border-radius:2px;letter-spacing:0.3px;-webkit-print-color-adjust:exact;print-color-adjust:exact}',
+    '.untr-en{display:inline-block;color:#dc2626;font-size:calc(7px * var(--ts, 1));font-weight:normal;font-style:italic;margin-left:3px;text-decoration:underline wavy #dc2626}',
+    '.fe{font-size:calc(6.5px * var(--ts, 1));color:#aaa;font-style:italic;line-height:1.1;margin-top:0}',
     // ── PROSE ── Affidavits, jurats and certifications are flowing text, not
     // form fields. These render without cell borders, at a readable size, and
     // with Japanese paragraph conventions (full-width indent, justified).
     '.prose{border:0.5px solid #bbb;border-top:none;background:#faf8f0;padding:4px 8px 5px}',
     '.prose.s{background:#f0ece0}',
     '.prose.plain{border:none;background:transparent;padding:2px 8px}',
-    '.para{font-size:8.5px;color:#1a2744;line-height:1.85;text-align:justify;text-justify:inter-ideograph;margin:0 0 4px;text-indent:1em}',
+    '.para{font-size:calc(8.5px * var(--ts, 1));color:#1a2744;line-height:1.85;text-align:justify;text-justify:inter-ideograph;margin:0 0 4px;text-indent:1em}',
     '.para:last-child{margin-bottom:0}',
     '.para.noind{text-indent:0}',
     '.para.ind{margin-left:12px;text-indent:0}',
@@ -2904,46 +3101,46 @@ function doDownloadPDF() {
     // issuer block. .tit is a display line; .rgt right-aligns.
     '.para.rgt{text-align:right;text-indent:0}',
     '.para-en.rgt{text-align:right}',
-    '.para.tit{text-align:center;text-indent:0;font-size:14px;font-weight:700;letter-spacing:.2em;word-spacing:.5em;margin:5px 0 3px;line-height:1.35}',
-    '.para-en.tit{text-align:center;font-size:9.5px;font-weight:600;letter-spacing:.16em;word-spacing:.4em;color:#55606f;margin:0 0 7px}',
+    '.para.tit{text-align:center;text-indent:0;font-size:calc(14px * var(--ts, 1));font-weight:700;letter-spacing:.2em;word-spacing:.5em;margin:5px 0 3px;line-height:1.35}',
+    '.para-en.tit{text-align:center;font-size:calc(9.5px * var(--ts, 1));font-weight:600;letter-spacing:.16em;word-spacing:.4em;color:#55606f;margin:0 0 7px}',
     // ── OPEN GRID ── same placement engine, rules suppressed, for unruled
     // label/value lists in letter-format documents.
     '.mg.open{border:none;margin-top:3px}',
     '.mg.open .mc,.mg.open .mc.h{border:none;background:transparent;min-height:0;padding:0.5px 5px 1.5px}',
     '.mg.open .mc.fillcell{background:transparent}',
     '.mc.rgt{text-align:right}',
-    '.para-en{font-size:6.8px;color:#666;font-style:italic;line-height:1.6;text-align:justify;margin:1px 0 0;text-indent:0}',
-    '.para-lbl{font-size:5.5px;color:#999;text-transform:uppercase;letter-spacing:.3px;margin-bottom:1px}',
+    '.para-en{font-size:calc(6.8px * var(--ts, 1));color:#666;font-style:italic;line-height:1.6;text-align:justify;margin:1px 0 0;text-indent:0}',
+    '.para-lbl{font-size:calc(5.5px * var(--ts, 1));color:#999;text-transform:uppercase;letter-spacing:.3px;margin-bottom:1px}',
     // Nested grids
     '.ng2{display:grid;grid-template-columns:1fr 1fr}',
     '.ng3{display:grid;grid-template-columns:1fr 1fr 1fr}',
     // Letter format — compact
-    '.lbody{padding:6px 10px;font-size:8.5px;color:#222;line-height:1.6;background:#faf8f0}',
-    '.ldate{text-align:right;margin-bottom:4px;font-size:7.5px}',
-    '.lconcern{font-size:8.5px;font-weight:bold;margin-bottom:4px}',
-    '.lpara{margin-bottom:4px;font-size:8.5px;line-height:1.6}',
-    '.fill{display:inline-block;border-bottom:1.5px solid #333;min-width:70px;font-weight:bold;color:#1a2744;font-size:8.5px;margin:0 2px;padding:0 2px}',
+    '.lbody{padding:6px 10px;font-size:calc(8.5px * var(--ts, 1));color:#222;line-height:1.6;background:#faf8f0}',
+    '.ldate{text-align:right;margin-bottom:4px;font-size:calc(7.5px * var(--ts, 1))}',
+    '.lconcern{font-size:calc(8.5px * var(--ts, 1));font-weight:bold;margin-bottom:4px}',
+    '.lpara{margin-bottom:4px;font-size:calc(8.5px * var(--ts, 1));line-height:1.6}',
+    '.fill{display:inline-block;border-bottom:1.5px solid #333;min-width:70px;font-weight:bold;color:#1a2744;font-size:calc(8.5px * var(--ts, 1));margin:0 2px;padding:0 2px}',
     '.fill-lg{min-width:110px}',
-    '.drow{display:grid;grid-template-columns:130px 1fr;margin-bottom:2px;font-size:8px}',
+    '.drow{display:grid;grid-template-columns:130px 1fr;margin-bottom:2px;font-size:calc(8px * var(--ts, 1))}',
     '.dlbl{color:#666}',
     '.dval{font-weight:bold;color:#1a2744;border-bottom:0.5px solid #ccc;padding-left:3px}',
-    '.sig{margin-top:5px;text-align:right;font-size:7.5px}',
-    '.sig-n{font-size:8.5px;font-weight:bold;text-decoration:underline}',
+    '.sig{margin-top:5px;text-align:right;font-size:calc(7.5px * var(--ts, 1))}',
+    '.sig-n{font-size:calc(8.5px * var(--ts, 1));font-weight:bold;text-decoration:underline}',
     // Footer
-    '.stamp{display:flex;justify-content:space-between;padding:1.5px 6px;font-size:6.5px;color:#666;border-top:0.5px solid #aaa;background:#f0ece0;margin-top:2px}',
-    '.cbox{background:#dbeafe;border:0.5px solid #93c5fd;margin:1px 0 1px;padding:2px 6px;font-size:6.5px;color:#1e3a8a;line-height:1.3}',
-    '.cbox b{font-size:7.5px;display:block;margin-bottom:1px}',
-    '.dbox{background:#fef9c3;border:0.5px solid #fde047;margin:1px 0 0;padding:2px 6px;font-size:6.5px;color:#713f12;line-height:1.3}',
+    '.stamp{display:flex;justify-content:space-between;padding:1.5px 6px;font-size:calc(6.5px * var(--ts, 1));color:#666;border-top:0.5px solid #aaa;background:#f0ece0;margin-top:2px}',
+    '.cbox{background:#dbeafe;border:0.5px solid #93c5fd;margin:1px 0 1px;padding:2px 6px;font-size:calc(6.5px * var(--ts, 1));color:#1e3a8a;line-height:1.3}',
+    '.cbox b{font-size:calc(7.5px * var(--ts, 1));display:block;margin-bottom:1px}',
+    '.dbox{background:#fef9c3;border:0.5px solid #fde047;margin:1px 0 0;padding:2px 6px;font-size:calc(6.5px * var(--ts, 1));color:#713f12;line-height:1.3}',
     '.cert-block{margin-top:3px!important}',
     // Translator block — compact for A4
     '.tblock-hdr{background:#1a2744;padding:3px 8px;display:flex;align-items:center;justify-content:space-between}',
     '.tblock-body{background:#fefefe;padding:4px 8px}',
-    '.tblock-cert{font-size:6.5px;color:#1a2744;line-height:1.4;margin-bottom:4px}',
+    '.tblock-cert{font-size:calc(6.5px * var(--ts, 1));color:#1a2744;line-height:1.4;margin-bottom:4px}',
     '.tblock-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;border-top:0.5px solid #e5e0d8;padding-top:4px}',
-    '.tblock-lbl{font-size:6px;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px}',
-    '.tblock-val{font-size:9px;font-weight:bold;color:#1a2744;border-bottom:1px solid #1a2744;padding-bottom:1px}',
-    '.tblock-sub{font-size:6.5px;color:#555;margin-top:1px}',
-    '.tblock-sig{font-family:"Dancing Script",cursive;font-size:18px;color:#1a2744;line-height:1}',
+    '.tblock-lbl{font-size:calc(6px * var(--ts, 1));color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px}',
+    '.tblock-val{font-size:calc(9px * var(--ts, 1));font-weight:bold;color:#1a2744;border-bottom:1px solid #1a2744;padding-bottom:1px}',
+    '.tblock-sub{font-size:calc(6.5px * var(--ts, 1));color:#555;margin-top:1px}',
+    '.tblock-sig{font-family:"Dancing Script",cursive;font-size:calc(18px * var(--ts, 1));color:#1a2744;line-height:1}',
     '.tblock-footer{margin-top:3px;padding-top:3px;border-top:0.5px solid #e5e0d8;display:flex;justify-content:space-between;align-items:center}',
     // Print
     '@media print{',
@@ -2954,15 +3151,15 @@ function doDownloadPDF() {
     // Rotated right-margin annotation
     '.rot-wrap{position:absolute;top:0;right:0;height:100%;width:11mm;display:flex;align-items:center;justify-content:center;pointer-events:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}',
     '.rot-ann{display:block;white-space:nowrap;transform:rotate(-90deg);transform-origin:center center;background:#c8e6c9;border-top:2px solid #388e3c;border-bottom:2px solid #388e3c;padding:3px 8px;color:#1b5e20;font-family:"Noto Sans JP",sans-serif;width:260mm;text-align:center}',
-    '.rot-en{font-size:6px;font-weight:bold;display:block;margin-bottom:1px;letter-spacing:0}',
-    '.rot-jp{font-size:6.5px;font-weight:bold;display:block;letter-spacing:0}',
+    '.rot-en{font-size:calc(6px * var(--ts, 1));font-weight:bold;display:block;margin-bottom:1px;letter-spacing:0}',
+    '.rot-jp{font-size:calc(6.5px * var(--ts, 1));font-weight:bold;display:block;letter-spacing:0}',
     // ── UNPAID WATERMARK ── injected into every .page when payment is not yet
     // confirmed, so a preview PDF cannot quietly be used as the final article.
     '.wmk{position:absolute;inset:0;pointer-events:none;z-index:50;background:repeating-linear-gradient(-32deg,rgba(220,38,38,0.05) 0 46px,rgba(220,38,38,0) 46px 104px);-webkit-print-color-adjust:exact;print-color-adjust:exact}',
     '.wmk-txt{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-30deg);border:5px solid rgba(185,28,28,0.30);border-radius:14px;padding:12px 34px;text-align:center;white-space:nowrap}',
-    '.wmk-1{font-size:44px;font-weight:800;color:rgba(185,28,28,0.30);letter-spacing:8px;line-height:1}',
-    '.wmk-2{font-size:17px;font-weight:700;color:rgba(185,28,28,0.28);letter-spacing:5px;margin-top:4px}',
-    '.wmk-3{position:absolute;left:0;right:0;bottom:6mm;text-align:center;font-size:9px;font-weight:700;color:rgba(185,28,28,0.42);letter-spacing:1px}'
+    '.wmk-1{font-size:calc(44px * var(--ts, 1));font-weight:800;color:rgba(185,28,28,0.30);letter-spacing:8px;line-height:1}',
+    '.wmk-2{font-size:calc(17px * var(--ts, 1));font-weight:700;color:rgba(185,28,28,0.28);letter-spacing:5px;margin-top:4px}',
+    '.wmk-3{position:absolute;left:0;right:0;bottom:6mm;text-align:center;font-size:calc(9px * var(--ts, 1));font-weight:700;color:rgba(185,28,28,0.42);letter-spacing:1px}'
   ].join('');
 
   // ── PSA HEADER (shared) ──
@@ -3025,10 +3222,44 @@ function doDownloadPDF() {
 
   // ── FOOTER (shared) ──
   // Generate translation serial number: ATS-YYYY-NNNN based on submission ID
+  // A certified translation's serial identifies a physical document, so it is
+  // allocated once and stored. Deriving it at print time meant two different
+  // submissions could share a serial, and a reprint in a later year changed it.
   function atsSerial() {
-    var yr = new Date().getFullYear();
-    var num = (s.id || 'UNK').replace(/[^0-9]/g,'').slice(-4).padStart(4,'0');
-    return 'ATS-' + yr + '-' + num;
+    if (s.serial) return s.serial;
+
+    // Year of the SUBMISSION, not of this print run.
+    var basis = s.createdAt || s.paymentRequestedAt || Date.now();
+    var yr;
+    try { yr = new Date(basis).getFullYear(); } catch (e) { yr = new Date().getFullYear(); }
+    if (!yr || isNaN(yr)) yr = new Date().getFullYear();
+
+    // Monotonic counter across every serial already issued, so no two
+    // submissions can collide however their ids happen to be numbered.
+    var top = 0;
+    (typeof subs !== 'undefined' ? subs : []).forEach(function (x) {
+      var m = /^ATS-(\d{4})-(\d+)$/.exec(String(x && x.serial || ''));
+      if (m) { var n = parseInt(m[2], 10); if (n > top) top = n; }
+    });
+
+    s.serial = 'ATS-' + yr + '-' + String(top + 1).padStart(4, '0');
+    try { if (typeof saveSubs === 'function') saveSubs().catch(function () {}); } catch (e) {}
+    return s.serial;
+  }
+
+  // Reprint accounting. The first generate is the original; every one after is
+  // a reissue and says so, so two copies in circulation are distinguishable.
+  function atsReprintNote() {
+    var n = parseInt(s.printCount || 0, 10) || 0;
+    if (n < 1) return '';
+    var d = new Date();
+    var when = d.getDate() + ' ' +
+      ['January','February','March','April','May','June','July',
+       'August','September','October','November','December'][d.getMonth()] +
+      ' ' + d.getFullYear();
+    return '<div style="font-size:6px;color:#8a8578;font-style:italic;padding:1px 6px">' +
+      'Reissued copy \u00b7 reprinted ' + when + ' \u00b7 \u518d\u767a\u884c ' +
+      '(original issued ' + esc(String(s.serialIssuedOn || '\u2014')) + ')</div>';
   }
 
   function certBlock(pageOf) {
@@ -3119,8 +3350,11 @@ function doDownloadPDF() {
 
   // ══ CUSTOM (MANUAL) TRANSLATION BUILDERS ══
   function esc(v) {
+    // Quotes are escaped as well. No current call site lands inside an HTML
+    // attribute, but that is a property of today's renderers, not a guarantee.
     return String(v == null ? '' : v)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
       .replace(/&lt;br\s*\/?&gt;/gi, '<br>');   // allow an explicit line break
   }
 
@@ -3936,7 +4170,7 @@ function doDownloadPDF() {
 
     body = '<div style=\'background:#f5f0e0;font-family:Times New Roman,Georgia,serif;padding:8px 10px;border:1px solid #c8b89a;min-height:100%\'>' +
     '<div style=\'text-align:center;padding-bottom:5px;border-bottom:2px solid #1a2744;margin-bottom:6px\'>' +
-      '<div style=\'font-size:10px;font-weight:bold;color:#1a2744\'>'+gv('coe_company').toUpperCase()+'</div>' +
+      '<div style=\'font-size:10px;font-weight:bold;color:#1a2744\'>'+esc(gvRaw('coe_company').toUpperCase())+'</div>' +
       '<div style=\'font-size:6.5px;color:#666;margin-top:1px\'>'+gv('coe_company_address')+(gv('coe_company_tel') ? ' · '+gv('coe_company_tel') : '')+(gv('coe_company_tin') ? ' · TIN: '+gv('coe_company_tin') : '')+'</div>' +
       '<div style=\'font-size:12px;font-weight:bold;color:#1a2744;margin:4px 0 1px;letter-spacing:1px\'>CERTIFICATE OF EMPLOYMENT</div>' +
       '<div style=\'font-size:8px;color:#555;font-style:italic\'>在職証明書　／　Certificate of Employment — English to Japanese Translation</div>' +
@@ -4063,7 +4297,7 @@ function doDownloadPDF() {
 
     body = '<div style=\'background:#f5f0e0;font-family:Times New Roman,Georgia,serif;padding:8px 10px;border:1px solid #c8b89a;min-height:100%\'>' +
     '<div style=\'text-align:center;padding-bottom:5px;border-bottom:2px solid #1a2744;margin-bottom:6px\'>' +
-      '<div style=\'font-size:10px;font-weight:bold;color:#1a2744\'>'+gv('bank_name').toUpperCase()+(gv('bank_branch') ? ' — '+gv('bank_branch').toUpperCase() : '')+'</div>' +
+      '<div style=\'font-size:10px;font-weight:bold;color:#1a2744\'>'+esc(gvRaw('bank_name').toUpperCase())+(gv('bank_branch') ? ' — '+esc(gvRaw('bank_branch').toUpperCase()) : '')+'</div>' +
       '<div style=\'font-size:6.5px;color:#666;margin-top:1px\'>'+gv('bank_address')+(gv('bank_tel') ? ' · Tel: '+gv('bank_tel') : '')+'</div>' +
       '<div style=\'font-size:12px;font-weight:bold;color:#1a2744;margin:4px 0 1px;letter-spacing:1px\'>BANK CERTIFICATE / 残高証明書</div>' +
       '<div style=\'font-size:8px;color:#555;font-style:italic\'>残高証明書　／　Bank Certificate — English to Japanese Translation</div>' +
@@ -4238,8 +4472,8 @@ function doDownloadPDF() {
   var langSwitchable = !hasCustom ||
     String(s.customView || 'bi-src').indexOf('bi') === 0;
 
-  var TOOLBAR = '<div style="position:fixed;top:0;left:0;right:0;background:#1a2744;padding:9px 20px;' +
-    'display:flex;align-items:center;gap:14px;z-index:9999;font-family:Arial,sans-serif;' +
+  var TOOLBAR = '<div id="ats-bar" style="position:fixed;top:0;left:0;right:0;background:#1a2744;padding:7px 14px;' +
+    'display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;z-index:9999;font-family:Arial,sans-serif;' +
     'box-shadow:0 2px 8px rgba(0,0,0,0.3);-webkit-print-color-adjust:exact;" class="no-print">' +
     '<span style="font-size:13px;font-weight:700;color:#e8c97a;">✏ Edit Mode</span>' +
     '<button onclick="window.print()" style="padding:7px 18px;background:#c9a84c;color:#1a2744;' +
@@ -4250,7 +4484,7 @@ function doDownloadPDF() {
       ? '<span style="font-size:12px;font-weight:700;color:#fff;background:#dc2626;padding:5px 12px;border-radius:6px;">' +
         '⚠ ' + untranslatedCount + ' field(s) NOT translated — find the red 【未翻訳】 marks and type the Japanese before printing' +
         '</span>'
-      : '<span style="font-size:11px;color:rgba(255,255,255,0.55);">Click any Japanese field value to edit before printing</span>') +
+      : '<span style="font-size:10.5px;color:rgba(255,255,255,0.5);">Click any highlighted text to edit</span>') +
     (langSwitchable
       ? '<span class="atslbl">Language</span>' +
         '<button id="lang-both" class="atsbtn on" onclick="setLang(\'both\')">日本語 + English</button>' +
@@ -4258,6 +4492,7 @@ function doDownloadPDF() {
         '<button id="lang-en" class="atsbtn" onclick="setLang(\'en\')">English only</button>' +
         '<button id="lang-jp" class="atsbtn" onclick="setLang(\'jp\')">日本語 only</button>'
       : '') +
+    '<button id="eh-btn" class="atsbtn on" onclick="toggleEditHints()">✎ Show editable</button>' +
     '<span class="atslbl">Text</span>' +
     '<button class="atsbtn" onclick="setTextSize(-1)">A&minus;</button>' +
     '<span id="ts-val" style="font-size:11px;color:#fff;min-width:38px;text-align:center;display:inline-block">100%</span>' +
@@ -4329,8 +4564,11 @@ function doDownloadPDF() {
       '[].slice.call(w.childNodes).forEach(function(n){t.appendChild(n);});',
       'w.appendChild(t);});',
     'window.setTextSize=function(d){',
-      'TS=(d===0)?100:Math.max(80,Math.min(130,TS+d*5));',
-      '[].slice.call(document.querySelectorAll(".tsw")).forEach(function(t){t.style.zoom=TS/100;});',
+      'TS=(d===0)?100:Math.max(80,Math.min(140,TS+d*5));',
+      // --ts scales type only; padding and rules stay put, so boxes grow to fit
+      // rather than the whole sheet being magnified.
+      '[].slice.call(document.querySelectorAll(".page")).forEach(function(pg){',
+        'pg.style.setProperty("--ts", (TS/100).toFixed(2));});',
       'var l=document.getElementById("ts-val");if(l)l.textContent=TS+"%";',
       'if(window.refit)window.refit();};',
     '})();'
@@ -4342,8 +4580,19 @@ function doDownloadPDF() {
     '[contenteditable="true"]:focus{background:rgba(201,168,76,0.28)!important;box-shadow:0 0 0 1.5px #c9a84c;outline:none}',
     'span.fill[contenteditable],span.fill-lg[contenteditable]{display:inline-block;min-width:40px}',
     'span.dval[contenteditable]{display:inline-block;min-width:40px}',
+    // Keyboard users need to see where they are; the default ring is removed
+    // by the contenteditable reset above.
+    '[contenteditable="true"]:focus-visible,button:focus-visible{outline:2px solid #c9a84c;outline-offset:2px}',
+    // Without a resting cue the framing text reads as locked, which is what
+    // made the header look uneditable even once it was not.
+    'body.show-edit [contenteditable="true"]{background:rgba(201,168,76,0.07);' +
+      'box-shadow:inset 0 -1px 0 rgba(201,168,76,0.35)}',
+    'body.show-edit .psa-hdr [contenteditable="true"],body.show-edit .meta [contenteditable="true"]' +
+      '{background:rgba(201,168,76,0.13)}',
+    '@media print{body.show-edit [contenteditable="true"]{background:transparent!important;box-shadow:none!important}}',
     // The zoomable layer the auto-fit engine drives. zoom (not transform) so it
     // actually reduces layout height and Chrome carries it into the PDF.
+    '.page{--ts:1}',
     '.pgfit{zoom:1}',
     '@media print{.pgfit{-webkit-print-color-adjust:exact;print-color-adjust:exact}}',
     '@media print{.no-print{display:none!important}[contenteditable]{background:transparent!important;box-shadow:none!important;cursor:default}}'
@@ -4406,6 +4655,15 @@ function doDownloadPDF() {
     'window.cycleFit=function(){if(mode==="flow")return;setFit(mode==="fit"?"off":"fit");};',
     'window.toggleFlow=function(){setFit(mode==="flow"?"fit":"flow");};',
     'window.refit=function(){apply();};',
+    // Certification block: name, date, address, contact, serial. Rendered as
+    // plain table cells, so target the deepest text-bearing nodes inside it.
+    '(function(){var cb=document.querySelector(".cert-block");if(!cb)return;',
+      'cb.querySelectorAll("td,div,span").forEach(function(el){',
+        'if(el.children.length)return;',
+        'if(!(el.textContent||"").trim())return;',
+        'el.setAttribute("contenteditable","true");',
+        'el.setAttribute("spellcheck","false");',
+        'el.setAttribute("title","Click to edit");});})();',
     'labels();apply();',
     // Re-fit as the document is edited, but never while a field has focus —
     // resetting zoom mid-keystroke would jump the caret.
@@ -4423,7 +4681,7 @@ function doDownloadPDF() {
     '<style>'+CSS+'\n'+EDIT_CSS+'\n'+LANG_CSS+'\n@media print{.page{page-break-after:auto}}</style>'+
     '</head><body>'+
     TOOLBAR+
-    '<div class="page">'+editableBody+'</div>'+
+    '<div class="page">'+editableBody+atsReprintNote()+'</div>'+
     editablePage2+
     '<script>var WM_UNPAID=' + (wmUnpaid ? 'true' : 'false') + ';var WM_REF=' + JSON.stringify(String(s.id||'')) + ';<\/script>' +
     '<script>document.addEventListener(\'DOMContentLoaded\',function(){' +
@@ -4436,16 +4694,44 @@ function doDownloadPDF() {
     'var f=document.createElement("div");f.className="wmk-3";' +
     'f.textContent="PREVIEW ONLY \u00B7 NOT VALID FOR SUBMISSION \u00B7 "+WM_REF;' +
     'w.appendChild(f);pg.appendChild(w);});}' +
-    '[\'.fj\',\'.fe\',\'.fill\',\'.fill-lg\',\'.dval\'].forEach(function(sel){' +
+    // Values, and everything framing them: header band, meta row, labels,
+    // mirror cells, prose, section bars and the certification text. Anything
+    // an operator may need to adjust for a particular job.
+    '[\'.fj\',\'.fe\',\'.fill\',\'.fill-lg\',\'.dval\',' +
+    '\'.psa-rep\',\'.psa-off\',\'.psa-doctit\',\'.psa-jptit\',' +
+    '\'.meta span\',\'.fl\',\'.fn\',\'.ml\',\'.mj\',\'.me\',' +
+    '\'.para\',\'.para-en\',\'.sh\',\'.cbox\',\'.mnote\'].forEach(function(sel){' +
     'document.querySelectorAll(sel).forEach(function(el){' +
+    'if(el.closest(\'.no-print\'))return;' +
     'el.setAttribute(\'contenteditable\',\'true\');' +
     'el.setAttribute(\'spellcheck\',\'false\');' +
     'el.setAttribute(\'title\',\'Click to edit\');});});' +
+    // A label edited by hand must update its stored original, or the next
+    // language switch would rewrite it from the stale value.
+    'document.querySelectorAll(\'.fl,.fn,.ml\').forEach(function(el){' +
+    'el.addEventListener(\'input\',function(){' +
+    'if(el.hasAttribute(\'data-both\'))el.setAttribute(\'data-both\',el.textContent);});});' +
     // .page is max-height:297mm with overflow:hidden, so anything too long used
     // to be silently cut off. Instead of only warning, shrink the content until
     // it fits; if even the floor is not enough, offer to spill onto a 2nd sheet.
     '});<\/script>' +
     '<script>' + FIT_JS + '<\/script>' +
+    '<script>(function(){document.body.classList.add("show-edit");' +
+      'function clearBar(){var b=document.getElementById(\"ats-bar\");' +
+      'if(b)document.body.style.paddingTop=(b.offsetHeight+10)+\"px\";}' +
+      'clearBar();window.addEventListener(\"resize\",clearBar);' +
+      'window.addEventListener(\"load\",clearBar);' +
+      'window.addEventListener(\"beforeprint\",function(){document.body.style.paddingTop=\"0\";});' +
+      'window.addEventListener(\"afterprint\",clearBar);' +
+      'window.toggleEditHints=function(){' +
+      'var on=document.body.classList.toggle("show-edit");' +
+      'var b=document.getElementById("eh-btn");if(b)b.classList.toggle("on",on);};})();<\/script>' +
+    '<script>(function(){' +
+      'var t=document.getElementById("ats-bar");if(t){t.setAttribute("role","toolbar");' +
+      't.setAttribute("aria-label","Document controls");}' +
+      '[].slice.call(document.querySelectorAll("button")).forEach(function(b){' +
+      'if(!b.getAttribute("aria-label")&&b.getAttribute("title"))' +
+      'b.setAttribute("aria-label",b.getAttribute("title"));});})();<\/script>' +
     '<script>' + TSIZE_JS + '<\/script>' +
     (LANG_JS ? '<script>' + LANG_JS + '<\/script>' : '') +
     '<script>document.addEventListener(\'DOMContentLoaded\',function(){' +
@@ -4455,6 +4741,30 @@ function doDownloadPDF() {
     'console.warn(\'Untranslated fields still present\');}});' +
     '});<\/script>'+
     '</body></html>';
+
+  // Append-only release record. Certified work eventually gets questioned; a
+  // register answers "which copy is this, and when did it leave the office".
+  try {
+    if (!s.serialIssuedOn) {
+      var d0 = new Date();
+      s.serialIssuedOn = d0.getDate() + ' ' +
+        ['January','February','March','April','May','June','July',
+         'August','September','October','November','December'][d0.getMonth()] +
+        ' ' + d0.getFullYear();
+    }
+    s.printCount = (parseInt(s.printCount || 0, 10) || 0) + 1;
+    s.releaseLog = (s.releaseLog || []).concat([{
+      at:      new Date().toISOString(),
+      serial:  s.serial || '',
+      copy:    s.printCount,
+      dir:     s.customDir || '',
+      view:    s.customView || '',
+      unpaid:  !!wmUnpaid,
+      override: gateOverridden ? atsGateOverrideNote.slice() : null
+    }]).slice(-50);
+    if (gateOverridden) atsGateOverrideNote = [];
+    if (typeof saveSubs === 'function') saveSubs().catch(function () {});
+  } catch (e) {}
 
   var blob = new Blob([docHtml], {type:'text/html'});
   var url = URL.createObjectURL(blob);
@@ -4509,7 +4819,7 @@ function doGenerateAffidavit() {
     '<meta charset="UTF-8">' +
     '<meta name="viewport" content="width=device-width,initial-scale=1">' +
     '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">' +
-    '<title>Sworn Affidavit of Translation — '+s.name+'</title>' +
+    '<title>Sworn Affidavit of Translation — '+escAttr(s.name)+'</title>' +
     '<style>' +
     '*{box-sizing:border-box;margin:0;padding:0}' +
     'body{font-family:Georgia,"Times New Roman",serif;background:#fff;color:#111;font-size:11pt;line-height:1.8}' +
@@ -4561,7 +4871,7 @@ function doGenerateAffidavit() {
     '<div class="ref-box">' +
       '<table>' +
         '<tr><td>Reference No. / 参照番号:</td><td>'+s.id+'</td></tr>' +
-        '<tr><td>Customer / 依頼者:</td><td>'+s.name+'</td></tr>' +
+        '<tr><td>Customer / 依頼者:</td><td>'+escAttr(s.name)+'</td></tr>' +
         '<tr><td>Document Type / 書類の種類:</td><td>'+s.doctype+' ('+jpTitle+')</td></tr>' +
         '<tr><td>Registry / Document No.:</td><td>'+regNum+'</td></tr>' +
         '<tr><td>Date of Translation / 翻訳日:</td><td>'+today+' ('+todayJP+')</td></tr>' +
@@ -4802,7 +5112,7 @@ async function doEmail() {
     // Body
     '<div style="background:#f7f8fc;padding:24px 28px;border-left:1px solid #e5e7eb;border-right:1px solid #e5e7eb;">' +
 
-      '<p style="font-size:15px;margin:0 0 8px;">Dear <strong>' + s.name + '</strong>,</p>' +
+      '<p style="font-size:15px;margin:0 0 8px;">Dear <strong>' + escAttr(s.name) + '</strong>,</p>' +
       '<p style="font-size:13px;line-height:1.8;color:#374151;margin:0 0 20px;">' +
         'Good news! Your <strong>' + docLabel + '</strong> has been successfully translated into Japanese. ' +
         'The complete translation is included below. ' +
@@ -5169,7 +5479,7 @@ async function doRequestTopUp() {
         '<h1 style="color:#e2c97e;margin:0;font-size:20px">Arroyo Translation Services</h1>' +
       '</div>' +
       '<div style="background:#f7f8fc;padding:24px 28px;border-left:1px solid #e5e7eb;border-right:1px solid #e5e7eb">' +
-        '<p style="font-size:15px;margin:0 0 8px">Dear <strong>' + s.name + '</strong>,</p>' +
+        '<p style="font-size:15px;margin:0 0 8px">Dear <strong>' + escAttr(s.name) + '</strong>,</p>' +
         '<p style="font-size:13px;line-height:1.8;color:#374151;margin:0 0 18px">' +
           'Thank you for your payment of <strong>₱' + got + '</strong> for request ' +
           '<strong style="font-family:monospace">' + s.id + '</strong>.' +
@@ -5757,6 +6067,170 @@ var MIRROR_NOTE_JP = '\u3014\u672c\u7ffb\u8a33\u306f\u539f\u672c\u306e\u66f8\u5f
 var MIRROR_NOTE_EN = '[This translation reproduces the layout of the original for reference. It is a translation, not the original document.]';
 
 var CUSTOM_PRESETS = {
+  // ── Verified mirror patterns ── both checked against the original scan
+  // with zero auto-filler cells, meaning every grid row's track count is exact.
+  'nta1040_mirror': {
+    group: 'Japanese Government Documents',
+    label: 'NTA Form 1040 — 開業・廃業等届出書（控用）· mirror',
+    titleEn: "NOTIFICATION OF COMMENCEMENT / DISCONTINUANCE OF A SOLE PROPRIETORSHIP (TAXPAYER'S COPY)",
+    titleJp: '個人事業の開業・廃業等届出書（控用）',
+    issuerEn: 'Ageo Tax Office, National Tax Agency (国税庁・上尾税務署)',
+    issuerJp: '上尾税務署',
+    country: 'Japan・日本国 — National Tax Agency / 国税庁',
+    cols: '2', dir: 'jp2en_filed', view: 'bi-src',
+    body: [
+      '::: 24',
+      'c5r8 税務署受付印・提出先・提出日 / Receipt Stamp, Filed With, Date of Submission',
+      '+ 税務署受付印 / Tax Office Receipt Stamp | 上尾税務署 青色収受印「5.4.6」番号22 | Ageo Tax Office blue receipt seal "5.4.6" (6 April 2023), no. 22',
+      '+ 提出先 / Filed With | 上尾　税務署長 | The Director, Ageo Tax Office',
+      '+ 提出日 / Date of Submission | 令和5年4月6日提出 | Filed 6 April 2023 (Reiwa 5)',
+      'c15x 様式表題 / Form Title | 個人事業の開業・廃業等届出書（控用） | NOTIFICATION OF COMMENCEMENT / DISCONTINUANCE OF A SOLE PROPRIETORSHIP (TAXPAYER\'S COPY)',
+      'c4x 様式番号 / Form No. | １０４０ | 1040',
+      'c4h 納　税　地 / Place of Tax Payment',
+      'c15 区分 / Category | ☑住所地（○居所地・○事業所等は非選択。「該当するものを選択してください。」と印刷） | ☑ Domicile (place of abode / place of business not selected; pre-printed instruction: "select the applicable item")',
+      '+ 郵便番号 / Postal Code | 〒362-0062 | 362-0062',
+      '+ 住所 / Address | 上尾市南338 | 338 Minami, Ageo City, Saitama Prefecture',
+      '+ 電話 / Telephone | (TEL 090-2458-5363) | (TEL 090-2458-5363)',
+      'c4h 上記以外の住所地・事業所等 / Other Address or Place of Business',
+      'c15 記載事項 / Entries | 納税地以外に住所地・事業所等がある場合は記載します。（〒欄・住所欄・TEL欄いずれも記載なし） | To be completed if an address or place of business other than the place of tax payment exists. Postal code, address and telephone all blank',
+      'c4h フリガナ / Name (Kana Reading)',
+      'c9 | ヒラハラ　ユウスケ | HIRAHARA YUSUKE',
+      'c2r2h 生年月日 / Date of Birth',
+      'c4r2 元号 / Era | ○大正・☑昭和・○平成・○令和　62年6月7日生 | Taisho / ☑ Showa / Heisei / Reiwa — born 7 June 1987 (Showa 62)',
+      'c4h 氏　名 / Full Name',
+      'c9 | 平原　裕輔 | HIRAHARA, Yusuke',
+      'c4h 個人番号 / Individual Number (My Number)',
+      'c15 | （原本において黒塗り） | Blacked out on the original',
+      'c4r2h 職　業 / Occupation',
+      'c5r2 | 建設 | Construction',
+      'c2h フリガナ / Kana',
+      'c8 | ヒラハラコウギョウ | HIRAHARA KOGYO',
+      'c2h 屋　号 / Trade Name',
+      'c8 | 平原工業 | Hirahara Kogyo',
+      'c24x | 個人事業の開廃業等について次のとおり届けます。 | Notification is hereby given as follows concerning the commencement / discontinuance of a sole proprietorship.',
+      'c4r4h 届出の区分 / Type of Notification',
+      'c20 開業 / Commencement | ☑開業（事業の引継ぎを受けた場合は、受けた先の住所・氏名を記載します。） | ☑ Commencement of business (if the business was taken over, state the address and name of the predecessor)',
+      'c20 引継ぎ元 / Predecessor — Address and Name | 住所・氏名とも記載なし | Address and name both blank',
+      'c20 事務所・事業所の異動 / Change to Office or Place of Business | ○新設・○増設・○移転・○廃止　いずれも非選択 | Newly established / expanded / relocated / abolished — none selected',
+      'c20 廃業 / Discontinuance | ○廃業（事由）非選択。引き継いだ（譲渡した）先の住所・氏名とも記載なし | Discontinuance (reason) not selected; address and name of transferee both blank',
+      'c4h 所得の種類 / Type of Income',
+      'c20 | ○不動産所得・○山林所得・☑事業（農業）所得〔廃業の場合… ○全部・○一部（　）〕 | Real estate income / Forestry income — not selected; ☑ Business (agricultural) income. Scope of discontinuance (all / partial) — not applicable',
+      'c4h 開業・廃業等日 / Date of Commencement or Discontinuance',
+      'c12 事由 / Event | 開業や廃業、事務所・事業所の新増設等のあった日 | Date on which the commencement, discontinuance, or establishment or expansion of an office or place of business occurred',
+      'c8 | 令和5年4月7日 | 7 April 2023 (Reiwa 5)',
+      'c4r2h 事業所等を新増設、移転、廃止した場合 / If an Office or Place of Business Was Established, Expanded, Relocated or Abolished',
+      'c6h 新増設、移転後の所在地 / New or Post-Relocation Address',
+      'c10 | （記載なし） | Not filled in',
+      'c4 （電話） / Telephone | （記載なし） | Not filled in',
+      'c6h 移転・廃止前の所在地 / Address Before Relocation or Abolition',
+      'c14 | （記載なし） | Not filled in',
+      'c4r2h 廃業の事由が法人の設立に伴うものである場合 / If Discontinuance Is Due to Incorporation',
+      'c4h 設立法人名 / Company Name',
+      'c6 | （記載なし） | Not filled in',
+      'c4h 代表者名 / Representative',
+      'c6 | （記載なし） | Not filled in',
+      'c4h 法人納税地 / Company Tax Address',
+      'c6 | （記載なし） | Not filled in',
+      'c4h 設立登記 / Date of Registration',
+      'c6 | 　年　月　日（記載なし） | Year / month / day — not filled in',
+      'c4r2h 開業・廃業に伴う届出書の提出の有無 / Accompanying Notifications Filed',
+      'c14 | 「青色申告承認申請書」又は「青色申告の取りやめ届出書」 | Application for Approval of Blue Return, or Notification of Discontinuance of Blue Return',
+      'c6 | ☑有・○無 | ☑ Yes — filed',
+      'c14 | 消費税に関する「課税事業者選択届出書」又は「事業廃止届出書」 | Consumption Tax: Notification of Selection of Taxable Business Status, or Notification of Business Closure',
+      'c6 | ☑有・○無 | ☑ Yes — filed',
+      'c4h 事業の概要（できるだけ具体的に記載します。） / Outline of Business (to be stated as specifically as possible)',
+      'c20 | 建設工事 | Construction work',
+      'c3r4h 給与等の支払の状況 / Status of Salary Payments',
+      'c4hx 区　分 / Category',
+      'c4hx 従事員数 / No. of Employees',
+      'c6hx 給与の定め方 / Basis of Salary',
+      'c4hx 税額の有無 / Tax Withheld',
+      'c3r4h その他参考事項 / Other Reference Items',
+      'c4h 専従者 / Family Employees',
+      'c4 | 　人（記載なし） | Persons — not filled in',
+      'c6 | （記載なし） | Not filled in',
+      'c4 | ○有・○無　非選択 | Yes / No — not selected',
+      'c4h 使用人 / Employees',
+      'c4 | （記載なし） | Not filled in',
+      'c6 | （記載なし） | Not filled in',
+      'c4 | ○有・○無　非選択 | Yes / No — not selected',
+      'c4h 計 / Total',
+      'c4 | （記載なし） | Not filled in',
+      'c6 | （記載なし） | Not filled in',
+      'c4 | ○有・○無　非選択 | Yes / No — not selected',
+      'c10h 源泉所得税の納期の特例の承認に関する申請書の提出の有無 / Application for Approval of Special Provision for Withholding Tax Due Dates',
+      'c6 | ○有・○無　非選択 | Yes / No — not selected',
+      'c8 給与支払を開始する年月日 / Date Salary Payments Commence | 平成　年　月　日（記載なし） | Not filled in (pre-printed era: Heisei / 平成)',
+      'c8h 関与税理士（氏名・電話） / Engaged Certified Tax Accountant (Name, Telephone)',
+      'c16h 税務署整理欄 / Tax Office Processing Section',
+      'c8 | （記載なし。TEL欄も空欄） | Not filled in; telephone field also blank',
+      'c16 | 整理番号・関係部門連絡・A・B・C・番号確認・身元確認（済／未済）・源泉用紙交付・通信日付印・確認印・確認書類　いずれも空欄（整理番号欄に印刷と思われる「0」のみ。原本照合を推奨） | Reference number, department routing, A/B/C, number verification, identity verification (completed / not completed), withholding form issued, postmark date, confirmation seal and verification documents — all blank (only what appears to be a pre-printed "0" in the reference-number grid — verification against the original recommended)',
+      ':::',
+      '',
+      '## 翻訳者注記 / TRANSLATOR\'S NOTES',
+      '〔本翻訳の配置は原本の罫線・枠組みに準じたものである。各欄内の小見出し（区分・記載事項・事由・元号・様式表題等）は参照の便宜のため翻訳者が付したものであり、原本には印刷されていない。〕',
+      '[The layout of this translation follows the ruling and cell structure of the original. Sub-labels within cells (Category, Entries, Event, Era, Form Title and similar) were added by the translator for reference convenience and are not printed on the original form.]',
+      '〔記入は手書きであり、納税地住所および屋号の一部は判読が困難なため原本照合を推奨する。郵便番号末尾は「2」と判読し、〒362-0062とした。生年月日の元号は「62」と整合する「昭和」と解した。税務署整理欄の「0」は印刷と判断したが、原本照合を推奨する。〕',
+      '[Entries are handwritten; parts of the address and trade name are difficult to read and verification against the original is recommended. The final digit of the postal code reads as "2", rendered here as 362-0062. The birth-date era reads as "Showa", consistent with year 62. The "0" in the Tax Office Processing Section is taken to be pre-printed, but verification against the original is recommended.]',
+      '〔納税地住所の英訳中「Saitama Prefecture」は翻訳者による補記であり、原本には記載されていない。〕',
+      '[The words "Saitama Prefecture" in the English address line are a translator\'s addition and do not appear on the original.]',
+      '〔屋号「平原工業」のフリガナは「ヒラハラコウギョウ」。「工業」の直訳は "industry / manufacturing" であるが、事業内容（建設工事）を踏まえ "Hirahara Construction" とも表記し得る。〕',
+      '[The trade name 平原工業 (Hirahara Kogyo) translates literally as "Hirahara Industry / Manufacturing." Given the stated business activity (construction work), it may also be rendered as "Hirahara Construction."]',
+      '〔「事業（農業）所得」は本様式において事業所得と農業所得を併せた一つのチェック欄である。届出者の実際の業種は建設工事である。〕',
+      '[On this form, 事業（農業）所得 is a single combined checkbox covering business income and agricultural income. The filer\'s actual business is construction work.]',
+      ''
+    ].join('\n')
+  },
+  'zaiseki_mirror': {
+    group: 'Japanese Government Documents',
+    label: '在籍証明書 — Certificate of Enrollment · letter mirror',
+    titleEn: 'CERTIFICATE OF ENROLLMENT',
+    titleJp: '在籍証明書',
+    issuerEn: '', issuerJp: '',
+    country: 'Japan・日本国',
+    cols: '1', dir: 'jp2en', view: 'tgt',
+    body: [
+      '>t 在　籍　証　明　書 | CERTIFICATE OF ENROLLMENT',
+      '>c 下記の者が、当事業所に在籍していることを相違なく証明いたします。 | I hereby certify, without discrepancy, that the person named below is enrolled at this business establishment.',
+      '>c 記 | Particulars',
+      '',
+      '::: 12 open',
+      'c1',
+      'c3h 氏　　　名 / Name',
+      'c8 | 平原　裕輔 | HIRAHARA, Yusuke',
+      'c1',
+      'c3h 生 年 月 日 / Date of Birth',
+      'c8 | 昭和62年6月7日 | 7 June 1987 (Showa 62)',
+      'c1',
+      'c3h 在 籍 期 間 / Period of Enrollment',
+      'c8 | 令和5年4月7日　〜　現在 | 7 April 2023 (Reiwa 5) – present',
+      'c1',
+      'c3h 役　　　職 / Position',
+      'c8 | 事業主（代表者） | Proprietor (Representative)',
+      'c1',
+      'c3h 職　　　種 / Type of Work',
+      'c8 | 建設工事 | Construction work',
+      ':::',
+      '',
+      '>r 以上 | End of statement',
+      '>r 令和8年9月22日 | 22 September 2026 (Reiwa 8)',
+      '',
+      '::: 12 open',
+      'c6e 事 業 所 名 / Name of Business Establishment',
+      'c6 | 平原工業 | Hirahara Kogyo',
+      'c6e 所 在 地 / Address',
+      'c6 | 〒362-0002　埼玉県上尾市南338 | 338 Minami, Ageo City, Saitama Prefecture 362-0002',
+      'c6e 電 話 番 号 / Telephone',
+      'c6 | 090-2458-5363 | 090-2458-5363',
+      'c6e 事業主氏名 / Name of Proprietor',
+      'c6 | 平原　裕輔 | HIRAHARA, Yusuke',
+      ':::',
+      '',
+      '>r 〔原本ではここに「平原工業」の朱色角印が押印されている〕 | [Red square seal reading 平原工業 (Hirahara Kogyo) impressed here on the original]',
+      ''
+    ].join('\n')
+  },
+
   'barangay': {
     group: 'Other Certificates & Documents', label: 'Barangay Clearance / Certificate',
     titleEn: 'BARANGAY CLEARANCE', titleJp: 'バランガイ証明書',
@@ -6688,7 +7162,11 @@ async function loadCustomPreset() {
   document.getElementById('cus-issuer-jp').value = p.issuerJp;
   document.getElementById('cus-cols').value      = p.cols;
   document.getElementById('cus-body').value      = p.body;
-  document.getElementById('cus-country').value   = '';
+  document.getElementById('cus-country').value   = p.country || '';
+  // Presets could not previously carry these, so a Japanese-source skeleton
+  // still loaded with the PSA/DFA certification attached.
+  if (p.dir)  document.getElementById('cus-dir').value  = p.dir;
+  if (p.view) document.getElementById('cus-view').value = p.view;
   cusRenderPreview();
   toast('Loaded skeleton — now fill in the Japanese column');
 }
@@ -6980,6 +7458,154 @@ function cusTogglePreview() {
 // ── REUSABLE TEMPLATES (this browser only) ───────────────────────
 var CUS_TPL_KEY = 'ats_custom_templates';
 
+// ════ WORKSPACE DRAFT SAFETY ════
+// The body can be a hundred lines of hand-counted grid. Losing it to a closed
+// tab is unacceptable, so it is mirrored to localStorage as it is typed.
+// True when the list on screen came from the local mirror rather than the API.
+var READ_ONLY_MIRROR = false;
+var CUS_DRAFT_KEY = 'ats_custom_draft';
+var cusDraftTimer = null;
+var cusDirty = false;
+
+function cusDraftFields() {
+  return ['cus-title-en','cus-title-jp','cus-issuer-en','cus-issuer-jp',
+          'cus-dir','cus-view','cus-country','cus-purpose','cus-docno',
+          'cus-cols','cus-body','cus-cust-name','cus-link'];
+}
+
+function cusSaveDraft() {
+  try {
+    var d = { at: Date.now() };
+    cusDraftFields().forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) d[id] = el.value;
+    });
+    var note = document.getElementById('cus-mirror-note');
+    d.mirrorNote = note ? note.checked : true;
+    if (!String(d['cus-body'] || '').trim()) { localStorage.removeItem(CUS_DRAFT_KEY); cusDirty = false; return; }
+    localStorage.setItem(CUS_DRAFT_KEY, JSON.stringify(d));
+    cusDirty = true;
+    var st = document.getElementById('cus-draft-state');
+    if (st) st.textContent = 'Draft saved locally · ' + new Date().toLocaleTimeString();
+  } catch (e) {
+    var st2 = document.getElementById('cus-draft-state');
+    if (st2) st2.textContent = '⚠ Could not save draft locally (storage full?)';
+  }
+}
+
+function cusQueueDraft() {
+  clearTimeout(cusDraftTimer);
+  cusDraftTimer = setTimeout(cusSaveDraft, 800);
+}
+
+function cusClearDraft() {
+  try { localStorage.removeItem(CUS_DRAFT_KEY); } catch (e) {}
+  cusDirty = false;
+  var st = document.getElementById('cus-draft-state');
+  if (st) st.textContent = '';
+}
+
+async function cusOfferRecovery() {
+  var raw = null;
+  try { raw = localStorage.getItem(CUS_DRAFT_KEY); } catch (e) { return; }
+  if (!raw) return;
+  var d; try { d = JSON.parse(raw); } catch (e) { return; }
+  if (!d || !String(d['cus-body'] || '').trim()) return;
+  var body = document.getElementById('cus-body');
+  if (body && body.value.trim() === String(d['cus-body']).trim()) return;   // already there
+  var when = d.at ? new Date(d.at).toLocaleString() : 'earlier';
+  var lines = String(d['cus-body']).split('\n').length;
+  if (!await uiConfirm('An unsaved Custom Translation draft from ' + when +
+        ' was found (' + lines + ' line(s)). Restore it?',
+        { title: 'Recover unsaved draft', okText: 'Restore', cancelText: 'Discard' })) {
+    cusClearDraft(); return;
+  }
+  cusDraftFields().forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el && typeof d[id] === 'string') el.value = d[id];
+  });
+  var note = document.getElementById('cus-mirror-note');
+  if (note) note.checked = d.mirrorNote !== false;
+  if (typeof cusRenderPreview === 'function') cusRenderPreview();
+  toast('Draft restored — nothing has been saved to a submission yet');
+}
+
+(function cusWireDraft() {
+  function wire() {
+    cusDraftFields().forEach(function (id) {
+      var el = document.getElementById(id);
+      if (!el || el.getAttribute('data-draft') === '1') return;
+      el.setAttribute('data-draft', '1');
+      el.addEventListener('input', cusQueueDraft);
+      el.addEventListener('change', cusQueueDraft);
+    });
+    var note = document.getElementById('cus-mirror-note');
+    if (note && note.getAttribute('data-draft') !== '1') {
+      note.setAttribute('data-draft', '1');
+      note.addEventListener('change', cusQueueDraft);
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () { wire(); cusOfferRecovery(); });
+  } else { wire(); cusOfferRecovery(); }
+
+  window.addEventListener('beforeunload', function (e) {
+    if (!cusDirty) return;
+    e.preventDefault();
+    e.returnValue = '';
+    return '';
+  });
+})();
+
+// ════ CROSS-DOCUMENT CONSISTENCY ════
+// A customer's documents should agree with each other. When they do not, it is
+// usually a transcription error in one of them — exactly the case that slipped
+// through once already (postal code 362-0002 vs 362-0062, every other field
+// matching). Compares the shared fields across a customer's submissions.
+var ATS_SHARED_FIELDS = [
+  ['name',     ['child_name','coe_emp_name','bank_acct_name','deceased_name','itr_emp_name']],
+  ['birthdate',['child_birthdate','coe_emp_birthdate','deceased_birthdate']],
+  ['address',  ['address','coe_company_address','bank_address','present_address']],
+  ['postcode', ['postal_code','zip','coe_company_zip']],
+  ['telephone',['coe_company_tel','bank_tel','tel','phone_no']],
+  ['employer', ['coe_company','employer','itr_employer']]
+];
+
+function atsNormalise(v) {
+  return String(v == null ? '' : v)
+    .replace(/[\u3000\s]+/g, ' ')
+    .replace(/[\u2010-\u2015\uff0d]/g, '-')
+    .trim().toLowerCase();
+}
+
+// Returns [{label, values:[{id, value}]}] for fields that disagree.
+function atsCrossCheck(sub) {
+  if (typeof subs === 'undefined' || !sub) return [];
+  var key = atsNormalise(sub.name);
+  if (!key) return [];
+  var peers = subs.filter(function (x) {
+    return x && atsNormalise(x.name) === key;
+  });
+  if (peers.length < 2) return [];
+
+  var out = [];
+  ATS_SHARED_FIELDS.forEach(function (pair) {
+    var label = pair[0], ids = pair[1];
+    var seen = [];
+    peers.forEach(function (x) {
+      var f = x.fields || {};
+      for (var i = 0; i < ids.length; i++) {
+        var raw = f[ids[i]];
+        if (raw && String(raw).trim()) { seen.push({ id: x.id, value: String(raw).trim() }); break; }
+      }
+    });
+    var distinct = {};
+    seen.forEach(function (e) { distinct[atsNormalise(e.value)] = 1; });
+    if (Object.keys(distinct).length > 1) out.push({ label: label, values: seen });
+  });
+  return out;
+}
+
 function cusTemplates() {
   try { return JSON.parse(localStorage.getItem(CUS_TPL_KEY) || '{}'); } catch (e) { return {}; }
 }
@@ -7249,6 +7875,7 @@ async function saveCustomToSubmission() {
   if (s.status !== 'translated') s.status = 'translated';
 
   await saveSubs();
+  cusClearDraft();
   document.getElementById('cus-status').textContent = '✓ Saved to ' + s.name + ' — ready to e-mail';
   document.getElementById('cus-status').style.color = '#16a34a';
   render(); updateStats(); refreshCustomLinkList();
