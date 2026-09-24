@@ -148,9 +148,17 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
 #cus-preview .cp-empty{color:#dc2626;font-weight:bold}
 #cus-preview .prose{border:1px solid #bbb;border-top:none;background:#faf8f0;padding:6px 9px 7px}
 #cus-preview .prose.s{background:#f0ece0}
+#cus-preview .prose.plain{border:none;background:transparent;padding:3px 7px}
 #cus-preview .para{font-size:11px;color:#1a2744;line-height:1.85;text-align:justify;margin:0 0 6px;text-indent:1em}
 #cus-preview .para:last-child{margin-bottom:0}
 #cus-preview .para.ind{margin-left:14px;text-indent:0}
+#cus-preview .para.rgt,#cus-preview .para-en.rgt{text-align:right;text-indent:0}
+#cus-preview .para.tit{text-align:center;text-indent:0;font-size:18px;font-weight:700;letter-spacing:.2em;word-spacing:.5em;margin:6px 0 4px}
+#cus-preview .para-en.tit{text-align:center;font-size:12px;font-weight:600;letter-spacing:.16em;word-spacing:.4em;color:#55606f;margin:0 0 9px}
+#cus-preview .mg.open{border:none}
+#cus-preview .mg.open .mc,#cus-preview .mg.open .mc.h{border:none;background:transparent;min-height:0;padding:1px 5px}
+#cus-preview .mg.open .mc.fillcell{background:transparent}
+#cus-preview .mc.rgt{text-align:right}
 #cus-preview .para.ctr{text-align:center;text-indent:0}
 #cus-preview .para-en{font-size:9px;color:#666;font-style:italic;line-height:1.6;margin:2px 0 0;text-indent:0}
 .cus-tool{padding:4px 9px;background:#fff;color:#5b21b6;border:1px solid #c4b5fd;border-radius:5px;font-size:10.5px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif}
@@ -535,6 +543,9 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
             <button class="cus-tool" onclick="cusInsert('&gt; ')" title="Full-width paragraph. Add | English after it for a bilingual paragraph.">＋ Paragraph</button>
             <button class="cus-tool" onclick="cusInsert('&gt;&gt; ')" title="Indented numbered clause — for affidavit points 1., 2., 3.">＋ Clause</button>
             <button class="cus-tool" onclick="cusInsert('&gt;c ')" title="Centred line — for signature and date blocks">＋ Centred</button>
+            <button class="cus-tool" onclick="cusInsert('&gt;t ')" title="Display title — centred and letter-spaced, for a document heading">＋ Title</button>
+            <button class="cus-tool" onclick="cusInsert('&gt;r ')" title="Right-aligned line — for 以上, dates and issuer blocks">＋ Right</button>
+            <button class="cus-tool" onclick="cusInsertLetter()" title="Formal letter skeleton — title, statement, 記…以上 list, right-aligned issuer block">✉ Letter</button>
             <button class="cus-tool" onclick="cusInsert(' |  | ')" title="Insert the field separators">＋ Field</button>
             <button class="cus-tool" onclick="cusInsertMirror()" title="Mirror grid — reproduce the cell structure of the original form">▦ Mirror grid</button>
             <button class="cus-tool" onclick="cusInsert('c6 ')" title="Grid cell spanning 6 of 12 tracks. Use c3, c4, c12… to change the width.">＋ Cell</button>
@@ -561,6 +572,14 @@ tbody td{padding:12px 16px;font-size:13px;color:#1a2744}
             <code>c6x</code> centred<br>
             <code>+ Label | 日本語 | English</code> sub-row inside the cell above — use for a tall cell holding several entries (例：納税地 → 〒 / 住所 / TEL)<br>
             <span style="color:#7c3aed">Leftover slots are filled automatically, so the block always prints as a clean rectangle. A grid closes at the next <code>##</code> section bar if you forget <code>:::</code>.</span>
+          </div>
+          <div style="margin-top:6px;padding-top:6px;border-top:1px dashed #d8b4fe">
+            <strong style="display:block;margin-bottom:3px;font-size:9.5px;letter-spacing:.4px;text-transform:uppercase">Letter layout — for 在籍証明書, 証明書, 通知書 and similar</strong>
+            <code>&gt;t 表題 | TITLE</code> display title &nbsp;·&nbsp;
+            <code>&gt;r 以上 | End</code> right-aligned line<br>
+            <code>::: 12 open</code> borderless grid — unruled label / value lists &nbsp;·&nbsp;
+            <code>c6e</code> right-aligned cell<br>
+            <span style="color:#7c3aed">Use <code>open</code> for a letter&#39;s particulars and issuer block: the cells align like the original without drawing a table around them.</span>
           </div>
         </div>
         <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:#5b21b6;margin-bottom:5px;cursor:pointer">
@@ -2875,11 +2894,24 @@ function doDownloadPDF() {
     // with Japanese paragraph conventions (full-width indent, justified).
     '.prose{border:0.5px solid #bbb;border-top:none;background:#faf8f0;padding:4px 8px 5px}',
     '.prose.s{background:#f0ece0}',
+    '.prose.plain{border:none;background:transparent;padding:2px 8px}',
     '.para{font-size:8.5px;color:#1a2744;line-height:1.85;text-align:justify;text-justify:inter-ideograph;margin:0 0 4px;text-indent:1em}',
     '.para:last-child{margin-bottom:0}',
     '.para.noind{text-indent:0}',
     '.para.ind{margin-left:12px;text-indent:0}',
     '.para.ctr{text-align:center;text-indent:0}',
+    // ── LETTER LAYOUT ── formal Japanese letters are centred-title, right-aligned
+    // issuer block. .tit is a display line; .rgt right-aligns.
+    '.para.rgt{text-align:right;text-indent:0}',
+    '.para-en.rgt{text-align:right}',
+    '.para.tit{text-align:center;text-indent:0;font-size:14px;font-weight:700;letter-spacing:.2em;word-spacing:.5em;margin:5px 0 3px;line-height:1.35}',
+    '.para-en.tit{text-align:center;font-size:9.5px;font-weight:600;letter-spacing:.16em;word-spacing:.4em;color:#55606f;margin:0 0 7px}',
+    // ── OPEN GRID ── same placement engine, rules suppressed, for unruled
+    // label/value lists in letter-format documents.
+    '.mg.open{border:none;margin-top:3px}',
+    '.mg.open .mc,.mg.open .mc.h{border:none;background:transparent;min-height:0;padding:0.5px 5px 1.5px}',
+    '.mg.open .mc.fillcell{background:transparent}',
+    '.mc.rgt{text-align:right}',
     '.para-en{font-size:6.8px;color:#666;font-style:italic;line-height:1.6;text-align:justify;margin:1px 0 0;text-indent:0}',
     '.para-lbl{font-size:5.5px;color:#999;text-transform:uppercase;letter-spacing:.3px;margin-bottom:1px}',
     // Nested grids
@@ -3117,9 +3149,14 @@ function doDownloadPDF() {
 
     function flushProse() {
       if (!proseBuf.length) return;
-      out += '<div class="prose' + (proseShade ? ' s' : '') + '">' + proseBuf.join('') + '</div>';
+      // Display titles and right-aligned lines are letter furniture; a ruled,
+      // shaded band around them reads as a form field, so the block goes plain.
+      var plain = proseBuf.join('').indexOf('para tit') !== -1 ||
+                  proseBuf.join('').indexOf('rgt') !== -1;
+      out += '<div class="prose' + (plain ? ' plain' : (proseShade ? ' s' : '')) + '">' +
+             proseBuf.join('') + '</div>';
       proseBuf = [];
-      proseShade = !proseShade;
+      if (!plain) proseShade = !proseShade;
     }
 
     function flush() {
@@ -3168,9 +3205,11 @@ function doDownloadPDF() {
           buf = [];
         }
         var rest = line.slice(1);
-        var cls = 'para';
+        var cls = 'para', encls = 'para-en';
         if (rest.charAt(0) === '>') { cls += ' ind'; rest = rest.slice(1); }
         else if (rest.charAt(0) === 'c' && rest.charAt(1) === ' ') { cls += ' ctr'; rest = rest.slice(1); }
+        else if (rest.charAt(0) === 'r' && rest.charAt(1) === ' ') { cls += ' rgt'; encls += ' rgt'; rest = rest.slice(1); }
+        else if (rest.charAt(0) === 't' && rest.charAt(1) === ' ') { cls += ' tit'; encls += ' tit'; rest = rest.slice(1); }
         rest = rest.trim();
         if (!rest) return;
 
@@ -3181,7 +3220,7 @@ function doDownloadPDF() {
         var pv = atsVals(V, pjp, pen);
         if (!pv.main && !pv.sub) return;
         proseBuf.push((pv.main ? '<p class="' + cls + '">' + esc(pv.main) + '</p>' : '') +
-                      (pv.sub ? '<p class="para-en">' + esc(pv.sub) + '</p>' : ''));
+                      (pv.sub ? '<p class="' + encls + '">' + esc(pv.sub) + '</p>' : ''));
         return;
       }
 
@@ -3190,6 +3229,10 @@ function doDownloadPDF() {
       var jp    = (p[1] || '').trim();
       var en    = (p[2] || '').trim();
 
+      // A field row ends any pending prose passage. Without this the prose
+      // stayed buffered and was emitted after these rows, reversing the order
+      // the operator wrote them in.
+      flushProse();
       var fv = atsVals(V, jp, en);
       var fl = atsLabel(label, V.label);
       buf.push('<div class="fb' + (shade ? ' s' : '') + '">' +
@@ -4189,6 +4232,12 @@ function doDownloadPDF() {
     : '';
 
   // Toolbar HTML — injected directly, no script needed
+  // The switch only means something when both languages are present. A custom
+  // translation generated in a single-language view has one language in the
+  // .fj slot, so the control is withheld rather than shown broken.
+  var langSwitchable = !hasCustom ||
+    String(s.customView || 'bi-src').indexOf('bi') === 0;
+
   var TOOLBAR = '<div style="position:fixed;top:0;left:0;right:0;background:#1a2744;padding:9px 20px;' +
     'display:flex;align-items:center;gap:14px;z-index:9999;font-family:Arial,sans-serif;' +
     'box-shadow:0 2px 8px rgba(0,0,0,0.3);-webkit-print-color-adjust:exact;" class="no-print">' +
@@ -4202,6 +4251,18 @@ function doDownloadPDF() {
         '⚠ ' + untranslatedCount + ' field(s) NOT translated — find the red 【未翻訳】 marks and type the Japanese before printing' +
         '</span>'
       : '<span style="font-size:11px;color:rgba(255,255,255,0.55);">Click any Japanese field value to edit before printing</span>') +
+    (langSwitchable
+      ? '<span class="atslbl">Language</span>' +
+        '<button id="lang-both" class="atsbtn on" onclick="setLang(\'both\')">日本語 + English</button>' +
+        '<button id="lang-enfirst" class="atsbtn" onclick="setLang(\'enfirst\')">English + 日本語</button>' +
+        '<button id="lang-en" class="atsbtn" onclick="setLang(\'en\')">English only</button>' +
+        '<button id="lang-jp" class="atsbtn" onclick="setLang(\'jp\')">日本語 only</button>'
+      : '') +
+    '<span class="atslbl">Text</span>' +
+    '<button class="atsbtn" onclick="setTextSize(-1)">A&minus;</button>' +
+    '<span id="ts-val" style="font-size:11px;color:#fff;min-width:38px;text-align:center;display:inline-block">100%</span>' +
+    '<button class="atsbtn" onclick="setTextSize(1)">A+</button>' +
+    '<button class="atsbtn" onclick="setTextSize(0)">Reset</button>' +
     '<button id="fit-btn" onclick="cycleFit()" style="padding:6px 12px;background:rgba(255,255,255,0.14);' +
       'color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:6px;font-size:11.5px;font-weight:700;' +
       'cursor:pointer;font-family:Arial,sans-serif;white-space:nowrap;">Auto-fit: On</button>' +
@@ -4212,6 +4273,68 @@ function doDownloadPDF() {
       'background:#a7f3d0;padding:5px 12px;border-radius:6px;"></span>' +
     '</div>' +
     '<div style="height:46px" class="no-print"></div>';
+
+  // ── LANGUAGE MODES (exported document) ──
+  // .fj / .mj carry Japanese, .fe / .me English, .para / .para-en the prose
+  // pair. Switching is therefore presentational — no regeneration needed.
+  var LANG_CSS = [
+    'body.lang-en .fj,body.lang-en .mj,body.lang-en .para{display:none!important}',
+    'body.lang-en .fe,body.lang-en .me{font-size:8px!important;font-weight:700!important;color:#1a2744!important;font-style:normal!important}',
+    'body.lang-en .para-en{font-size:8.5px!important;color:#1a2744!important;line-height:1.8!important;font-style:normal!important}',
+    'body.lang-jp .fe,body.lang-jp .me,body.lang-jp .para-en{display:none!important}',
+    'body.lang-enfirst .fb,body.lang-enfirst .mc{display:flex;flex-direction:column}',
+    'body.lang-enfirst .fn{order:0}',
+    'body.lang-enfirst .fl,body.lang-enfirst .ml{order:1}',
+    'body.lang-enfirst .fe,body.lang-enfirst .me{order:2;font-size:8px!important;font-weight:700!important;color:#1a2744!important;font-style:normal!important}',
+    'body.lang-enfirst .fj,body.lang-enfirst .mj{order:3;font-size:6.5px!important;font-weight:400!important;color:#9a9488!important}',
+    'body.lang-enfirst .para-en{font-size:8.5px!important;color:#1a2744!important;font-style:normal!important;line-height:1.8!important}',
+    'body.lang-enfirst .para{font-size:6.8px!important;color:#9a9488!important}',
+    '.atsbtn{padding:5px 10px;background:rgba(255,255,255,0.14);color:#fff;border:1px solid rgba(255,255,255,0.3);' +
+      'border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;font-family:Arial,sans-serif;white-space:nowrap}',
+    '.atsbtn.on{background:#e8c97a;color:#1a2744;border-color:#e8c97a}',
+    '.atslbl{font-size:9.5px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.6px}',
+    '@media print{.no-print{display:none!important}}'
+  ].join('');
+
+  var LANG_JS = langSwitchable ? [
+    '(function(){',
+    'var M="both";',
+    // Labels are written "日本語 / English"; keep the original so modes can
+    // re-derive either half. Split on the FIRST " / " only.
+    'var labs=[].slice.call(document.querySelectorAll(".fl,.ml,.fn"));',
+    'labs.forEach(function(el){el.setAttribute("data-both",el.textContent);});',
+    'function relabel(){labs.forEach(function(el){',
+      'var t=el.getAttribute("data-both")||"";var i=t.indexOf(" / ");',
+      'if(i<0){el.textContent=t;return;}',
+      'el.textContent=(M==="jp")?t.slice(0,i).trim():((M==="both")?t:t.slice(i+3).trim());});}',
+    'window.setLang=function(m){M=m;',
+      'document.body.className=document.body.className.replace(/\\blang-\\S+/g,"").trim()+" lang-"+m;',
+      'relabel();',
+      '["both","enfirst","en","jp"].forEach(function(k){',
+        'var b=document.getElementById("lang-"+k);if(b)b.classList.toggle("on",k===m);});',
+      'if(window.refit)window.refit();};',
+    'setLang("both");',
+    '})();'
+  ].join('') : '';
+
+  // Text size lives in its own wrapper INSIDE the auto-fit wrapper, so the two
+  // zooms compose instead of overwriting each other.
+  var TSIZE_JS = [
+    '(function(){',
+    'var TS=100;',
+    'function wraps(){return [].slice.call(document.querySelectorAll(".pgfit"));}',
+    'wraps().forEach(function(w){',
+      'if(w.getAttribute("data-ts")==="1")return;w.setAttribute("data-ts","1");',
+      'var t=document.createElement("div");t.className="tsw";',
+      '[].slice.call(w.childNodes).forEach(function(n){t.appendChild(n);});',
+      'w.appendChild(t);});',
+    'window.setTextSize=function(d){',
+      'TS=(d===0)?100:Math.max(80,Math.min(130,TS+d*5));',
+      '[].slice.call(document.querySelectorAll(".tsw")).forEach(function(t){t.style.zoom=TS/100;});',
+      'var l=document.getElementById("ts-val");if(l)l.textContent=TS+"%";',
+      'if(window.refit)window.refit();};',
+    '})();'
+  ].join('');
 
   var EDIT_CSS = [
     '[contenteditable="true"]{outline:none;cursor:text;border-radius:2px;transition:background .15s}',
@@ -4282,6 +4405,7 @@ function doDownloadPDF() {
     'window.setFit=function(m){mode=m;labels();apply();};',
     'window.cycleFit=function(){if(mode==="flow")return;setFit(mode==="fit"?"off":"fit");};',
     'window.toggleFlow=function(){setFit(mode==="flow"?"fit":"flow");};',
+    'window.refit=function(){apply();};',
     'labels();apply();',
     // Re-fit as the document is edited, but never while a field has focus —
     // resetting zoom mid-keystroke would jump the caret.
@@ -4296,7 +4420,7 @@ function doDownloadPDF() {
     '<meta name="viewport" content="width=device-width,initial-scale=1">'+
     '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Dancing+Script:wght@600&display=swap" rel="stylesheet">'+
     '<title>'+dt+' - Japanese Translation'+(page2Html?' (2 Pages)':'')+'</title>'+
-    '<style>'+CSS+'\n'+EDIT_CSS+'\n@media print{.page{page-break-after:auto}}</style>'+
+    '<style>'+CSS+'\n'+EDIT_CSS+'\n'+LANG_CSS+'\n@media print{.page{page-break-after:auto}}</style>'+
     '</head><body>'+
     TOOLBAR+
     '<div class="page">'+editableBody+'</div>'+
@@ -4322,6 +4446,8 @@ function doDownloadPDF() {
     // it fits; if even the floor is not enough, offer to spill onto a 2nd sheet.
     '});<\/script>' +
     '<script>' + FIT_JS + '<\/script>' +
+    '<script>' + TSIZE_JS + '<\/script>' +
+    (LANG_JS ? '<script>' + LANG_JS + '<\/script>' : '') +
     '<script>document.addEventListener(\'DOMContentLoaded\',function(){' +
     // Last line of defence before paper
     'window.addEventListener(\'beforeprint\',function(){' +
@@ -5451,8 +5577,8 @@ function atsVals(V, jp, en) {
   return { main: pick(V.primary), sub: V.secondary ? pick(V.secondary) : '' };
 }
 
-var MIRROR_OPEN = /^:::\s*(\d+)?\s*$/;
-var MIRROR_CELL = /^c(\d+)(?:r(\d+))?([hx]*)\s*(.*)$/;
+var MIRROR_OPEN = /^:::\s*(\d+)?\s*(open)?\s*$/;
+var MIRROR_CELL = /^c(\d+)(?:r(\d+))?([hxe]*)\s*(.*)$/;
 
 // Split "Label | JP | EN" without losing empty trailing segments.
 function mgParts(t) {
@@ -5466,6 +5592,10 @@ function mgParts(t) {
 
 function mgCellInner(t, escFn, emptyHtml, V) {
   V = V || { primary: 'jp', secondary: 'en', label: 'both' };
+  // A cell written with no content at all (e.g. "c1") is a deliberate spacer
+  // used for indentation. Only a cell that HAS a pipe but no value is a
+  // missing translation, so the empty-value marker stays for those.
+  if (!String(t == null ? '' : t).trim()) return '';
   var q  = mgParts(t);
   var vv = atsVals(V, q.jp, q.en);
   var lb = atsLabel(q.label, V.label);
@@ -5482,6 +5612,7 @@ function mgBuild(lines, start, escFn, emptyHtml, V) {
   var m = MIRROR_OPEN.exec(lines[start]);
   if (!m) return null;
   var tracks = Math.max(1, Math.min(24, parseInt(m[1] || '12', 10) || 12));
+  var openCls = (m[2] === 'open') ? ' open' : '';   // rules suppressed
   var cells = [], i = start + 1, maxRowSpan = 1, cellCount = 0, unitsUsed = 0;
 
   while (i < lines.length) {
@@ -5547,12 +5678,13 @@ function mgBuild(lines, start, escFn, emptyHtml, V) {
     cur = r;                                                   // keep scanning forward
   });
 
-  var html = '<div class="mg" style="grid-template-columns:repeat(' + tracks + ',1fr)">';
+  var html = '<div class="mg' + openCls + '" style="grid-template-columns:repeat(' + tracks + ',1fr)">';
   placed.forEach(function(p) {
     var c   = p.cell;
     var cls = 'mc';
     if (c.flags.indexOf('h') !== -1) cls += ' h';
     if (c.flags.indexOf('x') !== -1) cls += ' ctr';
+    if (c.flags.indexOf('e') !== -1) cls += ' rgt';
     if (c.rows > 1) cls += ' mid';
     var st = 'grid-column:' + (p.c + 1) + '/span ' + c.cols +
              ';grid-row:'   + (p.r + 1) + '/span ' + c.rows;
@@ -5580,12 +5712,44 @@ function mgBuild(lines, start, escFn, emptyHtml, V) {
   html += '</div>';
 
   cellCount = cells.length;
+
+  // \u2500\u2500 Printed-height estimate \u2500\u2500
+  // The old flat "16px per grid row" guess was wildly pessimistic on dense
+  // forms \u2014 it reported 115% on a block that measured 768px against a 788px
+  // budget. Height is now derived from the actual content: narrow cells wrap
+  // more, and a cell's height is shared across the rows it spans.
+  var CW = 760;                                   // printable content width, px
+  function cellPx(c) {
+    var w  = Math.max(40, (c.cols / tracks) * CW);
+    var pieces = c.sub.length
+      ? [c.text].concat(c.sub).filter(function(t) { return String(t).trim() !== ''; })
+      : [c.text];
+    var h = 3;                                    // .mc padding + border
+    pieces.forEach(function(t, k) {
+      var q  = mgParts(t);
+      var vv = atsVals(V || { primary: 'jp', secondary: 'en', label: 'both' }, q.jp, q.en);
+      var lb = atsLabel(q.label, (V && V.label) || 'both');
+      if (k > 0) h += 3;                          // .msub separator + spacing
+      if (lb)      h += Math.max(1, Math.ceil(lb.length      / Math.max(4, w / 4.2))) * 6.05;
+      if (vv.main) h += Math.max(1, Math.ceil(vv.main.length / Math.max(4, w / 7.2))) * 9.6;
+      if (vv.sub)  h += Math.max(1, Math.ceil(vv.sub.length  / Math.max(4, w / 3.9))) * 7.15;
+    });
+    return Math.max(15, h);
+  }
+
+  var rowH = new Array(occ.length).fill(0);
+  placed.forEach(function(p) {
+    var per = cellPx(p.cell) / p.cell.rows;
+    for (var y = p.r; y < p.r + p.cell.rows && y < rowH.length; y++) {
+      if (per > rowH[y]) rowH[y] = per;
+    }
+  });
+
   return {
     html: html,
     consumed: i - start,
     cells: cellCount,
-    rowsPx: occ.length * 16 +
-            cells.reduce(function(a, c) { return a + c.sub.length * 11; }, 0)
+    rowsPx: rowH.reduce(function(a, h) { return a + h; }, 0)
   };
 }
 
@@ -6557,6 +6721,35 @@ function cusInsertMirror() {
   ].join('\n'));
 }
 
+// Formal Japanese letter skeleton: centred title, certifying sentence,
+// 記 … 以上 particulars list, right-aligned issuer block.
+function cusInsertLetter() {
+  cusInsert([
+    '>t 在　籍　証　明　書 | CERTIFICATE OF ENROLLMENT',
+    '>c 下記の者が、当事業所に在籍していることを相違なく証明いたします。 | I hereby certify, without discrepancy, that the person named below is enrolled at this business establishment.',
+    '>c 記 | Particulars',
+    '::: 12 open',
+    'c3h 氏　名 / Name',
+    'c9 | | ',
+    'c3h 生年月日 / Date of Birth',
+    'c9 | | ',
+    'c3h 在籍期間 / Period of Enrollment',
+    'c9 | | ',
+    ':::',
+    '>r 以上 | End of statement',
+    '>r 令和〇年〇月〇日 | 0 Month 0000 (Reiwa 0)',
+    '::: 12 open',
+    'c6e 事業所名 / Name of Establishment',
+    'c6 | | ',
+    'c6e 所在地 / Address',
+    'c6 | | ',
+    'c6e 電話番号 / Telephone',
+    'c6 | | ',
+    ':::',
+    ''
+  ].join('\n'));
+}
+
 function cusInsertSeal() {
   cusInsert('> 〔原本には発行機関の公印および発行責任者の署名が付されている。〕');
 }
@@ -6617,9 +6810,12 @@ function cusRenderPreview() {
 
   function flushProse() {
     if (!proseBuf.length) return;
-    html += '<div class="prose' + (proseShade ? ' s' : '') + '">' + proseBuf.join('') + '</div>';
+    var plain = proseBuf.join('').indexOf('para tit') !== -1 ||
+                proseBuf.join('').indexOf('rgt') !== -1;
+    html += '<div class="prose' + (plain ? ' plain' : (proseShade ? ' s' : '')) + '">' +
+            proseBuf.join('') + '</div>';
     proseBuf = [];
-    proseShade = !proseShade;
+    if (!plain) proseShade = !proseShade;
     paraPx += 9;    // block padding, once per group rather than per line
   }
 
@@ -6668,9 +6864,11 @@ function cusRenderPreview() {
         buf = [];
       }
       shade = true; nParas++;
-      var rest = line.slice(1), cls = 'para';
+      var rest = line.slice(1), cls = 'para', encls = 'para-en';
       if (rest.charAt(0) === '>') { cls += ' ind'; rest = rest.slice(1); }
       else if (rest.charAt(0) === 'c' && rest.charAt(1) === ' ') { cls += ' ctr'; rest = rest.slice(1); }
+      else if (rest.charAt(0) === 'r' && rest.charAt(1) === ' ') { cls += ' rgt'; encls += ' rgt'; rest = rest.slice(1); }
+      else if (rest.charAt(0) === 't' && rest.charAt(1) === ' ') { cls += ' tit'; encls += ' tit'; rest = rest.slice(1); }
       rest = rest.trim();
       if (!rest) return;
       var pp = rest.split('|');
@@ -6682,11 +6880,12 @@ function cusRenderPreview() {
       var pv = atsVals(V, pjp, pen);
       if (!pv.main && !pv.sub) return;
       proseBuf.push((pv.main ? '<p class="' + cls + '">' + cusEsc(pv.main) + '</p>' : '') +
-                    (pv.sub ? '<p class="para-en">' + cusEsc(pv.sub) + '</p>' : ''));
+                    (pv.sub ? '<p class="' + encls + '">' + cusEsc(pv.sub) + '</p>' : ''));
       return;
     }
     var p = line.split('|');
     var label = (p[0] || '').trim(), jp = (p[1] || '').trim(), en = (p[2] || '').trim();
+    flushProse();                 // see note in the print renderer
     var fv = atsVals(V, jp, en);
     var fl = atsLabel(label, V.label);
     nFields++;
